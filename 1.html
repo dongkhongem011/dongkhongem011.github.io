@@ -381,21 +381,25 @@ function initGame() {
 
     // 1. ĐỌC CÀI ĐẶT TỪ URL
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Đọc cấu hình đảo câu hỏi (Mặc định là có)
     const configShuffleQ = urlParams.get('sq') !== 'false'; 
-    const configShuffleA = urlParams.get('sa') !== 'false';
+    
+    // ⚠️ QUAN TRỌNG: Luôn tắt đảo đáp án để tránh lỗi "Cả A và B"
+    const configShuffleA = false; 
+
+    // Xác định nguồn dữ liệu (File 1 dùng originalQuiz, File 2 dùng rawData)
+    // Dòng này giúp code chạy được trên cả 2 file mà không cần sửa tên biến
+    const sourceData = (typeof originalQuiz !== 'undefined') ? originalQuiz : rawData;
 
     // 2. XỬ LÝ DỮ LIỆU
-    sessionQuiz = originalQuiz.map((item, originalIdx) => {
+    sessionQuiz = sourceData.map((item, originalIdx) => {
+        // Tạo mảng đáp án, giữ nguyên vị trí gốc
         let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
         
-        // CHỈ ĐẢO ĐÁP ÁN NẾU ĐƯỢC BẬT
-        if (configShuffleA) {
-            for (let i = options.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [options[i], options[j]] = [options[j], options[i]];
-            }
-        }
+        // (Đã xóa đoạn code đảo đáp án ở đây)
         
+        // Tìm lại index đúng (thực ra nó vẫn y nguyên vì không đảo)
         const newCorrectIndex = options.findIndex(opt => opt.isCorrect);
 
         return {
@@ -410,7 +414,7 @@ function initGame() {
     // 3. TẠO HÀNG ĐỢI CÂU HỎI
     let indices = sessionQuiz.map((_, i) => i);
     
-    // CHỈ ĐẢO CÂU HỎI NẾU ĐƯỢC BẬT
+    // Chỉ đảo thứ tự câu hỏi nếu được bật
     if (configShuffleQ) {
         for (let i = indices.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
