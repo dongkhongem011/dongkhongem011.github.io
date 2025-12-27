@@ -3,276 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Test trang tn 123Nahhh</title>
+<title>Cổng Thi Trắc Nghiệm - Nahhh</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
         --primary: #4f46e5;
-        --secondary: #8b5cf6;
         --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         --card-bg: rgba(255, 255, 255, 0.95);
         --text: #1f2937;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-gradient); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 15px; }
     
-    body {
-        font-family: 'Nunito', sans-serif;
-        background: var(--bg-gradient);
-        color: var(--text);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px 15px;
-    }
-
-    /* --- MAIN LAYOUT --- */
-    .container {
-        width: 100%;
-        max-width: 600px;
-        text-align: center;
-        z-index: 1;
-        margin-top: auto;
-        margin-bottom: auto;
-    }
-
-    .main-title {
-        color: white;
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 5px;
-        text-shadow: 0 3px 6px rgba(0,0,0,0.2);
-    }
-
-    .sub-title {
-        color: #e0e7ff;
-        font-size: 1rem;
-        margin-bottom: 30px;
-        font-weight: 600;
-        opacity: 0.9;
-    }
-
-    .grid-menu {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .card {
-        background: var(--card-bg);
-        border-radius: 20px;
-        padding: 20px;
-        text-decoration: none;
-        color: var(--text);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        cursor: pointer;
-        position: relative;
-        transition: transform 0.2s;
-        border: 2px solid transparent;
-    }
-
+    .container { width: 100%; max-width: 600px; text-align: center; z-index: 1; margin: auto; }
+    .main-title { color: white; font-size: 2rem; font-weight: 800; margin-bottom: 5px; text-shadow: 0 3px 6px rgba(0,0,0,0.2); }
+    .sub-title { color: #e0e7ff; font-size: 0.95rem; margin-bottom: 30px; }
+    
+    .grid-menu { display: flex; flex-direction: column; gap: 15px; }
+    .card { background: var(--card-bg); border-radius: 20px; padding: 18px; text-decoration: none; color: var(--text); box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; align-items: center; transition: transform 0.2s; }
     .card:active { transform: scale(0.98); background: #fff; }
-
-    .card-icon { 
-        font-size: 3rem; 
-        margin-right: 20px; 
-        background: #f3f4f6;
-        width: 70px; height: 70px;
-        display: flex; align-items: center; justify-content: center;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-    
+    .card-icon { font-size: 2.5rem; margin-right: 15px; background: #f3f4f6; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
     .card-content { text-align: left; flex-grow: 1; }
-    
-    .card-title { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 4px; line-height: 1.2; }
-    .card-desc { font-size: 0.85rem; color: #6b7280; font-weight: 600; margin-bottom: 5px; }
-    .badge { 
-        display: inline-block;
-        background: #e0e7ff; 
-        padding: 4px 10px; 
-        border-radius: 12px; 
-        font-size: 0.75rem; 
-        font-weight: 700; 
-        color: var(--primary); 
-    }
+    .card-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 3px; }
+    .card-desc { font-size: 0.8rem; color: #6b7280; }
+    .badge { display: inline-block; background: #e0e7ff; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; color: var(--primary); margin-top: 5px; }
+    .creator-badge { margin-top: 30px; color: rgba(255,255,255,0.7); font-size: 0.8rem; }
 
-    .creator-badge {
-        margin-top: 40px;
-        color: rgba(255,255,255,0.7);
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-
-    /* --- MODAL POPUP --- */
-    .modal-overlay {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(5px);
-        z-index: 1000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.2s ease;
-        padding: 20px;
-    }
-
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; padding: 20px; }
     .modal-overlay.active { opacity: 1; visibility: visible; }
-
-    .modal-box {
-        background: white;
-        width: 100%;
-        max-width: 400px;
-        border-radius: 20px;
-        padding: 25px;
-        position: relative;
-        transform: translateY(20px);
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
+    .modal-box { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; transform: translateY(20px); transition: 0.3s; box-shadow: 0 20px 50px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
     .modal-overlay.active .modal-box { transform: translateY(0); }
-
-    .close-btn {
-        position: absolute;
-        top: 15px; right: 15px;
-        width: 30px; height: 30px;
-        background: #f3f4f6;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem;
-        color: #6b7280;
-        cursor: pointer;
-        font-weight: bold;
-    }
-
+    
+    .close-btn { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; color: #9ca3af; cursor: pointer; line-height: 1; }
     .modal-header { margin-bottom: 20px; text-align: center; }
-    .modal-title { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
-    .modal-subtitle { color: #6b7280; font-size: 0.9rem; }
+    .modal-title { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
 
-    /* Settings Group */
-    .settings-group {
-        background: #f9fafb;
-        border-radius: 15px;
-        padding: 15px;
-        margin-bottom: 20px;
-        border: 1px solid #e5e7eb;
-    }
-
-    .toggle-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
+    .settings-group { background: #f9fafb; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e7eb; }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .toggle-row:last-child { margin-bottom: 0; }
     .toggle-label { font-weight: 700; color: #374151; font-size: 0.95rem; }
     
-    /* Toggle Switch */
-    .switch { position: relative; display: inline-block; width: 52px; height: 30px; }
+    .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
     .switch input { opacity: 0; width: 0; height: 0; }
-    .slider {
-        position: absolute; cursor: pointer;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #cbd5e1;
-        transition: .3s; border-radius: 34px;
-    }
-    .slider:before {
-        position: absolute; content: "";
-        height: 24px; width: 24px;
-        left: 3px; bottom: 3px;
-        background-color: white;
-        transition: .3s; border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
     input:checked + .slider { background-color: var(--primary); }
-    input:checked + .slider:before { transform: translateX(22px); }
+    input:checked + .slider:before { transform: translateX(20px); }
 
-    /* Warning & Contact */
-    .warning-box {
-        background: #fff1f2;
-        border: 1px solid #fecdd3;
-        padding: 12px;
-        border-radius: 10px;
-        font-size: 0.85rem;
-        color: #be123c;
-        margin-bottom: 20px;
-        line-height: 1.4;
-        text-align: left;
-    }
+    /* Time Input */
+    .time-input-container { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e7eb; animation: slideDown 0.3s; }
+    .time-input-group { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+    .time-input { width: 60px; padding: 5px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1rem; }
+    .time-unit { font-size: 0.9rem; color: #6b7280; font-weight: 600; }
 
-    /* Lưu ý riêng cho Tin học - Mới thêm */
-    #tin-hoc-note {
-        display: none; /* Mặc định ẩn */
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-        color: #c2410c;
-        padding: 10px;
-        border-radius: 10px;
-        font-size: 0.85rem;
-        margin-bottom: 20px;
-        font-weight: 600;
-        text-align: left;
-    }
-
-    .contact-area {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .social-btn {
-        flex: 1;
-        display: flex; align-items: center; justify-content: center; gap: 6px;
-        padding: 10px; border-radius: 12px;
-        text-decoration: none; color: white; font-weight: 700; font-size: 0.85rem;
-        transition: transform 0.2s;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .social-btn:active { transform: scale(0.96); }
-    .btn-fb { background: #1877F2; }
-    .btn-tele { background: #229ED9; }
-
-    /* Start Button */
-    .start-btn {
-        width: 100%;
-        padding: 16px;
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 15px;
-        font-size: 1.1rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all 0.2s;
-        box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .start-btn:active { background: #4338ca; transform: scale(0.98); }
-
-    .fade-in { animation: fadeIn 0.6s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+    .start-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 10px; }
+    
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
 
-<div class="container fade-in">
+<div class="container">
     <h1 class="main-title">TRẮC NGHIỆM</h1>
     <p class="sub-title">Hệ thống ôn thi trực tuyến</p>
 
     <div class="grid-menu">
-        <div onclick="openModal('1.html', 'Dẫn luận Ngôn ngữ', false)" class="card">
+        <div onclick="openModal('1.html', 'Dẫn luận Ngôn ngữ')" class="card">
             <div class="card-icon">📚</div>
             <div class="card-content">
                 <div class="card-title">Dẫn luận Ngôn ngữ</div>
@@ -280,8 +77,7 @@
                 <div class="badge">100 Câu</div>
             </div>
         </div>
-
-        <div onclick="openModal('2.html', 'Tin học Đại cương', true)" class="card">
+        <div onclick="openModal('2.html', 'Tin học Đại cương')" class="card">
             <div class="card-icon">💻</div>
             <div class="card-content">
                 <div class="card-title">Tin học Đại cương</div>
@@ -290,85 +86,79 @@
             </div>
         </div>
     </div>
-
     <div class="creator-badge">Designed by <b>Nahhh</b></div>
 </div>
 
 <div id="setupModal" class="modal-overlay" onclick="closeModalOnOutside(event)">
     <div class="modal-box">
         <div class="close-btn" onclick="closeModal()">&times;</div>
-        
         <div class="modal-header">
-            <div class="modal-title" id="modalSubject">Tên Môn Học</div>
-            <div class="modal-subtitle">Cài đặt bài thi</div>
+            <div class="modal-title" id="modalSubject">Môn Học</div>
+            <div style="font-size:0.9rem; color:#6b7280">Cài đặt bài thi</div>
         </div>
 
         <div class="settings-group">
             <div class="toggle-row">
-                <div class="toggle-label">🔀 Đảo thứ tự câu hỏi</div>
+                <div class="toggle-label">🔀 Đảo câu hỏi</div>
                 <label class="switch">
                     <input type="checkbox" id="shuffleQ" checked>
                     <span class="slider"></span>
                 </label>
             </div>
+            
+            <div class="toggle-row">
+                <div class="toggle-label">⏱️ Giới hạn thời gian</div>
+                <label class="switch">
+                    <input type="checkbox" id="timeLimitToggle" onchange="toggleTimeInput()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div id="timeInputBox" class="time-input-container">
+                <div class="time-input-group">
+                    <input type="number" id="timeMinutes" class="time-input" value="45" min="1" max="180">
+                    <span class="time-unit">Phút</span>
+                </div>
+            </div>
         </div>
 
-        <div id="tin-hoc-note">
-            ⏳ <b>Lưu ý:</b> Môn này có nhiều hình ảnh, vui lòng đợi một chút để tải đầy đủ trước khi bắt đầu nhé!
+        <div style="text-align:left; font-size:0.85rem; color:#be123c; background:#fff1f2; padding:10px; border-radius:10px; margin-bottom:20px; border:1px solid #fecdd3">
+            ⚠️ <b>Lưu ý:</b> Nếu phát hiện lỗi sai, vui lòng báo cáo qua FB/Tele.
         </div>
 
-        <div class="warning-box">
-            ⚠️ <b>Lưu ý:</b> Dữ liệu có thể còn sai sót. Nếu phát hiện lỗi, hãy báo cáo ngay cho mình nhé!
-        </div>
-
-        <div class="contact-area">
-            <a href="https://www.facebook.com/pna1301" target="_blank" class="social-btn btn-fb">
-                <span>📘</span> Facebook
-            </a>
-            <a href="https://t.me/justn1" target="_blank" class="social-btn btn-tele">
-                <span>✈️</span> Telegram
-            </a>
-        </div>
-
-        <button class="start-btn" onclick="startExam()">VÀO THI NGAY 🚀</button>
+        <button class="start-btn" onclick="startExam()">BẮT ĐẦU LÀM BÀI 🚀</button>
     </div>
 </div>
 
 <script>
     let currentUrl = '';
 
-    function openModal(url, title, showNote) {
+    function openModal(url, title) {
         currentUrl = url;
         document.getElementById('modalSubject').innerText = title;
-        
-        // Hiện thông báo riêng cho Tin học nếu cần
-        const note = document.getElementById('tin-hoc-note');
-        if (showNote) {
-            note.style.display = 'block';
-        } else {
-            note.style.display = 'none';
-        }
-
         document.getElementById('setupModal').classList.add('active');
     }
 
-    function closeModal() {
-        document.getElementById('setupModal').classList.remove('active');
-    }
+    function closeModal() { document.getElementById('setupModal').classList.remove('active'); }
+    function closeModalOnOutside(e) { if (e.target.id === 'setupModal') closeModal(); }
 
-    function closeModalOnOutside(event) {
-        if (event.target.id === 'setupModal') {
-            closeModal();
-        }
+    function toggleTimeInput() {
+        const isChecked = document.getElementById('timeLimitToggle').checked;
+        document.getElementById('timeInputBox').style.display = isChecked ? 'block' : 'none';
     }
 
     function startExam() {
         if (!currentUrl) return;
-        
         const sQ = document.getElementById('shuffleQ').checked;
-        window.location.href = `${currentUrl}?sq=${sQ}&sa=false`;
+        
+        let timeParam = 0;
+        if (document.getElementById('timeLimitToggle').checked) {
+            timeParam = document.getElementById('timeMinutes').value;
+        }
+        
+        // Truyền tham số: sq=shuffle, time=số phút (0 là không giới hạn)
+        window.location.href = `${currentUrl}?sq=${sQ}&sa=false&time=${timeParam}`;
     }
 </script>
-
 </body>
 </html>
