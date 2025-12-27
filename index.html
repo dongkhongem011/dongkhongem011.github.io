@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cổng Thi Trắc Nghiệm - Nahhh</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary: #4f46e5;
+        --secondary: #8b5cf6;
+        --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --card-bg: #ffffff;
+        --text: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+        font-family: 'Nunito', sans-serif;
+        background: var(--bg-gradient);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 800px;
+        text-align: center;
+    }
+
+    .main-title {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .sub-title {
+        color: #e0e7ff;
+        font-size: 1.1rem;
+        margin-bottom: 40px;
+    }
+
+    .grid-menu {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    @media (max-width: 600px) {
+        .grid-menu { grid-template-columns: 1fr; }
+    }
+
+    .card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 30px 20px;
+        text-decoration: none;
+        color: var(--text);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        border-color: #a5b4fc;
+    }
+
+    .card-icon {
+        font-size: 4rem;
+        margin-bottom: 15px;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: var(--primary);
+    }
+
+    .card-desc {
+        font-size: 0.95rem;
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    /* Hiệu ứng badge số lượng câu hỏi */
+    .badge {
+        background: #f3f4f6;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        margin-top: 10px;
+        color: #4b5563;
+        font-weight: 700;
+    }
+
+    .footer-info {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.9rem;
+        margin-top: 20px;
+        font-weight: 600;
+    }
+
+    .creator-badge {
+        display: inline-block;
+        background: rgba(0,0,0,0.2);
+        padding: 5px 15px;
+        border-radius: 20px;
+        margin-top: 5px;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .warning-text {
+        font-size: 0.8rem;
+        color: #fca5a5;
+        margin-top: 10px;
+        font-style: italic;
+    }
+
+    /* Animation */
+    .fade-in { animation: fadeIn 0.8s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+</style>
+</head>
+<body>
+
+<div class="container fade-in">
+    <h1 class="main-title">HỆ THỐNG ÔN THI</h1>
+    <p class="sub-title">Chọn môn học để bắt đầu làm bài trắc nghiệm</p>
+
+    <div class="grid-menu">
+        <a href="1.html" class="card">
+            <div class="card-icon">📚</div>
+            <div class="card-title">Dẫn luận Ngôn ngữ</div>
+            <div class="card-desc">Lý thuyết & Bài tập cơ bản</div>
+            <div class="badge">100 Câu hỏi</div>
+        </a>
+
+        <a href="2.html" class="card">
+            <div class="card-icon">💻</div>
+            <div class="card-title">Tin học Đại cương</div>
+            <div class="card-desc">Word, Excel, Powerpoint & Hệ điều hành</div>
+            <div class="badge">223 Câu hỏi</div>
+        </a>
+    </div>
+
+    <div class="footer-info">
+        <div>Minigame Trắc Nghiệm</div>
+        <div class="creator-badge">Người tạo: <b>Nahhh</b></div>
+        <div class="warning-text">⚠️ Phiên bản thử nghiệm chưa hoàn chỉnh. Nếu có sai sót vui lòng báo cáo.</div>
+        <button onclick="alert('Cảm ơn bạn đã báo cáo! Chúng tôi sẽ sớm khắc phục.')" style="margin-top:10px; padding:5px 10px; border-radius:5px; border:none; cursor:pointer; background:white; color:#333; font-weight:bold; font-size:0.8rem">🚨 Báo cáo lỗi</button>
+    </div>
+</div>
+
+</body>
+</html>

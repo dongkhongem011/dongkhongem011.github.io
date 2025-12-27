@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Dẫn luận Ngôn ngữ – Final PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary: #2563eb;
+        --secondary: #64748b;
+        --success: #16a34a;
+        --danger: #dc2626;
+        --bg: #f1f5f9;
+        --card-bg: #ffffff;
+        --text: #0f172a;
+        --warning: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Nunito', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 15px;
+        user-select: none;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 800px;
+        background: var(--card-bg);
+        border-radius: 20px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .header {
+        padding: 15px 25px;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .stats { font-weight: 700; font-size: 1rem; }
+    
+    .combo-badge {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .combo-badge.active { opacity: 1; transform: scale(1); }
+    
+    /* Màu Combo */
+    .c-5 { background: #f97316; box-shadow: 0 0 10px #f97316; }
+    .c-10 { background: #ef4444; box-shadow: 0 0 10px #ef4444; animation: pulse 1s infinite; }
+    .c-20 { background: #b91c1c; box-shadow: 0 0 15px #b91c1c; }
+    .c-40 { background: #be185d; box-shadow: 0 0 15px #be185d; }
+    .c-50 { background: #7e22ce; box-shadow: 0 0 20px #7e22ce; border: 2px solid gold; }
+    .c-70 { background: #4338ca; box-shadow: 0 0 20px #4338ca; }
+    .c-100 { background: linear-gradient(45deg, #FFD700, #FF8C00); color: #000; box-shadow: 0 0 25px gold; font-size: 1.1rem; }
+
+    .progress-container { width: 100%; height: 6px; background: #e2e8f0; }
+    .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+    .quiz-body { padding: 25px; }
+    .question-text { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; line-height: 1.5; color: #1e293b; }
+    .options-grid { display: grid; gap: 10px; }
+
+    .option-btn {
+        width: 100%; text-align: left; padding: 14px 18px;
+        border: 2px solid #e2e8f0; background: white; border-radius: 12px;
+        font-size: 1rem; font-weight: 600; color: #475569;
+        cursor: pointer; transition: all 0.2s; position: relative; font-family: inherit;
+    }
+    .option-btn:hover:not(:disabled) { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+    .option-btn:disabled { cursor: default; opacity: 0.9; color: #94a3b8; border-color: #e2e8f0; }
+    
+    .option-btn.correct { border-color: var(--success) !important; background: #dcfce7 !important; color: #166534 !important; }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 20px; font-weight: bold; }
+
+    .option-btn.wrong { border-color: var(--danger) !important; background: #fee2e2 !important; color: #991b1b !important; }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 20px; font-weight: bold; }
+
+    .option-btn.user-selected { border: 2px solid #64748b; }
+
+    .footer { padding: 20px 25px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .btn { padding: 10px 20px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; transition: transform 0.1s; }
+    .btn:active { transform: scale(0.96); }
+    .btn-prev { background: #cbd5e1; color: #334155; }
+    .btn-skip { background: var(--warning); color: white; }
+    .btn-next { background: var(--primary); color: white; display: none; }
+    
+    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 10px; font-weight: bold; }
+
+    .result-screen { text-align: center; padding: 40px 20px; display: none; }
+    .score-circle { width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(var(--success) 0%, #e2e8f0 0%); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 800; color: var(--text); position: relative; }
+    .score-circle::before { content: ''; position: absolute; width: 120px; height: 120px; background: white; border-radius: 50%; }
+    .score-text { position: relative; z-index: 2; }
+    
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; text-align: left; }
+    .summary-item { background: #f1f5f9; padding: 15px; border-radius: 10px; }
+    .summary-item b { display: block; font-size: 1.1rem; color: var(--primary); }
+
+    .toast-fail { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #7f1d1d; color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: bold; z-index: 1000; display: flex; align-items: center; gap: 10px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast-fail.show { opacity: 1; animation: shake 0.5s; }
+
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    @keyframes shake { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 10px)); } 75% { transform: translateX(calc(-50% + 10px)); } }
+</style>
+</head>
+<body>
+
+<div class="toast-fail" id="fail-toast">
+    <span style="font-size: 1.5rem">😒</span>
+    <span>Trượt môn rồi cưng ơi!</span>
+</div>
+
+<div class="container">
+    <div id="quiz-interface">
+        <div class="header">
+            <div class="stats" id="question-counter">Câu 1/100</div>
+            <div id="combo-display" class="combo-badge">🔥 Combo 0</div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div class="quiz-body">
+            <div id="phase-display" class="phase-badge">QUAY LẠI CÂU ĐÃ BỎ QUA</div>
+            <h2 class="question-text" id="question">Loading...</h2>
+            <div class="options-grid" id="answers"></div>
+        </div>
+
+        <div class="footer">
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">⬅ Quay lại</button>
+            <div style="flex-grow: 1"></div>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">Bỏ qua ⤵</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">Tiếp theo ➜</button>
+        </div>
+    </div>
+
+    <div id="result-interface" class="result-screen">
+        <h2>🎉 Tổng kết</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Bạn đã hoàn thành bài thi!</p>
+        <div class="score-circle" id="score-circle">
+            <span class="score-text" id="final-score">0%</span>
+        </div>
+        <div class="summary-grid">
+            <div class="summary-item"><b>✅ Đúng</b><span id="txt-correct">0</span> câu</div>
+            <div class="summary-item"><b>❌ Sai</b><span id="txt-wrong">0</span> câu</div>
+        </div>
+        <button class="btn btn-next" style="display:inline-block; width:100%" onclick="location.reload()">🔄 Làm lại đề mới (Ngẫu nhiên)</button>
+    </div>
+</div>
+
+<script>
+// Dữ liệu 100 câu sạch sẽ (không còn lỗi syntax)
+const originalQuizData = [
+  {q: "Câu 1: Ngôn ngữ là gì?", a: ["Ngôn ngữ là một hệ thống các đơn vị (âm vị, hình vị, từ, câu)", "Những quy tắc kết hợp để tạo thành lời nói trong giao tiếp", "Được cộng đồng sử dụng ngôn ngữ quy ước và phản ánh trong ý thức của họ", "Cả A, B, C"], c: 3},
+  {q: "Câu 2: Phát biểu nào sau đây là sai?", a: ["Ngôn ngữ là một thuộc tính tinh thần", "Ngôn ngữ là một thuộc tính vật chất", "Ngôn ngữ là một hiện tượng xã hội đặc biệt", "Ngôn ngữ không thuộc về một kiến trúc thượng tầng nào"], c: 0},
+  {q: "Câu 3: Ngôn ngữ có mấy bản chất? Đó là những bản chất nào?", a: ["Có 2 bản chất, đó là bản chất tín hiệu và bản chất ký hiệu", "Có 2 bản chất, đó là bản chất tín hiệu và bản chất xã hội", "Có 3 bản chất, đó là bản chất tín hiệu, ký hiệu và giao tiếp", "Có 3 bản chất, đó là bản chất tín hiệu, giao tiếp và công cụ của tư duy."], c: 1},
+  {q: "Câu 4: Ngôn ngữ thống nhất nhưng không đồng nhất với tư duy bởi:", a: ["Nếu không có ngôn ngữ thì không có tư duy và ngược lại", "Ngôn ngữ là hệ thống, tư duy là tín hiệu", "Ngôn ngữ là vật chất, tư duy là tinh thần", "Ngôn ngữ là phương tiện của tư duy"], c: 2},
+  {q: "Câu 5: “Một ý nghĩa ngữ pháp có thể được biểu thị bằng nhiều phụ tổ” là đặc trưng của loại hình ngôn ngữ nào?", a: ["Ngôn ngữ đơn lập", "Ngôn ngữ hòa kết", "Ngôn ngữ chắp dính", "Ngôn ngữ đa tổng hợp"], c: 1},
+  {q: "Câu 6: Phát biểu nào sau đây là sai?", a: ["Ngôn ngữ không phải là hệ thống tín hiệu", "Ngôn ngữ không phải hiện tượng tự nhiên", "Ngôn ngữ không phải bản năng sinh vật của con người", "Ngôn ngữ không phải là một hiện tượng cá nhân"], c: 1},
+  {q: "Câu 7: Câu nói “Ngôn ngữ sinh ra do nhu cầu giao tiếp của con người, phát triển trong môi trường xã hội và phục vụ cho các lợi ích của xã hội” dùng để chỉ điều gì?", a: ["Ngôn ngữ là một hiện tượng cá nhân", "Ngôn ngữ là một hiện tượng xã hội", "Ngôn ngữ là một hệ thống tín hiệu", "Ngôn ngữ mang tính dân tộc"], c: 1},
+  {q: "Câu 8: “Không có ngôn ngữ thì không có tư duy và không có tư duy thì ngôn ngữ chỉ là một tổ hợp âm vô nghĩa” là nói đến điều gì?", a: ["Ngôn ngữ là công cụ hình thành tư duy", "Ngôn ngữ thuộc về tư duy", "Sự thống nhất giữa ngôn ngữ và tư duy", "Sự khác biệt giữa ngôn ngữ và tư duy"], c: 2},
+  {q: "Câu 9: Âm /r/ trong các từ “rực rỡ, rõ ràng, rộn rã” của tiếng Việt được gọi là phụ âm gì?", a: ["Phụ âm môi", "Phụ âm lưỡi", "Phụ âm rung", "Phụ âm tắc"], c: 2},
+  {q: "Câu 10: Âm tiết có thể phân thành mấy loại? Đó là những loại nào?", a: ["Có 4 loại âm tiết: cao, thấp, dài, ngắn", "Có 2 loại âm tiết: rộng, hẹp", "Có 4 loại: mở, nửa mở, khép, nửa khép", "A và B"], c: 2},
+  {q: "Câu 11: Vì sao ngôn ngữ lại có tính hệ thống?", a: ["Vì ngôn ngữ có sự kết hợp của nhiều âm vị với nhau để tạo thành hệ thống", "Vì ngôn ngữ tổ chức theo những điều kiện, tiêu chí cần yếu của hệ thống", "Vì ngôn ngữ gồm nhiều bộ phận hợp thành một tổ chức lớn nhất", "Vì ngôn ngữ được sắp đặt theo các chức năng khác nhau"], c: 1},
+  {q: "Câu 12: Ngôn ngữ gồm những đơn vị nào?", a: ["Từ, câu, hình vị", "Câu, từ, âm vị", "Âm vị, hình vị, từ, câu", "Không có đơn vị"], c: 2},
+  {q: "Câu 13: Chức năng chính của âm vị là:", a: ["Thông báo", "Khu biệt nghĩa của từ", "Định danh", "Tạo từ"], c: 1},
+  {q: "Câu 14: Chức năng chính của hình vị là:", a: ["Thông báo", "Khu biệt nghĩa của từ", "Định danh", "Tạo từ"], c: 3},
+  {q: "Câu 15: Chức năng chính của từ là:", a: ["Thông báo", "Khu biệt nghĩa của câu", "Định danh", "Tạo âm"], c: 2},
+  {q: "Câu 16: Chức năng chính của câu là:", a: ["Thông báo", "Khu biệt nghĩa của từ", "Định danh", "Tạo nghĩa"], c: 0},
+  {q: "Câu 17: Câu “Làm sao cắt nghĩa được tình yêu” có bao nhiêu âm vị?", a: ["19 âm vị", "25 âm vị", "7 âm vị", "6 âm vị"], c: 0},
+  {q: "Câu 18: Câu “Em bảo anh đi đi!” có bao nhiêu âm vị?", a: ["5 âm vị", "4 âm vị", "12 âm vị", "11 âm vị"], c: 3},
+  {q: "Câu 19: Câu “Người đâu gặp gỡ làm chi” có mấy hình vị?", a: ["17 hình vị", "19 hình vị", "6 hình vị", "5 hình vị"], c: 2},
+  {q: "Câu 20: “Em bảo anh đừng đợi/ Sao anh vội về ngay” có mấy hình vị?", a: ["26 hình vị", "10 hình vị", "9 hình vị", "Không có đáp án nào đúng"], c: 1},
+  {q: "Câu 21: Các yếu tố trong ngôn ngữ được sắp đặt theo một quy luật nhất định (chúng không kết hợp một cách tùy tiện với nhau) là để chỉ:", a: ["Ngôn ngữ là tín hiệu", "Ngôn ngữ có sự sắp đặt", "Ngôn ngữ là một hệ thống", "Ngôn ngữ là cấu trúc"], c: 2},
+  {q: "Câu 22: Định nghĩa “là tổng thể các mối quan hệ và liên hệ giữa các yếu tố khác loại trong cùng hệ thống” là nói đến khái niệm:", a: ["Hệ thống", "Cấu trúc", "Ngôn ngữ", "Tín hiệu"], c: 1},
+  {q: "Câu 23: [s, s, t] trong các từ “sẽ, sau, trên” là những phụ âm gì?", a: ["Âm răng", "Âm môi", "Âm lợi", "Âm quặt lưỡi"], c: 3},
+  {q: "Câu 24: “Dựa trên cấu trúc cơ bản của ngôn ngữ để phân loại chúng, sắp xếp chúng vào một loại hình nhất định” là phương pháp phân loại gì?", a: ["Phương pháp tổng hợp", "Phương pháp tổng kết", "Phương pháp so sánh lịch sử", "Phương pháp so sánh loại hình"], c: 3},
+  {q: "Câu 25: Ngôn ngữ đơn lập có đặc điểm gì?", a: ["Từ có nhiều phụ tố, biến đổi hình thái để thể hiện ý nghĩa ngữ pháp", "Từ không biến đổi hình thái", "Quan hệ ngữ pháp và ý nghĩa ngữ pháp được biểu thị bằng hư từ và trật tự từ", "B và C"], c: 3},
+  {q: "Câu 26: Tiếng Việt và tiếng Hán thuộc loại hình ngôn ngữ nào?", a: ["Đơn lập", "Hòa kết", "Chắp dính", "Đa tổng hợp"], c: 0},
+  {q: "Câu 27: Cách gọi khác của ngôn ngữ biến hình là gì?", a: ["Ngôn ngữ đơn lập", "Ngôn ngữ chắp dính", "Ngôn ngữ hòa kết", "Ngôn ngữ đa tổng hợp"], c: 2},
+  {q: "Câu 28: Trong câu “Tôi đọc sách”, nếu thay thế “Tôi đọc sách” bằng “Tôi đọc báo/ Tôi đọc tạp chí / Tôi đọc tiểu thuyết” thì người nói đã sử dụng kiểu quan hệ gì trong ngôn ngữ?", a: ["Quan hệ liên tưởng (dọc)", "Quan hệ tuyến tính (ngang)", "Quan hệ cấp bậc", "Không theo quan hệ nào"], c: 0},
+  {q: "Câu 29: Trong câu “Hôm nay tôi ở nhà” nếu bổ sung thêm các từ như: “Hôm nay tôi ở nhà xem ti vi/ Hôm nay tôi ở nhà xem ti vi với bạn”,.... thì người nói đã sử dụng kiểu quan hệ gì trong ngôn ngữ?", a: ["Không có đáp án đúng", "Quan hệ cấp bậc", "Quan hệ liên tưởng (dọc)", "Quan hệ tuyến tính (ngang)"], c: 3},
+  {q: "Câu 30: Bộ phận nào là nguồn chính tạo ra luồng hơi?", a: ["Phổi", "Miệng", "Mũi", "Bụng"], c: 0},
+  {q: "Câu 31: Thế nào là âm tố?", a: ["Âm tố là đơn vị phát âm lớn nhất", "Âm tố là đơn vị âm thanh nhỏ nhất của lời nói, có thể tách ra về mặt cấu âm – thính giác và thường ứng với một âm vị", "Âm tố là đơn vị ngữ nghĩa nhỏ nhất, không thể tách ra về mặt cấu âm – thính giác", "Âm tố là âm tiết của lời nói"], c: 1},
+  {q: "Câu 32: Âm tố được xác định dựa trên những bình diện nào?", a: ["Phát âm và ngữ nghĩa", "Cấu âm và thính giác", "Cấu tạo và ngữ nghĩa", "Cấu tạo và phát âm"], c: 1},
+  {q: "Câu 33: Có mấy loại âm tố? Là những loại nào?", a: ["Có 2 loại, nguyên âm và phụ âm", "Có 1 loại, âm vị", "Có 1 loại, âm tiết", "Có 2 loại, âm vị và âm tiết"], c: 0},
+  {q: "Câu 34: Nguyên âm là gì?", a: ["Nguyên âm là những âm thoát ra có tiếng động", "Nguyên âm là những âm thoát ra có tiếng xát", "Nguyên âm là những âm được tạo thành khi luồng hơi đi từ phổi lên qua khoang miệng và thoát ra ngoài một cách tự do", "Nguyên âm là những âm được tạo thành khi luồng hơi từ phổi đi lên, qua bộ máy phát âm bị cản trở hoàn toàn hoặc một phần"], c: 2},
+  {q: "Câu 35: Phụ âm là gì?", a: ["Phụ âm là những âm được tạo thành khi luồng hơi đi từ phổi lên qua khoang miệng và thoát ra ngoài một cách tự do", "Phụ âm là những âm được tạo thành khi luồng hơi đi ngược trở lại và có tiếng thanh", "Phụ âm là những âm được tạo thành khi luồng hơi từ phổi đi lên, qua bộ máy phát âm bị cản trở hoàn toàn hoặc cản trở một phần tạo nên tiếng động như tiếng nổ hoặc tiếng xát", "Không có khái niệm nào đúng"], c: 2},
+  {q: "Câu 36: Người ta nhận diện phụ âm dựa vào những đặc trưng gì?", a: ["Dựa vào vị trí cấu âm, phương thức cấu âm và tính thanh", "Dựa vào cách phát âm", "Dựa vào vị trí của lưỡi", "Dựa vào B & C"], c: 0},
+  {q: "Câu 37: Chúng ta gọi là “phụ âm tắc” nhờ vào đặc trưng nhận diện gì?", a: ["Vị trí cấu âm", "Phương thức cấu âm", "Tính thanh", "Kiểu dáng của môi"], c: 1},
+  {q: "Câu 38: Chúng ta gọi là “phụ âm môi” nhờ vào đặc trưng nhận diện gì?", a: ["Vị trí cấu âm", "Phương thức cấu âm", "Tính thanh", "Kiểu dáng của môi"], c: 0},
+  {q: "Câu 39: Cách thoát hơi từ phổi giữa nguyên âm và phụ âm có điểm gì khác nhau?", a: ["Luồng hơi thoát ra từ phổi của nguyên âm bị cản trở, còn phụ âm thì tự do", "Luồng hơi thoát ra từ phổi của nguyên âm chỉ bị cản một phần, phụ âm thì cản hoàn toàn", "Luồng hơi thoát ra từ phổi của nguyên âm tự do, còn phụ âm thì bị cản lại bởi bộ máy phát âm", "Không có đáp án nào đúng"], c: 2},
+  {q: "Câu 40: Thế nào là âm tiết?", a: ["Âm tiết là đơn vị phát âm lớn nhất có giọng điệu", "Âm tiết là đơn vị phát âm nhỏ nhất của lời nói, mang những sự kiện ngôn điệu như thanh điệu, trọng âm, ngữ điệu", "Âm tiết là đơn vị phát ngôn lớn nhất mang giá trị khu biệt", "Âm tiết là âm thanh được cấu tạo bởi các phụ âm"], c: 1},
+  {q: "Câu 41: Cấu trúc âm tiết gồm mấy phần?", a: ["Gồm 3 phần: âm đầu, vần, thanh điệu", "Gồm 3 phần: âm đầu, âm chính, âm cuối", "Gồm 2 phần: âm chính và thanh điệu", "Gồm 2 phần: âm đầu và thanh điệu"], c: 0},
+  {q: "Câu 42: Hai câu thơ “Em bảo anh đi đi!/Sao anh không đứng lại?” có bao nhiêu âm tiết?", a: ["8 âm tiết", "9 âm tiết", "10 âm tiết", "25 âm tiết"], c: 2},
+  {q: "Câu 43: “Hoa cười ngọc thốt đoan trang” thì /o/ trong “ngọc” thuộc bộ phận cấu tạo nào của âm tiết?", a: ["Âm đầu", "Âm đệm", "Âm chính", "Âm cuối"], c: 2},
+  {q: "Câu 44: Trọng âm đóng vai trò gì trong tiếng Việt và các ngôn ngữ có thanh điệu?", a: ["Có vai trò rất quan trọng", "Có vai trò khá quan trọng", "Không có vai trò gì", "Bị mờ nhạt do có thanh điệu"], c: 3},
+  {q: "Câu 45: Chữ viết là gì?", a: ["Chữ viết là hình dạng của nguyên âm và hình khối", "Chữ viết là hình dạng của phụ âm và hình khối", "Chữ viết là những tập hợp, những hệ thống kí hiệu bằng hình nét, có thể nhìn thấy được, sờ thấy được (chữ nổi) dùng để ghi lại mặt nào đó (âm, ý) của những đơn vị, yếu tố ngôn ngữ", "A và B"], c: 2},
+  {q: "Câu 46: Chữ Hán là chữ gì?", a: ["Là chữ viết biểu ý (ghi ý)", "Là chữ ghi âm", "Là chữ ghi thanh", "B & C"], c: 0},
+  {q: "Câu 47: Chữ Quốc ngữ là chữ gì?", a: ["Là chữ ghi thanh điệu", "Là chữ ghi ý", "Là bộ chữ của người Việt, dùng các kí tự Latin, với các dấu phụ từ bảng chữ cái Hy Lạp để ghi âm tiếng Việt", "Là bộ chữ dùng các kí hiệu đường nét với các dấu phụ từ ngôn ngữ Ấn Âu"], c: 2},
+  {q: "Câu 48: Chữ Nôm là chữ gì?", a: ["Là hệ chữ ngữ tố, dựa theo quy tắc kí âm chữ Hán phồn thể tạo ra các kí tự mới để viết các từ thuần Việt", "Là hệ chữ ghi âm, thuộc chữ Hán", "Là hệ chữ Ấn Âu, dựa trên các kí tự Latin", "Là hệ chữ thuần Việt, dựa trên các kí âm quốc tế"], c: 0},
+  {q: "Câu 49: Từ có những chức năng gì?", a: ["Định danh (gọi tên sự vật, hiện tượng)", "Cấu tạo như một hình vị và phân biệt nghĩa", "Thông báo và thực hiện các chức năng ngữ pháp", "A, B, C"], c: 3},
+  {q: "Câu 50: Có mấy phương thức chính dùng để cấu tạo từ? Đó là những phương thức nào?", a: ["Có 2 phương thức: ghép và láy", "Có 2 phương thức: láy và phụ gia", "Có 3 phương thức: phụ gia, ghép và láy", "Có 3 phương thức: biến đổi, ghép và lặp"], c: 2},
+  {q: "Câu 51: Phương thức láy là phương thức:", a: ["Nối kết phụ tố vào thành tố gốc để tạo ra từ mới", "Kết hợp các hình vị có cùng tính chất theo một trật tự nhất định", "Lặp lại toàn bộ hay một bộ phận vỏ ngữ âm của từ gốc", "A và B"], c: 2},
+  {q: "Câu 52: “Nhẹ như lông hồng”, “Đắt như tôm tươi” thuộc thành ngữ:", a: ["Miêu tả ẩn dụ", "Miêu tả", "So sánh", "Không có đáp án đúng"], c: 2},
+  {q: "Câu 53: Nghĩa của từ gồm có những thành phần nghĩa nào?", a: ["Nghĩa trừu tượng, nghĩa phái sinh", "Nghĩa biểu vật, nghĩa biểu niệm, nghĩa biểu thái", "Nghĩa tự do và nghĩa bắt buộc", "A & C"], c: 1},
+  {q: "Câu 54: “Nuôi ong tay áo”, “nước đổ đầu vịt” thuộc thành ngữ:", a: ["So sánh", "Miêu tả", "Miêu tả ẩn dụ", "Không có đáp án đúng"], c: 2},
+  {q: "Câu 55: “Con ngựa đá con ngựa đá”, hai từ “đá” trong câu này thuộc nhóm từ nào?", a: ["Từ đồng nghĩa", "Từ trái nghĩa", "Từ gần nghĩa", "Từ đồng âm"], c: 3},
+  {q: "Câu 56: Cụm từ là gì?", a: ["Là kết quả của sự mở rộng một từ để bổ sung ý nghĩa cho nó", "Là kết quả của sự thu hẹp nghĩa", "Là do sự nối kết các chức năng ngữ nghĩa", "B và C"], c: 0},
+  {q: "Câu 57: Cách gọi khác của cụm danh từ là gì?", a: ["Danh tính", "Động ngữ", "Tính ngữ", "Danh ngữ"], c: 3},
+  {q: "Câu 58: Cách gọi khác của cụm tính từ là gì?", a: ["Từ tính", "Tính ngữ", "Động ngữ", "Danh ngữ"], c: 1},
+  {q: "Câu 59: Cách gọi khác của cụm động từ là gì?", a: ["Động tính", "Động ngữ", "Ngữ nghĩa động từ", "Không có đáp án đúng"], c: 1},
+  {q: "Câu 60: Cấu tạo đầy đủ của cụm danh từ gồm mấy phần? Đó là những phần nào?", a: ["1 phần: phần chính", "2 phần: phần trước, phần sau", "3 phần: phần phụ trước, phần trung tâm, phần phụ sau", "4 phần: phần trước, phần giữa, phần trung tâm, phần phụ"], c: 2},
+  {q: "Câu 61: “Những con mèo đen dễ thương ấy” thuộc cụm từ gì?", a: ["Cụm danh từ", "Cụm động từ", "Cụm tính từ", "Cụm số từ"], c: 0},
+  {q: "Câu 62: Phát biểu nào sau đây là sai?", a: ["Câu là đơn vị lời nói nhỏ nhất có khả năng thông báo một sự việc, một ý kiến, một tình cảm hoặc một cảm xúc", "Trong hội thoại, con người dùng câu để trao và đáp lời", "Câu là đơn vị ngôn ngữ lớn nhất không có khả năng thông báo", "Câu có khả năng thông báo và khả năng nhận định"], c: 2},
+  {q: "Câu 63: Cấu trúc chủ - vị là cấu trúc câu của:", a: ["Ngữ pháp ngữ nghĩa", "Ngữ pháp truyền thống", "Ngữ pháp chức năng", "Ngữ pháp miêu tả"], c: 1},
+  {q: "Câu 64: Trạng ngữ, định ngữ, bổ ngữ thuộc thành phần nào trong câu?", a: ["Thành phần chính", "Thành phần phụ", "A và B", "Không có đáp án đúng"], c: 1},
+  {q: "Câu 65: Bổ ngữ có thể đứng trước hoặc sau từ loại nào?", a: ["Danh từ", "Động từ", "Tính từ", "B và C"], c: 3},
+  {q: "Câu 66: Câu là gì?", a: ["Câu là một đơn vị ngữ pháp gồm một hay nhiều từ có liên kết ngữ pháp với nhau", "Câu là đơn vị lời nói lớn nhất có khả năng thông báo", "Câu là đơn vị ngữ pháp nhỏ nhất không có khả năng thông báo", "Câu là đơn vị ngữ nghĩa không có khả năng thông báo"], c: 0},
+  {q: "Câu 67: Thế nào là một phát ngôn?", a: ["Phát ngôn là những đơn vị thuộc ngữ nghĩa", "Phát ngôn là lời nói hoàn chỉnh, mang ý nghĩa cụ thể và được sử dụng trong một ngữ cảnh giao tiếp nhất định", "Phát ngôn là bất kì lời nói nào được phát ra", "Phát ngôn là sự trừu tượng trong suy nghĩ của mỗi người"], c: 1},
+  {q: "Câu 68: Chức năng thường trực của danh từ là chức năng gì?", a: ["Làm thành tố phụ", "Làm vị ngữ", "Làm chủ ngữ và bổ ngữ", "Làm trạng ngữ"], c: 2},
+  {q: "Câu 69: Chức năng thường trực của động từ là gì?", a: ["Làm vị ngữ và bổ ngữ", "Làm thành tố phụ", "Làm chủ ngữ", "Làm thành tố biệt lập"], c: 0},
+  {q: "Câu 70: Có những kiểu phát ngôn nào?", a: ["Phát ngôn thể hiện", "Phát ngôn nghi vấn, phát ngôn hàm ý", "Phát ngôn hỏi, phát ngôn tường thuật, phát ngôn hàm ý", "Phát ngôn trần thuật, phát ngôn nghi vấn, phát ngôn cầu khiến, phát ngôn cảm thán"], c: 3},
+  {q: "Câu 71: [i, u, ư] là những nguyên âm cao hay thấp?", a: ["Cao", "Thấp", "Nửa cao nửa thấp", "Không có đáp án nào đúng"], c: 0},
+  {q: "Câu 72: Khi phát âm các nguyên âm [u, ư, o, ô, ơ] vị trí lưỡi nhích về trước hay sau?", a: ["Lưỡi nhích về trước", "Lưỡi giữ nguyên", "Lưỡi hạ thấp", "Lưỡi nhích về sau"], c: 3},
+  {q: "Câu 73: Người ta nhận diện nguyên âm dựa vào những tiêu chí gì?", a: ["Lưỡi cao hay thấp hoặc miệng mở hay khép", "Lưỡi trước hay sau", "Môi tròn hay dẹt", "A, B, C"], c: 3},
+  {q: "Câu 74: Dựa vào tiêu chí nào để có thể biết nguyên âm tròn hay dẹt?", a: ["Dựa vào vị trí của lưỡi", "Dựa vào hình dáng của môi", "Dựa vào độ nâng của lưỡi", "Không có đáp án nào đúng"], c: 1},
+  {q: "Câu 75: Ba vạch đứng trong hình thang nguyên âm quốc tế biểu thị cho điều gì?", a: ["3 nguyên âm cao", "3 hàng nguyên âm: trước, giữa, sau", "3 hàng nguyên âm: cao, giữa, thấp", "3 nguyên âm thấp"], c: 1},
+  {q: "Câu 76: Các nguyên âm bên trái mỗi vạch đứng trong hình thang nguyên âm quốc tế là những nguyên âm gì?", a: ["Các nguyên âm không tròn môi", "Các nguyên âm tròn môi", "Các nguyên âm thấp", "Các nguyên âm cao"], c: 0},
+  {q: "Câu 77: Các nguyên âm bên phải mỗi vạch đứng trong hình thang nguyên âm quốc tế là những nguyên âm gì?", a: ["Các nguyên âm không tròn môi", "Các nguyên âm tròn môi", "Các nguyên âm thấp", "Các nguyên âm cao"], c: 1},
+  {q: "Câu 78: Bốn vạch ngang từ trên xuống dưới trong hình thang nguyên âm quốc tế biểu thị cho điều gì?", a: ["Biểu thị nguyên âm tròn môi, không tròn môi", "Biểu thị nguyên âm dài, nguyên âm ngắn", "Biểu thị nguyên âm trước, giữa, sau", "Biểu thị nguyên âm từ cao đến thấp"], c: 3},
+  {q: "Câu 79: Phát biểu nào sau đây là sai?", a: ["Ngôn ngữ không mang tính giai cấp trong xã hội có giai cấp", "Ngôn ngữ mang tính giai cấp trong xã hội có giai cấp", "Ngôn ngữ có được nhờ quá trình tương tác, học hỏi, giáo dục", "Không có đáp án đúng"], c: 1},
+  {q: "Câu 80: “Hoa cười ngọc thốt đoan trang” thì 'o' trong 'hoa' thuộc bộ phận cấu tạo nào của âm tiết?", a: ["Âm đầu", "Âm chính", "Âm cuối", "Âm đệm"], c: 3},
+  {q: "Câu 81: Âm tiết “người” bị khuyết bộ phận nào nếu xét về mặt cấu tạo âm tiết?", a: ["Âm đầu", "Âm đệm", "Âm chính", "Âm cuối"], c: 3},
+  {q: "Câu 82: Hai âm tiết “hoa hòe” bị khuyết bộ phận nào nếu xét về mặt cấu tạo âm tiết?", a: ["Âm cuối", "Âm chính", "Âm đệm", "Âm đầu"], c: 0},
+  {q: "Câu 83: Âm tiết “ao” bị khuyết bộ phận nào nếu xét về mặt cấu tạo âm tiết?", a: ["Âm cuối và âm chính", "Âm chính và âm đệm", "Âm đầu và âm đệm", "Âm đầu và âm cuối"], c: 3},
+  {q: "Câu 84: Thanh điệu trong tiếng Việt thuộc kiểu thanh điệu nào?", a: ["Thanh điệu âm vực", "Thanh điệu hình tuyến", "Thanh điệu đường nét", "Thanh điệu đối lập"], c: 1},
+  {q: "Câu 85: Đâu là điểm khác biệt giữa âm vị và âm tố?", a: ["Âm vị là âm thanh, âm tố là ngôn ngữ", "Âm vị là một đơn vị trừu tượng, âm tố là một đơn vị cụ thể", "Âm vị chỉ bó hẹp trong một ngôn ngữ, âm tố là chung cho nhiều ngôn ngữ", "B và C"], c: 3},
+  {q: "Câu 86: Về cơ bản, nguyên âm và phụ âm khác nhau ở điểm gì?", a: ["Nguyên âm dễ phát âm, phụ âm khó phát âm", "Nguyên âm là tiếng thanh, phụ âm là tiếng động", "Nguyên âm là tiếng ồn, phụ âm là tiếng thanh", "Nguyên âm có luồng hơi mạnh, phụ âm có luồng hơi yếu"], c: 1},
+  {q: "Câu 87: Nguyên nhân nào khiến chữ ghi ý trở thành một hệ thống cồng kềnh, phức tạp, gây khó khăn cho cả người dạy và người học?", a: ["Do số lượng chữ ghi ý không đồng đều", "Do số lượng nét được ghi không phù hợp với số âm", "Do số kí hiệu chữ viết phải tương ứng với số lượng từ khác nhau cần được ghi nên rất lớn", "Do chữ ghi ý được tiếp nhận bằng khối hình học nên số lượng lớn"], c: 2},
+  {q: "Câu 88: Các từ “nhà cửa, bàn ghế, xinh đẹp, vợ chồng” là:", a: ["Từ ghép chính phụ", "Từ ghép đẳng lập", "Từ ngẫu hợp", "Không có đáp án nào đúng"], c: 1},
+  {q: "Câu 89: Các từ “bồ hòn, bồ hóng” là:", a: ["Từ ngẫu hợp", "Từ láy", "Từ ghép chính phụ", "Từ đơn"], c: 0},
+  {q: "Câu 90: “Đừng có mà Chí Phèo quá nhé!” thì “Chí Phèo” là phương thức:", a: ["Ẩn dụ", "So sánh", "Miêu tả", "B & C"], c: 0},
+  {q: "Câu 91: Có mấy tiêu chí dùng để phân định từ loại? Đó là những tiêu chí gì?", a: ["Có 1 tiêu chí, đó là: tiêu chí ngữ nghĩa", "Có 3 tiêu chí, đó là: ý nghĩa khái quát, khả năng kết hợp, chức vụ cú pháp", "Có 2 tiêu chí, đó là: ý nghĩa và âm thanh", "Có 3 tiêu chí, đó là: ý nghĩa, âm thanh và hình thức"], c: 1},
+  {q: "Câu 92: Phát biểu nào sau đây là sai?", a: ["Thực từ là những là có ý nghĩa từ vựng", "Hư từ là những từ chỉ có ý nghĩa ngữ pháp", "Thực từ chỉ có thể hoạt động bên cạnh các hư từ", "Hư từ chỉ có thể hoạt động bên cạnh các thực từ"], c: 2},
+  {q: "Câu 93: Phát biểu nào sau đây là sai?", a: ["Từ loại là những lớp từ không cùng bản chất ngữ pháp", "Từ loại là những lớp từ có cùng bản chất ngữ pháp", "Từ loại được phân chia theo ý nghĩa, theo khả năng kết hợp với các từ ngữ khác trong ngữ lưu", "Không có đáp án đúng"], c: 0},
+  {q: "Câu 94: Những từ đứng sau “đang, vẫn, hãy, đừng” thuộc lớp từ nào?", a: ["Động từ", "Danh từ", "Phó từ", "Trợ từ"], c: 2},
+  {q: "Câu 95: Chức năng thường trực của tính từ là gì?", a: ["Làm chủ ngữ", "Làm vị ngữ gián tiếp", "Làm định ngữ và vị ngữ trực tiếp", "Làm thành tố phụ"], c: 2},
+  {q: "Câu 96: “Nên, cần, phải, có thể, không thể” thuộc nhóm động từ nào?", a: ["Động từ chỉ hoạt động", "Động từ tình thái", "Động từ bất động", "Không phải động từ"], c: 1},
+  {q: "Câu 97: “Giữa trời nắng chang chang mà mẹ vẫn lội xuống ruộng cấy lúa. Mỗi hạt gạo làm ra chứa đựng biết bao nhiêu giọt mồ hôi và nỗi vất vả của mẹ.” Đoạn văn này có bao nhiêu quan hệ từ?", a: ["Có 4 quan hệ từ", "Có 3 quan hệ từ", "Có 2 quan hệ từ", "Có 1 quan hệ từ"], c: 0},
+  {q: "Câu 98: Cấu trúc đề - thuyết là cấu trúc câu của:", a: ["Ngữ pháp chức năng", "Ngữ pháp truyền thống", "Ngữ dụng", "Ngữ pháp miêu tả"], c: 0},
+  {q: "Câu 99: Đâu là điểm khác biệt cơ bản giữa ngôn ngữ và lời nói?", a: ["Ngôn ngữ là tư duy, lời nói là hiện thực", "Ngôn ngữ là hiện thực, lời nói là tư duy", "Ngôn ngữ là tài sản chung của xã hội, lời nói mang tính cá nhân của mỗi người", "Ngôn ngữ mang tính cá nhân, lời nói là tài sản chung của xã hội"], c: 2},
+  {q: "Câu 100: “Vừa viết xong rồi” thuộc cụm từ gì?", a: ["Cụm đại từ", "Cụm danh từ", "Cụm tính từ", "Cụm động từ"], c: 3}
+];
+
+// --- CẤU HÌNH GAME ---
+let sessionQuiz = [];
+let currentIndex = 0;
+let activeQueue = [];
+let skippedQueue = [];
+let userAnswers = {};
+let score = 0;
+let combo = 0;
+let wrongStreak = 0;
+let isPhaseSkipped = false;
+
+// DOM Elements
+const elInterface = document.getElementById("quiz-interface");
+const elResult = document.getElementById("result-interface");
+const elQuestion = document.getElementById("question");
+const elAnswers = document.getElementById("answers");
+const elCounter = document.getElementById("question-counter");
+const elCombo = document.getElementById("combo-display");
+const elProgressBar = document.getElementById("progress-bar");
+const elBtnNext = document.getElementById("btn-next");
+const elBtnSkip = document.getElementById("btn-skip");
+const elBtnPrev = document.getElementById("btn-prev");
+const elFailToast = document.getElementById("fail-toast");
+const elPhaseBadge = document.getElementById("phase-display");
+
+// Hàm khởi tạo game
+function initGame() {
+    score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
+    activeQueue = []; skippedQueue = []; userAnswers = {}; isPhaseSkipped = false;
+
+    // Xáo trộn đáp án
+    sessionQuiz = originalQuizData.map((item, originalIdx) => {
+        let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+        
+        // Fisher-Yates Shuffle đáp án
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
+        const newCorrectIndex = options.findIndex(opt => opt.isCorrect);
+
+        return {
+            q: item.q,
+            a: options.map(opt => opt.text),
+            c: newCorrectIndex,
+            originalId: originalIdx
+        };
+    });
+
+    // Tạo hàng đợi
+    activeQueue = sessionQuiz.map((_, i) => i);
+    
+    // Bắt đầu (Đã sửa lỗi gọi hàm)
+    updateStats();
+    loadQuestion();
+}
+
+// Hàm tải câu hỏi
+function loadQuestion() {
+    const qIndex = activeQueue[currentIndex];
+    const data = sessionQuiz[qIndex];
+    const hasAnswered = userAnswers.hasOwnProperty(qIndex);
+
+    elQuestion.classList.remove("fade-in");
+    void elQuestion.offsetWidth;
+    elQuestion.classList.add("fade-in");
+
+    elQuestion.innerText = data.q;
+    elAnswers.innerHTML = "";
+
+    if (isPhaseSkipped) {
+        elPhaseBadge.style.display = "inline-block";
+        elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
+    } else {
+        elPhaseBadge.style.display = "none";
+        elCounter.innerText = `Câu ${currentIndex + 1}/${originalQuizData.length}`;
+    }
+
+    const labels = ["A", "B", "C", "D"];
+    data.a.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<b>${labels[idx] || ''}.</b> ${ans}`;
+        
+        if (hasAnswered) {
+            btn.disabled = true;
+            const userPick = userAnswers[qIndex];
+            if (idx === data.c) btn.classList.add("correct");
+            if (idx === userPick && userPick !== data.c) btn.classList.add("wrong");
+            if (idx === userPick) btn.classList.add("user-selected");
+        } else {
+            btn.onclick = () => checkAnswer(qIndex, idx);
+        }
+        elAnswers.appendChild(btn);
+    });
+
+    elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
+    
+    if (hasAnswered) {
+        elBtnSkip.style.display = "none";
+        elBtnNext.style.display = "block";
+    } else {
+        elBtnSkip.style.display = "block";
+        elBtnNext.style.display = "none";
+    }
+
+    updateStats();
+}
+
+// Xử lý chọn đáp án
+function checkAnswer(qIndex, selectedIdx) {
+    const data = sessionQuiz[qIndex];
+    const isCorrect = selectedIdx === data.c;
+
+    userAnswers[qIndex] = selectedIdx;
+
+    // Tô màu ngay
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === data.c) btn.classList.add("correct");
+        if (idx === selectedIdx && !isCorrect) btn.classList.add("wrong");
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+    } else {
+        combo = 0; wrongStreak++;
+        checkFailCondition();
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+}
+
+function checkFailCondition() {
+    if (wrongStreak >= 3) {
+        elFailToast.classList.add("show");
+        setTimeout(() => elFailToast.classList.remove("show"), 3000);
+    }
+}
+
+function nextQuestion() {
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        alert(`Bạn đã hoàn thành lượt đầu. Giờ sẽ làm lại ${skippedQueue.length} câu đã bỏ qua.`);
+        isPhaseSkipped = true;
+        activeQueue = [...skippedQueue];
+        skippedQueue = [];
+        currentIndex = 0;
+        loadQuestion();
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const totalQ = originalQuizData.length;
+    const answeredCount = Object.keys(userAnswers).length;
+    const pct = totalQ > 0 ? (answeredCount / totalQ) * 100 : 0;
+    elProgressBar.style.width = `${pct}%`;
+
+    elCombo.className = "combo-badge";
+    if (combo > 0) elCombo.classList.add("active");
+    
+    if (combo >= 100) elCombo.classList.add("c-100");
+    else if (combo >= 70) elCombo.classList.add("c-70");
+    else if (combo >= 50) elCombo.classList.add("c-50");
+    else if (combo >= 40) elCombo.classList.add("c-40");
+    else if (combo >= 20) elCombo.classList.add("c-20");
+    else if (combo >= 10) elCombo.classList.add("c-10");
+    else if (combo >= 5) elCombo.classList.add("c-5");
+
+    elCombo.innerText = combo > 0 ? `🔥 Combo ${combo}` : "";
+}
+
+function finishGame() {
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+
+    const total = originalQuizData.length;
+    const correctCount = score;
+    const wrongCount = Object.keys(userAnswers).length - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, #e2e8f0 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+}
+
+// Start Game
+initGame();
+
+</script>
+</body>
+</html>
