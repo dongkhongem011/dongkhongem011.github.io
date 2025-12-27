@@ -20,7 +20,7 @@
     .sub-title { color: #e0e7ff; font-size: 0.95rem; margin-bottom: 30px; }
     
     .grid-menu { display: flex; flex-direction: column; gap: 15px; }
-    .card { background: var(--card-bg); border-radius: 20px; padding: 18px; text-decoration: none; color: var(--text); box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; align-items: center; transition: transform 0.2s; }
+    .card { background: var(--card-bg); border-radius: 20px; padding: 18px; text-decoration: none; color: var(--text); box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; align-items: center; transition: transform 0.2s; cursor: pointer; }
     .card:active { transform: scale(0.98); background: #fff; }
     .card-icon { font-size: 2.5rem; margin-right: 15px; background: #f3f4f6; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
     .card-content { text-align: left; flex-grow: 1; }
@@ -39,6 +39,7 @@
     .modal-header { margin-bottom: 20px; text-align: center; }
     .modal-title { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
 
+    /* Settings */
     .settings-group { background: #f9fafb; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e7eb; }
     .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .toggle-row:last-child { margin-bottom: 0; }
@@ -57,19 +58,32 @@
     .time-input { width: 60px; padding: 5px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1rem; }
     .time-unit { font-size: 0.9rem; color: #6b7280; font-weight: 600; }
 
-    .start-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 10px; }
+    /* Warning & Contact */
+    .warning-box { text-align:left; font-size:0.85rem; color:#be123c; background:#fff1f2; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #fecdd3; }
+    
+    #tin-hoc-note { display: none; background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; padding: 10px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 15px; font-weight: 600; text-align: left; }
+
+    .contact-area { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+    .social-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 12px; text-decoration: none; color: white; font-weight: 700; font-size: 0.85rem; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .social-btn:active { transform: scale(0.96); }
+    .btn-fb { background: #1877F2; }
+    .btn-tele { background: #229ED9; }
+
+    .start-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
     
     @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.6s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container fade-in">
     <h1 class="main-title">TRẮC NGHIỆM</h1>
     <p class="sub-title">Hệ thống ôn thi trực tuyến</p>
 
     <div class="grid-menu">
-        <div onclick="openModal('1.html', 'Dẫn luận Ngôn ngữ')" class="card">
+        <div onclick="openModal('1.html', 'Dẫn luận Ngôn ngữ', false)" class="card">
             <div class="card-icon">📚</div>
             <div class="card-content">
                 <div class="card-title">Dẫn luận Ngôn ngữ</div>
@@ -77,7 +91,7 @@
                 <div class="badge">100 Câu</div>
             </div>
         </div>
-        <div onclick="openModal('2.html', 'Tin học Đại cương')" class="card">
+        <div onclick="openModal('2.html', 'Tin học Đại cương', true)" class="card">
             <div class="card-icon">💻</div>
             <div class="card-content">
                 <div class="card-title">Tin học Đại cương</div>
@@ -122,8 +136,21 @@
             </div>
         </div>
 
-        <div style="text-align:left; font-size:0.85rem; color:#be123c; background:#fff1f2; padding:10px; border-radius:10px; margin-bottom:20px; border:1px solid #fecdd3">
-            ⚠️ <b>Lưu ý:</b> Nếu phát hiện lỗi sai, vui lòng báo cáo qua FB/Tele.
+        <div id="tin-hoc-note">
+            ⏳ <b>Lưu ý:</b> Môn này có nhiều hình ảnh, vui lòng đợi tải xong rồi hãy làm nhé!
+        </div>
+
+        <div class="warning-box">
+            ⚠️ <b>Lưu ý:</b> Nếu phát hiện lỗi sai, vui lòng báo cáo ngay.
+        </div>
+
+        <div class="contact-area">
+            <a href="https://www.facebook.com/pna1301" target="_blank" class="social-btn btn-fb">
+                <span>📘</span> Facebook
+            </a>
+            <a href="https://t.me/justn1" target="_blank" class="social-btn btn-tele">
+                <span>✈️</span> Telegram
+            </a>
         </div>
 
         <button class="start-btn" onclick="startExam()">BẮT ĐẦU LÀM BÀI 🚀</button>
@@ -133,9 +160,18 @@
 <script>
     let currentUrl = '';
 
-    function openModal(url, title) {
+    function openModal(url, title, showNote = false) {
         currentUrl = url;
         document.getElementById('modalSubject').innerText = title;
+        
+        // Hiện thông báo riêng nếu cần
+        const note = document.getElementById('tin-hoc-note');
+        if (showNote) {
+            note.style.display = 'block';
+        } else {
+            note.style.display = 'none';
+        }
+
         document.getElementById('setupModal').classList.add('active');
     }
 
@@ -156,7 +192,6 @@
             timeParam = document.getElementById('timeMinutes').value;
         }
         
-        // Truyền tham số: sq=shuffle, time=số phút (0 là không giới hạn)
         window.location.href = `${currentUrl}?sq=${sQ}&sa=false&time=${timeParam}`;
     }
 </script>
