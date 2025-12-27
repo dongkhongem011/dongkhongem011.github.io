@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
-        --primary: #2563eb; /* Màu Xanh Dương */
+        --primary: #2563eb;
         --secondary: #64748b;
         --success: #16a34a;
         --danger: #dc2626;
@@ -41,7 +41,7 @@
         flex-shrink: 0;
     }
     
-    .stats { font-weight: 800; font-size: 1rem; }
+    .stats { font-weight: 800; font-size: 0.95rem; }
     
     .combo-badge {
         background: rgba(255,255,255,0.2);
@@ -80,8 +80,7 @@
         padding: 20px; 
         overflow-y: auto; 
         flex-grow: 1;
-        /* Padding bottom cực lớn để nội dung không bị nút che khi cuộn hết */
-        padding-bottom: 120px; 
+        padding-bottom: 120px; /* Chừa chỗ cho footer nổi */
         -webkit-overflow-scrolling: touch;
     }
 
@@ -144,7 +143,7 @@
     
     .option-btn.user-selected { border: 2px solid #475569; }
 
-    /* --- THANH ĐIỀU KHIỂN NỔI (POPUP STYLE) --- */
+    /* --- THANH ĐIỀU KHIỂN NỔI --- */
     .control-bar {
         position: fixed;
         bottom: 30px; 
@@ -275,7 +274,7 @@
 </div>
 
 <script>
-// DỮ LIỆU CÂU HỎI (223 CÂU - ĐÃ SỬA TÊN ẢNH THÀNH 'I' HOA)
+// DỮ LIỆU CÂU HỎI (ĐÃ FIX CÚ PHÁP ĐỂ TRÁNH LỖI)
 const rawData = [
   {q: "1. Khái niệm dữ liệu là gì?", a: ["Dữ liệu là đối tượng mang thông tin.", "Dữ liệu là các tín hiệu vật lý và các số liệu.", "Dữ liệu là các kí hiệu, các hình ảnh.", "Dữ liệu là đối tượng mang thông tin, dữ liệu sau khi được xử lý sẽ cho ta thông tin."], c: 3},
   {q: "2. Dữ liệu trong máy tính có thể là gì?", a: ["Là các số liệu hoặc tài liệu cho trước chưa được xử lý.", "Là các tín hiệu vật lý như sóng điện từ, ánh sáng, âm thanh.", "Là các hình ảnh.", "Tất cả các đáp án trên đều đúng."], c: 3},
@@ -531,7 +530,7 @@ function initGame() {
     const configShuffleA = false; // Tắt đảo đáp án
 
     // 2. XỬ LÝ DỮ LIỆU
-    sessionQuiz = originalQuiz.map((item, originalIdx) => {
+    sessionQuiz = rawData.map((item, originalIdx) => {
         let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
         
         // (Bỏ đảo đáp án)
@@ -543,7 +542,7 @@ function initGame() {
             a: options.map(opt => opt.text),
             c: newCorrectIndex,
             originalId: originalIdx,
-            image: null // File này không có ảnh
+            image: item.image || null 
         };
     });
 
@@ -583,10 +582,10 @@ function loadQuestion() {
         elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
     } else {
         elPhaseBadge.style.display = "none";
-        elCounter.innerText = `Câu ${currentIndex + 1}/${originalQuiz.length}`;
+        elCounter.innerText = `Câu ${currentIndex + 1}/${rawData.length}`;
     }
 
-    const labels = ["A", "B", "C", "D"];
+    const labels = ["A", "B", "C", "D", "E"];
     data.a.forEach((ans, idx) => {
         const btn = document.createElement("button");
         btn.className = "option-btn";
@@ -623,4 +622,98 @@ function checkAnswer(qIndex, selectedIdx) {
     const isCorrect = selectedIdx === data.c;
     userAnswers[qIndex] = selectedIdx;
 
-    const allBtns = elAnswers.querySelectorAll(".
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === data.c) btn.classList.add("correct");
+        if (idx === selectedIdx && !isCorrect) btn.classList.add("wrong");
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+    } else {
+        combo = 0; wrongStreak++;
+        if (wrongStreak >= 3) {
+            elFailToast.classList.add("show");
+            setTimeout(() => elFailToast.classList.remove("show"), 3000);
+        }
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+}
+
+function nextQuestion() {
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        alert(`Hết lượt 1! Làm lại ${skippedQueue.length} câu đã bỏ qua.`);
+        isPhaseSkipped = true;
+        activeQueue = [...skippedQueue];
+        skippedQueue = [];
+        currentIndex = 0;
+        loadQuestion();
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const totalQ = rawData.length;
+    const answeredCount = Object.keys(userAnswers).length;
+    const pct = totalQ > 0 ? (answeredCount / totalQ) * 100 : 0;
+    elProgressBar.style.width = `${pct}%`;
+
+    elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
+}
+
+function finishGame() {
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+    elFooter.style.display = "none"; // Ẩn footer
+
+    const total = rawData.length;
+    const correctCount = score;
+    const wrongCount = Object.keys(userAnswers).length - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, #e2e8f0 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+}
+
+// Bắt đầu
+initGame();
+
+</script>
+</body>
+</html>
