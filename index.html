@@ -12,6 +12,7 @@
         --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         --card-bg: #ffffff;
         --text: #1f2937;
+        --glass: rgba(255, 255, 255, 0.95);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,14 +27,318 @@
         justify-content: center;
         align-items: center;
         padding: 20px;
+        overflow: hidden; /* Tránh cuộn khi popup hiện */
     }
 
+    /* --- MAIN LAYOUT --- */
     .container {
         width: 100%;
-        max-width: 800px;
+        max-width: 900px;
         text-align: center;
+        z-index: 1;
     }
 
+    .main-title {
+        color: white;
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        letter-spacing: 1px;
+    }
+
+    .sub-title {
+        color: #e0e7ff;
+        font-size: 1.1rem;
+        margin-bottom: 50px;
+        font-weight: 600;
+    }
+
+    .grid-menu {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        justify-content: center;
+    }
+
+    .card {
+        background: var(--glass);
+        border-radius: 25px;
+        padding: 35px 25px;
+        text-decoration: none;
+        color: var(--text);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        border: 4px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        border-color: rgba(255,255,255,0.8);
+    }
+
+    .card-icon { font-size: 4.5rem; margin-bottom: 15px; text-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .card-title { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+    .card-desc { font-size: 0.95rem; color: #6b7280; font-weight: 600; margin-bottom: 15px; }
+    .badge { background: #e0e7ff; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+
+    .creator-badge {
+        position: fixed;
+        bottom: 20px;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    /* --- MODAL (CỬA SỔ NỔI) --- */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-box {
+        background: white;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 25px;
+        padding: 30px;
+        position: relative;
+        transform: scale(0.8);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-overlay.active .modal-box {
+        transform: scale(1);
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 15px; right: 20px;
+        font-size: 2rem;
+        color: #9ca3af;
+        cursor: pointer;
+        line-height: 1;
+    }
+    .close-btn:hover { color: #ef4444; }
+
+    .modal-header { margin-bottom: 20px; text-align: center; }
+    .modal-title { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
+    .modal-subtitle { color: #6b7280; font-size: 0.95rem; }
+
+    /* Settings within Modal */
+    .settings-group {
+        background: #f9fafb;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .toggle-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .toggle-row:last-child { margin-bottom: 0; }
+
+    .toggle-label { font-weight: 700; color: #374151; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    
+    /* Toggle Switch CSS */
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute; cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #ccc;
+        transition: .4s; border-radius: 34px;
+    }
+    .slider:before {
+        position: absolute; content: "";
+        height: 20px; width: 20px;
+        left: 4px; bottom: 4px;
+        background-color: white;
+        transition: .4s; border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* Warning & Contact */
+    .warning-box {
+        background: #fff1f2;
+        border-left: 4px solid #f43f5e;
+        padding: 12px 15px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: #9f1239;
+        margin-bottom: 20px;
+        line-height: 1.4;
+        text-align: left;
+    }
+
+    .contact-area {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .social-btn {
+        display: flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: 50px;
+        text-decoration: none; color: white; font-weight: 700; font-size: 0.85rem;
+        transition: transform 0.2s;
+    }
+    .social-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .btn-fb { background: #1877F2; }
+    .btn-tele { background: #229ED9; }
+
+    /* Start Button */
+    .start-btn {
+        width: 100%;
+        padding: 15px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        font-size: 1.1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+    }
+    .start-btn:hover { background: #4338ca; transform: scale(1.02); }
+    .start-btn:active { transform: scale(0.98); }
+
+    .fade-in { animation: fadeIn 0.8s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+</style>
+</head>
+<body>
+
+<div class="container fade-in">
+    <h1 class="main-title">TRẮC NGHIỆM ONLINE</h1>
+    <p class="sub-title">Hệ thống ôn thi & kiểm tra kiến thức</p>
+
+    <div class="grid-menu">
+        <div onclick="openModal('1.html', 'Dẫn luận Ngôn ngữ')" class="card">
+            <div class="card-icon">📚</div>
+            <div class="card-title">Dẫn luận Ngôn ngữ</div>
+            <div class="card-desc">Lý thuyết cơ bản</div>
+            <div class="badge">100 Câu hỏi</div>
+        </div>
+
+        <div onclick="openModal('2.html', 'Tin học Đại cương')" class="card">
+            <div class="card-icon">💻</div>
+            <div class="card-title">Tin học Đại cương</div>
+            <div class="card-desc">Word, Excel, Powerpoint</div>
+            <div class="badge">223 Câu hỏi</div>
+        </div>
+    </div>
+
+    <div class="creator-badge">Designed by <b>Nahhh</b></div>
+</div>
+
+<div id="setupModal" class="modal-overlay" onclick="closeModalOnOutside(event)">
+    <div class="modal-box">
+        <div class="close-btn" onclick="closeModal()">&times;</div>
+        
+        <div class="modal-header">
+            <div class="modal-title" id="modalSubject">Tên Môn Học</div>
+            <div class="modal-subtitle">Cấu hình bài thi trước khi bắt đầu</div>
+        </div>
+
+        <div class="settings-group">
+            <div class="toggle-row">
+                <div class="toggle-label">🔀 Đảo câu hỏi</div>
+                <label class="switch">
+                    <input type="checkbox" id="shuffleQ" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <div class="toggle-label">🔠 Đảo đáp án</div>
+                <label class="switch">
+                    <input type="checkbox" id="shuffleA" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            ⚠️ <b>Lưu ý:</b> Đây là phiên bản thử nghiệm. Dữ liệu có thể còn sai sót. Nếu phát hiện lỗi, vui lòng báo cáo để mình sửa nhé!
+        </div>
+
+        <div class="contact-area">
+            <a href="https://www.facebook.com/pna1301" target="_blank" class="social-btn btn-fb">
+                <span>📘</span> Báo lỗi FB
+            </a>
+            <a href="https://t.me/justn1" target="_blank" class="social-btn btn-tele">
+                <span>✈️</span> Báo lỗi Tele
+            </a>
+        </div>
+
+        <button class="start-btn" onclick="startExam()">BẮT ĐẦU LÀM BÀI 🚀</button>
+    </div>
+</div>
+
+<script>
+    let currentUrl = '';
+
+    function openModal(url, title) {
+        currentUrl = url;
+        document.getElementById('modalSubject').innerText = title;
+        document.getElementById('setupModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('setupModal').classList.remove('active');
+    }
+
+    function closeModalOnOutside(event) {
+        if (event.target.id === 'setupModal') {
+            closeModal();
+        }
+    }
+
+    function startExam() {
+        if (!currentUrl) return;
+        
+        // Lấy trạng thái cài đặt
+        const sQ = document.getElementById('shuffleQ').checked;
+        const sA = document.getElementById('shuffleA').checked;
+        
+        // Chuyển hướng
+        window.location.href = `${currentUrl}?sq=${sQ}&sa=${sA}`;
+    }
+</script>
+
+</body>
+</html>
     .main-title {
         color: white;
         font-size: 2.5rem;
