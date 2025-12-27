@@ -2,38 +2,693 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ôn thi Tin học Đại cương - 223 Câu (Giao diện Mở rộng)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ôn thi Tin học - Full Text (Mobile Optimized)</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
-        --primary: #3b82f6;
+        --primary: #2563eb;
         --secondary: #64748b;
-        --success: #22c55e;
-        --danger: #ef4444;
+        --success: #16a34a;
+        --danger: #dc2626;
         --bg: #f1f5f9;
         --card-bg: #ffffff;
-        --text: #1e293b;
-        --warning: #f59e0b;
+        --text: #0f172a;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
     body {
         font-family: 'Nunito', sans-serif;
         background: var(--bg);
         color: var(--text);
-        min-height: 100vh;
-        /* Cho phép cuộn trang tự nhiên */
-        overflow-y: auto; 
-        padding: 20px;
-        display: block; /* Thay đổi từ flex sang block để scroll dễ hơn */
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Khóa scroll body chính */
     }
 
     .container {
         width: 100%;
-        /* TĂNG CHIỀU RỘNG TỐI ĐA */
-        max-width: 1000px; 
+        max-width: 100%;
+        height: 100%;
         background: var(--card-bg);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    /* Header Compact */
+    .header {
+        padding: 12px 15px;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 10;
+        flex-shrink: 0;
+    }
+    
+    .stats { font-weight: 800; font-size: 0.95rem; }
+    
+    .combo-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s;
+    }
+    .combo-badge.active { opacity: 1; transform: scale(1); }
+    
+    /* Màu Combo */
+    .c-5 { background: #f97316; box-shadow: 0 0 10px #f97316; }
+    .c-10 { background: #ef4444; animation: pulse 1s infinite; }
+    .c-20 { background: #b91c1c; border: 1px solid #fff; }
+    .c-50 { background: #7e22ce; border: 1px solid gold; }
+
+    .progress-container { width: 100%; height: 4px; background: #e2e8f0; flex-shrink: 0; }
+    .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+    /* Vùng nội dung cuộn */
+    .quiz-body { 
+        padding: 15px; 
+        overflow-y: auto; 
+        flex-grow: 1;
+        -webkit-overflow-scrolling: touch; /* Mượt trên iPhone */
+    }
+
+    .phase-badge { 
+        display: none; 
+        background: #0ea5e9; color: white; 
+        padding: 4px 10px; border-radius: 4px; 
+        font-size: 0.8rem; margin-bottom: 10px; 
+        font-weight: bold;
+    }
+
+    .question-text {
+        font-size: 1.1rem; /* Chữ vừa phải cho điện thoại */
+        font-weight: 700;
+        margin-bottom: 15px;
+        line-height: 1.5;
+        color: #1e293b;
+        word-wrap: break-word; /* Xuống dòng nếu chữ quá dài */
+    }
+
+    .question-image {
+        display: none;
+        max-width: 100%;
+        height: auto;
+        max-height: 250px; /* Giới hạn chiều cao ảnh */
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        margin: 0 auto 15px auto;
+        object-fit: contain;
+    }
+
+    .options-grid { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
+
+    .option-btn {
+        width: 100%;
+        text-align: left;
+        padding: 12px 15px;
+        border: 1px solid #cbd5e1;
+        background: white;
+        border-radius: 10px;
+        font-size: 0.95rem; /* Chữ đáp án nhỏ hơn xíu */
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        position: relative;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+
+    /* Trạng thái nút */
+    .option-btn:active { background: #f1f5f9; }
+    .option-btn.correct { border-color: var(--success); background: #dcfce7; color: #14532d; }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-weight: bold; }
+    
+    .option-btn.wrong { border-color: var(--danger); background: #fee2e2; color: #7f1d1d; }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-weight: bold; }
+    
+    .option-btn.user-selected { border: 2px solid #475569; }
+
+    /* Footer cố định */
+    .footer {
+        padding: 10px 15px;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-shrink: 0;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom)); /* Cho iPhone X trở lên */
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        flex: 1; /* Các nút chia đều chiều rộng */
+    }
+    .btn-prev { background: #e2e8f0; color: #475569; flex: 0.6; }
+    .btn-skip { background: #f59e0b; color: white; }
+    .btn-next { background: var(--primary); color: white; display: none; }
+
+    /* Kết quả & Thông báo */
+    .result-screen { text-align: center; padding: 30px 20px; display: none; overflow-y: auto; height: 100%; }
+    .score-circle {
+        width: 140px; height: 140px;
+        border-radius: 50%;
+        background: conic-gradient(var(--success) 0%, #e2e8f0 0%);
+        margin: 0 auto 20px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem; font-weight: 800; color: var(--text);
+        position: relative;
+    }
+    .score-circle::before { content: ''; position: absolute; width: 115px; height: 115px; background: white; border-radius: 50%; }
+    .score-text { position: relative; z-index: 2; }
+
+    .toast-fail {
+        position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+        background: #991b1b; color: white;
+        padding: 10px 20px; border-radius: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        font-weight: 700; z-index: 100;
+        display: flex; align-items: center; gap: 8px;
+        opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        font-size: 0.9rem; white-space: nowrap;
+    }
+    .toast-fail.show { opacity: 1; animation: shake 0.5s; }
+
+    @keyframes shake { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 5px)); } 75% { transform: translateX(calc(-50% + 5px)); } }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    .fade-in { animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+</style>
+</head>
+<body>
+
+<div class="toast-fail" id="fail-toast">
+    <span style="font-size: 1.2rem">😒</span>
+    <span>Trượt môn rồi cưng ơi!</span>
+</div>
+
+<div class="container">
+    <div id="quiz-interface" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="header">
+            <div class="stats" id="question-counter">Câu 1/223</div>
+            <div id="combo-display" class="combo-badge">🔥 0</div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div class="quiz-body">
+            <div id="phase-display" class="phase-badge">LÀM LẠI CÂU BỎ QUA</div>
+            <h2 class="question-text" id="question">Đang tải...</h2>
+            <img id="q-image" class="question-image" src="" alt="Hình minh họa" onerror="this.style.display='none'">
+            <div class="options-grid" id="answers"></div>
+        </div>
+
+        <div class="footer">
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">Quay lại</button>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">Bỏ qua</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">Tiếp tục</button>
+        </div>
+    </div>
+
+    <div id="result-interface" class="result-screen">
+        <h2>🎉 Hoàn thành!</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Bạn đã rất cố gắng.</p>
+        <div class="score-circle" id="score-circle">
+            <span class="score-text" id="final-score">0%</span>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
+            <div style="background:#f1f5f9; padding:15px; border-radius:10px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.2rem; color:var(--success)">0</span></div>
+            <div style="background:#f1f5f9; padding:15px; border-radius:10px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.2rem; color:var(--danger)">0</span></div>
+        </div>
+        <button class="btn btn-next" style="display:inline-block; width:100%; background:var(--primary)" onclick="location.reload()">🔄 Làm lại đề mới</button>
+    </div>
+</div>
+
+<script>
+// DỮ LIỆU ĐẦY ĐỦ (Full Text & Đúng cấu trúc)
+const rawData = [
+  {q: "1. Khái niệm dữ liệu là gì?", a: ["Dữ liệu là đối tượng mang thông tin.", "Dữ liệu là các tín hiệu vật lý và các số liệu.", "Dữ liệu là các kí hiệu, các hình ảnh.", "Dữ liệu là đối tượng mang thông tin, dữ liệu sau khi được xử lý sẽ cho ta thông tin."], c: 3},
+  {q: "2. Dữ liệu trong máy tính có thể là gì?", a: ["Là các số liệu hoặc tài liệu cho trước chưa được xử lý.", "Là các tín hiệu vật lý như sóng điện từ, ánh sáng, âm thanh.", "Là các hình ảnh.", "Tất cả các đáp án trên đều đúng."], c: 3},
+  {q: "3. Hãy nêu khái niệm thông tin? Chọn phương án đúng nhất.", a: ["Thông tin là một khái niệm mô tả những gì đem lại sự hiểu biết cho con người.", "Thông tin là một khái niệm mô tả những gì đem lại sự hiểu biết và nhận thức cho con người. Thông tin có thể được tạo ra, truyền đi, lưu trữ và xử lý.", "Thông tin có thể được tạo ra, truyền đi, lưu trữ và xử lý.", "Thông tin mang những dữ liệu quan trọng mang lại hiểu biết cho con người."], c: 1},
+  {q: "4. Trong quy trình xử lý thông tin, bước đầu tiên là bước nào?", a: ["Vào thông tin (Input).", "Xử lý thông tin (Processing).", "Xuất và lưu trữ thông tin (Output).", "Biểu diễn thông tin."], c: 0},
+  {q: "5. Trong quy trình xử lý thông tin, bước thứ hai là bước nào?", a: ["Vào thông tin.", "Xử lý thông tin.", "Xuất và lưu trữ thông tin.", "Biểu diễn thông tin."], c: 1},
+  {q: "6. Trong quy trình xử lý thông tin, bước Xử lý thông tin là bước thứ mấy?", a: ["Bước 2.", "Bước 1.", "Bước 3.", "Xử lý thông tin không nằm trong quy trình xử lý thông tin."], c: 0},
+  {q: "7. Hệ nhị phân (Binary) chỉ sử dụng những chữ số nào để biểu diễn dữ liệu?", a: ["0, 1, 2, ..., 9", "0, 1, 2, ..., 7", "0, 1, 2, ..., 9, A, B, C, D, E, F", "0, 1"], c: 3},
+  {q: "8. Hãy cho biết hệ đếm nào chỉ sử dụng số 0 và 1 để biểu diễn dữ liệu?", a: ["Hệ bát phân (Oct).", "Hệ thập lục phân (Hex).", "Hệ nhị phân (Bin).", "Hệ thập phân (Dec)."], c: 2},
+  {q: "9. Hex (Hexadicimal Number System) là tên gọi của hệ đếm nào?", a: ["Hệ nhị phân", "Hệ bát phân", "Hệ thập phân", "Hệ thập lục phân"], c: 3},
+  {q: "10. Bin (Binary Number System) là tên gọi của hệ đếm nào?", a: ["Hệ nhị phân.", "Hệ bát phân.", "Hệ thập phân.", "Hệ thập lục phân."], c: 0},
+  {q: "11. Hãy chọn phát biểu ĐÚNG NHẤT trong các phát biểu sau?", a: ["Hệ nhị phân chỉ sử dụng các số 0, 1, 2 để biểu diễn dữ liệu.", "Hệ thập phân sử dụng các số từ 1 đến 10 để biểu diễn dữ liệu.", "Hệ nhị phân chỉ sử dụng các số 0, 1 để biểu diễn dữ liệu.", "Hệ thập phân sử dụng các số từ 1 đến 9 để biểu diễn dữ liệu."], c: 2},
+  {q: "12. Muốn chuyển đổi 1 số từ hệ 10 sang hệ 2, phát biểu nào sau đây là đúng?", a: ["Lấy số nguyên thập phân chia cho 2 liên tiếp cho đến khi thương số bằng 0. Kết quả là số dư lấy theo chiều từ dưới lên.", "Lấy số nguyên thập phân chia cho 10...", "Lấy số nguyên thập phân chia cho 2... kết quả là số dư lấy từ trên xuống.", "Lấy số nguyên thập phân chia cho 10... số dư từ trên xuống."], c: 0},
+  {q: "13. Trong các đẳng thức đổi đơn vị sau, đẳng thức nào đúng?", a: ["2MB = 1024 Byte.", "1 Bit = 10 Byte.", "2GB = 2048 MB.", "1GB = 1000 MB."], c: 2},
+  {q: "14. Hãy cho biết đối tượng số 3 trong hình là gì?", a: ["Shortcut (Biểu tượng lối tắt).", "Menu Start (Nút khởi động).", "Desktop (Màn hình nền).", "Quicklaunch (Thanh thao tác nhanh)."], c: 0, img: "Hinh_D1.png"},
+  {q: "15. Để truy lục và khởi động các chương trình ứng dụng, ta sử dụng đối tượng số mấy trong Hình D1?", a: ["Đối tượng 2", "Đối tượng 3", "Đối tượng 1 (Menu Start)", "Đối tượng 4"], c: 2, img: "Hinh_D1.png"},
+  {q: "16. Muốn hiển thị tập tin và thư mục dưới dạng danh sách, kích chuột phải vào vùng trống, sau đó ta chọn?", a: ["Menu View > chọn List", "Menu View > chọn Contents", "Menu View > chọn Details", "Menu View > chọn Tiles"], c: 0},
+  {q: "17. Trong khi soạn thảo, yêu cầu gõ văn bản với font chữ '.VnArabia', ta sử dụng bảng mã nào để không bị lỗi font?", a: ["Bảng mã Unicode", "Bảng mã VNI Windows.", "Bảng mã TCVN3 (ABC).", "Không có đáp án đúng."], c: 2},
+  {q: "18. Trong khi soạn thảo, yêu cầu gõ văn bản với font chữ 'Arial', ta sử dụng bảng mã nào để không bị lỗi font?", a: ["Bảng mã Unicode.", "Bảng mã VNI Windows.", "Bảng mã TCVN3.", "Không có đáp án đúng."], c: 0},
+  {q: "19. Trong khi soạn thảo, đang sử dụng bảng mã Unicode, font chữ nào sau đây KHÔNG phù hợp?", a: ["Tahoma", "Arial", "VNI - Times", "Times New Roman"], c: 2},
+  {q: "20. Hãy nêu cách có thể khởi động Microsoft Office Word?", a: ["Vào Start > Run gõ Winword.exe chọn Ok.", "Vào Start > All Program > Microsoft Office > Microsoft Word.", "Kích đúp chuột vào biểu tượng shortcut Microsoft Word trên Desktop.", "Cả ba cách đều đúng."], c: 3},
+  {q: "21. Thao tác vào Tab File > Close có chức năng gì? Chọn câu trả lời đúng nhất.", a: ["Chỉ đóng văn bản đang làm việc trên màn hình.", "Đóng toàn bộ văn bản đang mở và thoát chương trình Word.", "Cả hai đáp án đều đúng.", "Có chức năng khác."], c: 0},
+  {q: "22. Muốn đóng toàn bộ văn bản đang mở và thoát chương trình Word, ta thao tác?", a: ["Tab File > Close.", "Tab File > Exit.", "Gõ tổ hợp phím Ctrl + W", "Không có đáp án đúng."], c: 1},
+  {q: "23. Tổ hợp phím Ctrl + N trong môi trường Word có chức năng gì?", a: ["Lưu văn bản đang làm việc.", "Tạo một tệp văn bản mới.", "In văn bản đang mở.", "Không có đáp án đúng."], c: 1},
+  {q: "24. Nêu thao tác mở một văn bản đã có sẵn trong máy, hãy chọn đáp án đúng?", a: ["Gõ tổ hợp phím Alt + O", "Gõ tổ hợp phím Shift + O.", "Vào Tab File > chọn Open (hoặc Ctrl + O).", "Vào Tab Home > chọn Open."], c: 2},
+  {q: "25. Để tạo tệp văn bản mới, hãy chọn đáp án đúng?", a: ["Tại H2 chọn công cụ số 6.", "Tại H1 chọn Tab File > New.", "Gõ tổ hợp phím Ctrl + N", "Tất cả đều đúng."], c: 3, img: "Hinh_G2.png"},
+  {q: "26. Tại hình H2, cho biết chức năng của công cụ số 7 (kính lúp trên trang giấy)?", a: ["In văn bản đang mở.", "Phóng to văn bản đang làm việc.", "Xem văn bản trước khi in (Print Preview).", "Tạo mới một tệp văn bản."], c: 2, img: "Hinh_G2.png"},
+  {q: "27. Trong khi soạn thảo văn bản, để căn văn bản thẳng hàng về bên trái, ta thực hiện? Hình H1", a: ["Hình 1 chọn công cụ số 13 hoặc ấn Ctrl + R", "Hình 1 chọn công cụ số 12 hoặc ấn Ctrl + L", "Hình 1 chọn công cụ số 12 hoặc ấn Ctrl + R.", "Hình 1 chọn công cụ số 13 hoặc ấn Ctrl + L"], c: 1, img: "Hinh_H1.png"},
+  {q: "28. Chọn đoạn văn bản, sau đó ấn tổ hợp phím Ctrl + J, điều gì sẽ xảy ra?", a: ["Văn bản sẽ được căn thẳng đều hai bên (Justify).", "Văn bản sẽ được căn thẳng hàng về bên trái.", "Văn bản sẽ được căn thẳng hàng về bên phải.", "Văn bản sẽ được căn thẳng hàng ở giữa."], c: 0},
+  {q: "29. Tại hình 2, muốn chèn các biểu tượng ở tại mục 5, ta thao tác thế nào?", a: ["Tab View > nhóm Symbols > Symbol.", "Tab Insert > nhóm Symbols > Symbol.", "Tab Insert > nhóm Symbols > Equation.", "Tab View > nhóm Symbols > Equation."], c: 1, img: "Hinh_H1.png"},
+  {q: "30. Nêu chức năng của thao tác sau: Tại Tab Page Layout trong nhóm Page Background chọn Page Borders > chọn đường viền?", a: ["Đổ bóng cho văn bản.", "Tạo đường viền cho đoạn văn bản.", "Tạo đường viền cho toàn bộ trang văn bản.", "Không có đáp án đúng."], c: 2},
+  {q: "31. Giả sử văn bản có 5 trang, muốn chèn Footer hiển thị số thứ tự cho từng trang, hình 1 ta chọn?", a: ["Công cụ số 1 (Page Number)", "Công cụ số 2", "Công cụ số 3", "Công cụ số 7"], c: 0, img: "Hinh_I3.png"},
+  {q: "32. Chuyển qua lại giữa Header và Footer ta chọn công cụ nào? Hình 13", a: ["Công cụ 5, 6.", "Công cụ 3, 4.", "Công cụ 1, 2.", "Công cụ 6, 7 (Go to Header/Footer)."], c: 3, img: "Hinh_I3.png"},
+  {q: "33. Khi soạn thảo dữ liệu trong bảng, cách nào dồn văn bản trong một ô lên phía trên bên trái?", a: ["Tab Table Tool > Layout > Chọn Align Top Left", "Tab Table Tool > Layout > Chọn Align Center Left", "Tab Table Tool > Layout > Chọn Align Bottom Left", "Tab Table Tool > Layout > Chọn Align Top Right"], c: 0},
+  {q: "34. Để thực hiện việc sắp xếp dữ liệu trong bảng ta chọn mục nào?", a: ["Layout > Data > Formula.", "Design > Data > Formula.", "Layout > Data > Sort.", "Design > Data > Sort."], c: 2},
+  {q: "35. Khi soạn thảo dữ liệu trong bảng, để thực hiện việc tính toán giá trị trong ô ta chọn?", a: ["Tab Layout > Chọn Formula trong nhóm Data", "Tab Design > Chọn Formula trong nhóm Data", "Tab Design > Chọn Formula trong nhóm Alignment", "Tab Layout > Chọn Formula trong nhóm Alignment"], c: 0},
+  {q: "36. Để xóa dòng trong bảng bạn làm như thế nào?", a: ["Vào Layout > Delete > Delete Rows", "Vào Layout > Delete > Delete Column", "Vào Layout > Delete > Delete Cells", "Vào Layout > Delete > Delete Table"], c: 0},
+  {q: "37. Để xóa cột tại vị trí con trỏ chuột bạn làm như thế nào?", a: ["Layout > Delete Rows", "Layout > Delete Column", "Layout > Delete Cells", "Layout > Delete Table"], c: 1},
+  {q: "38. Muốn thay đổi độ rộng lề trang in ta làm như thế nào?", a: ["Page Layout > Margins", "Page Layout > Orientation", "Page Layout > Size", "Không có đáp án đúng."], c: 0},
+  {q: "39. Tại hình H1, giả sử ta muốn đặt lề trên cho văn bản là 3cm và lề trái là 2,5cm ta làm như thế nào?", a: ["Tại Margins chọn Top là 3cm và Left là 2,5cm", "Tại Margins chọn Bottom là 3cm và Left là 2,5cm", "Tại Margins chọn Right là 3cm và Left là 2,5cm", "Tại Margins chọn Gutter là 3cm và Right là 2,5cm"], c: 0, img: "Hinh_I2.png"},
+  {q: "40. Tại hình H1, nếu mục Orientation chọn Landscape, khi in sẽ cho ta kết quả?", a: ["In theo hướng giấy ngang.", "In theo hướng giấy dọc.", "In văn bản với khổ giấy tự chọn.", "Không có đáp án đúng."], c: 0, img: "Hinh_I2.png"},
+  {q: "41. Muốn in văn bản theo hướng giấy dọc, ta thực hiện?", a: ["Tại Orientation chọn Lanscape.", "Tại Multiple pages chọn hướng giấy.", "Tại Orientation chọn Portrait.", "Không có đáp án đúng."], c: 2, img: "Hinh_I2.png"},
+  {q: "42. Trong quy trình xử lý thông tin, bước thực hiện 50*1000 là?", a: ["Bước vào thông tin.", "Bước xử lý thông tin.", "Lưu trữ.", "Ra thông tin."], c: 1, img: "Hinh_A1.png"},
+  {q: "43. Trong hình trên “150, 200” được biểu diễn trong máy tính thuộc loại thông tin - dữ liệu nào?", a: ["Thông tin văn bản.", "Thông tin số liệu.", "Thông tin âm thanh.", "Thông tin hình ảnh."], c: 1, img: "Hinh_A1.png"},
+  {q: "44. Hai đối tượng 50 và 50000 trong hình trên là gì?", a: ["Dữ liệu.", "Đối tượng mang thông tin.", "Thông tin.", "Không có đáp án đúng."], c: 2, img: "Hinh_A1.png"},
+  {q: "45. Chuyển đổi số 18 (hệ 10) sang hệ nhị phân (hệ 2) = ?", a: ["11010", "10010", "10011", "10000"], c: 1},
+  {q: "46. Số 10010 (hệ 2) là số bao nhiêu trong hệ 10?", a: ["17", "18", "19", "20"], c: 1},
+  {q: "47. Số 33 (hệ 10) là dãy số nào trong hệ 2?", a: ["110011", "100110", "100001", "100011"], c: 2},
+  {q: "48. Biểu thức 110011 OR 10111 cho kết quả?", a: ["110111", "011101", "111101", "100111"], c: 0},
+  {q: "49. Biểu thức 11001 AND 10111 cho kết quả?", a: ["01110", "11110", "10011", "10001"], c: 3},
+  {q: "50. Tốc độ của máy tính phụ thuộc vào các yếu tố nào sau đây?", a: ["Tốc độ của bộ vi xử lý (CPU). Tốc độ, dung lượng ổ cứng.", "Dung lượng bộ nhớ RAM.", "Hệ điều hành và chống phân mảnh.", "Tất cả các yếu tố trên đều đúng."], c: 3},
+  {q: "51. Bộ vi xử lý trung tâm CPU (Central Processing Unit) bao gồm các thành phần chính nào sau đây?", a: ["ALU (Số học & Logic), CU (Điều khiển), Registers (Thanh ghi).", "RAM.", "ROM.", "ALU, CU, RAM, ROM."], c: 0},
+  {q: "52. Thiết bị nào thực hiện thao tác vào dữ liệu (Input)?", a: ["Máy in, màn hình, máy quét, chuột.", "Máy vẽ, ổ đĩa cứng, ổ đĩa mềm, bàn phím.", "Bàn phím, chuột, máy quét.", "Máy quét, Loa, chuột, màn hình."], c: 2},
+  {q: "53. Các thiết bị: màn hình, loa, máy in, thuộc khối chức năng nào?", a: ["Thiết bị vào (Input).", "Thiết bị ra (Output).", "Khối xử lý.", "Các thiết bị lưu trữ."], c: 1},
+  {q: "54. Hãy chọn nhóm trong đó có thiết bị KHÔNG cùng chức năng với những thiết bị còn lại?", a: ["Màn hình, máy in, máy chiếu, loa.", "Bàn phím, chuột, máy quét.", "Màn hình, máy in, loa, bàn phím.", "USB, HDD, FDD."], c: 2},
+  {q: "55. Hãy nêu cách đặt tên tệp? Chọn đáp án chính xác nhất.", a: ["Tối đa 256 ký tự, không có ký tự đặc biệt...", "Tối đa 255 ký tự, có thể có ký tự đặc biệt...", "Tối đa 256 ký tự, có thể có ký tự đặc biệt...", "Tối đa 255 ký tự, không có các ký tự đặc biệt như: \\ / : * ? \" < > |. Có phần mở rộng."], c: 3},
+  {q: "56. Trong các tên tệp sau đây, khi sử dụng tên tệp nào máy sẽ báo lỗi?", a: ["Hoc_phan_tin1?.docx", "Hoc_phan_tin_1.docx", "Hoc, phan,tin, 1.docx", "Hoc phan tin 1.docx"], c: 0},
+  {q: "57. Để chọn toàn bộ các thư mục từ thư mục 1 tới thư mục 5, ta thao tác thế nào?", a: ["Kéo chuột để bôi đen toàn bộ 5 thư mục.", "Chọn thư mục 1, giữ phím Shift, sau đó kích chuột chọn thư mục 5.", "Gõ tổ hợp phím Ctrl + A", "Tất cả các đáp án đều đúng."], c: 3, img: "Hinh_D2.png"},
+  {q: "58. Muốn chọn thư mục 2 và thư mục 4 (không liền kề), ta thao tác như thế nào?", a: ["Chọn TM 2, giữ Shift, chọn TM 4.", "Chọn TM 2, giữ Ctrl, chọn TM 4.", "Chọn TM 2, giữ Alt, chọn TM 4.", "Không có đáp án đúng."], c: 1, img: "Hinh_D2.png"},
+  {q: "59. Để đổi tên thư mục ta thao tác thế nào?", a: ["Chọn thư mục > Tab Edit > Rename.", "Chọn thư mục, ấn phím F2 và gõ tên mới.", "Không có đáp án đúng.", "Cả hai đáp án đều đúng."], c: 1},
+  {q: "60. Muốn xoá hẳn thư mục ra khỏi máy (không vào thùng rác), ta thao tác thế nào?", a: ["Chọn thư mục gõ tổ hợp phím Shift + Delete.", "Chọn thư mục chuột phải chọn Delete.", "Chọn thư mục Tab File Delete.", "Không có đáp án đúng."], c: 0},
+  {q: "61. Để sắp xếp các cửa sổ theo chiều dọc ta chọn thao tác?", a: ["Chuột phải Taskbar / Cascade Windows.", "Chuột phải Taskbar / Show windows stacked.", "Chuột phải Taskbar / Show windows side by side", "Không có đáp án đúng."], c: 2},
+  {q: "62. Tổ hợp phím Ctrl + Mũi tên trái, có chức năng gì?", a: ["Sang phải một ký tự", "Sang trái một ký tự", "Sang phải một từ", "Sang trái một từ"], c: 3},
+  {q: "63. Muốn đưa con trỏ chuột sang trái một từ trong khi soạn thảo, ta sử dụng phím nào?", a: ["Ctrl + ->", "Mũi tên sang phải", "Mũi tên sang trái", "Ctrl + <-"], c: 3},
+  {q: "64. Muốn đưa dấu chèn sang trang văn bản tiếp theo, trong khi soạn thảo ta gõ tổ hợp phím nào?", a: ["Ctrl + Page Up", "Shift + Page Down", "Page Up", "Ctrl + Page Down"], c: 3},
+  {q: "65. Cho biết chức năng của tổ hợp phím Ctrl + Home trong môi trường Word?", a: ["Dời dấu chèn về đầu tư liệu.", "Dời dấu chèn về cuối tư liệu.", "Chọn văn bản từ vị trí dấu chèn về đầu tư liệu.", "Chọn văn bản từ vị trí dấu chèn về cuối tư liệu."], c: 0},
+  {q: "66. Trong khi soạn thảo, muốn chọn văn bản từ vị trí dấu chèn về cuối tư liệu?", a: ["Ctrl + Home.", "Ctrl + End.", "Ctrl + Shift + Home.", "Ctrl + Shift + End."], c: 3},
+  {q: "67. Trong khi soạn thảo văn bản, ấn phím Delete sẽ xóa?", a: ["Một ký tự phía bên phải dấu chèn.", "Một ký tự phía bên trái dấu chèn.", "Một từ nằm bên phải dấu chèn.", "Một từ nằm bên trái dấu chèn."], c: 0},
+  {q: "68. Tổ hợp phím Ctrl + Enter trong môi trường Word có chức năng gì?", a: ["Ngắt đoạn văn bản.", "Ngắt dòng văn bản.", "Ngắt trang văn bản.", "Không có đáp án đúng."], c: 2},
+  {q: "69. Muốn hiển thị văn bản từ bộ nhớ đệm (Clipboard), ta thao tác thế nào?", a: ["Chuột phải chọn Copy.", "Đưa trỏ chuột tới vị trí muốn hiển thị, chọn Paste.", "Chuột phải chọn Cut.", "Ctrl + Z."], c: 1},
+  {q: "70. Tổ hợp phím Ctrl + C trong môi trường Word có chức năng gì?", a: ["Sao chép văn bản vào bộ nhớ đệm.", "Di chuyển văn bản vào bộ nhớ đệm.", "Hiển thị văn bản từ bộ nhớ đệm.", "Phục hồi lại thao tác trước đó."], c: 0},
+  {q: "71. Để Copy kiểu định dạng font chữ (Format Painter), trong quá trình soạn thảo, ta thao tác? Hình F2", a: ["Chọn công cụ 4", "Chọn công cụ 7", "Chọn công cụ 8", "Chọn công cụ 10 (cái chổi sơn)"], c: 3, img: "Hinh_F2.png"},
+  {q: "72. Hãy cho biết công cụ số 7 có chức năng gì? Hình F2 (Paste)", a: ["Sao chép văn bản vào bộ nhớ đệm.", "Hiển thị văn bản từ bộ nhớ đệm (Dán).", "Di chuyển văn bản vào bộ nhớ đệm.", "Không có đáp án đúng."], c: 1, img: "Hinh_F2.png"},
+  {q: "73. Trong quá trình soạn thảo văn bản, để di chuyển con trỏ chuột đến trang 32, tại hình 2 ta thực hiện?", a: ["Go to what chọn Page, gõ 32.", "Go to what chọn Line, gõ 32.", "Go to what chọn Section, gõ 32.", "Không có đáp án đúng."], c: 0, img: "Hinh_F1.png"},
+  {q: "74. Tại hình 2, nếu Go to What chọn Line, gõ 32, Word sẽ làm gì?", a: ["Di chuyển tới trang 32.", "Di chuyển tới phần 32.", "Di chuyển tới dòng 32.", "Di chuyển tới dòng 32 của trang 32."], c: 2, img: "Hinh_F1.png"},
+  {q: "75. Tại hình 1, nút Replace có chức năng là gì?", a: ["Thay thế văn bản đầu tiên tìm thấy bằng văn bản mới.", "Thay thế toàn bộ văn bản tìm thấy.", "Tìm kiếm văn bản tiếp theo.", "Thêm kiểu tìm kiếm khác."], c: 0, img: "Hinh_F1.png"},
+  {q: "76. Muốn định dạng chữ “văn bản” như mục 1 hình 2 (in đậm), ta thao tác?", a: ["Mục Font Style chọn Bold.", "Hình 1 chọn công cụ số 6 (B).", "Ấn Ctrl + B", "Tất cả các đáp án đều đúng."], c: 3, img: "Hinh_H1.png"},
+  {q: "77. Muốn định dạng chữ “văn bản” lần lượt theo thứ tự như mục 1,2,3 hình 2 (đậm, nghiêng, gạch chân), ta thao tác?", a: ["Chọn lần lượt Regular, Italic, Bold.", "Chọn lần lượt công cụ số 6, 7, 8 (B, I, U).", "Gõ lần lượt Ctrl + I, Ctrl + B, Ctrl + A.", "Tất cả đúng."], c: 1, img: "Hinh_H1.png"},
+  {q: "78. Để đổ màu nền cho văn bản, ta thao tác như thế nào?", a: ["Công cụ số 16 (Text Highlight Color).", "Công cụ số 13.", "Font color.", "Underline color."], c: 0, img: "Hinh_H1.png"},
+  {q: "79. Chọn văn bản, tại hình 1 chọn công cụ số 16, sau đó chọn Bold Italic, văn bản sẽ thay đổi?", a: ["In đậm, nghiêng, đổ màu chữ.", "In đậm, gạch chân, đổ màu chữ.", "In nghiêng, gạch chân, đổ màu nền.", "In đậm, in nghiêng và đổ màu nền."], c: 3, img: "Hinh_H1.png"},
+  {q: "80. Nếu chọn công cụ 6, 8, 16. Hình 2 sẽ cho định dạng như mục nào?", a: ["Mục 1", "Mục 3", "Mục 7", "Mục 4"], c: 2, img: "Hinh_H1.png"},
+  {q: "81. Tại hình 2, chọn Only Print Odd Pages. Khi in sẽ cho ta kết quả? Hình I1", a: ["In toàn bộ các trang chẵn.", "In toàn bộ các trang lẻ.", "In toàn bộ văn bản.", "Không có đáp án đúng."], c: 1, img: "Hinh_I1.png"},
+  {q: "82. Tại hình 1 mục 3, phần Pages gõ: 1, 4, 7 - 10, sẽ cho ta kết quả?", a: ["In các trang 1, 4, 7 và 10.", "In các trang từ 1 đến 4 và 7 đến 10.", "In các trang 1, 4 và từ trang 7 đến trang 10.", "Không có đáp án đúng."], c: 2, img: "Hinh_I1.png"},
+  {q: "83. Hình 1 mục 5 chọn A4. Hình 2 chọn Print Current Page. Kết quả?", a: ["In trang hiện tại và in trên khổ giấy A4.", "In phần được chọn trên A4.", "In trang hiện tại tự kéo dãn.", "In phần được chọn tự kéo dãn."], c: 0, img: "Hinh_I1.png"},
+  {q: "84. Giả sử máy tính kết nối nhiều máy in, muốn chỉ định máy in ta chọn?", a: ["Printer Properties", "Tại mục Printer chọn tên máy in.", "Print to File", "Manual Duplex"], c: 1, img: "Hinh_I1.png"},
+  {q: "85. Muốn chia cột cho đoạn văn bản, ta thao tác?", a: ["Tab Page Layout > Columns.", "Tab Insert > Columns.", "Tab Home > Columns.", "Tab File > Columns."], c: 0, img: "Hinh_I4.png"},
+  {q: "86. Sử dụng các mẫu chia cột do word gợi ý sẵn, ta chọn mục nào?", a: ["Presets.", "Width and spacing.", "Equal column width.", "Không có đáp án đúng."], c: 0, img: "Hinh_I4.png"},
+  {q: "87. Tại bảng 1, muốn tách ô A1 thành 3 ô, ta thao tác như thế nào?", a: ["Công cụ 12", "Chuột phải chọn split cells", "Tab Layout > Split cells", "Tất cả đều đúng."], c: 3, img: "Hinh_I5.png"},
+  {q: "88. Tại bảng 1, muốn đổ màu nền cho ô B1, ta thao tác?", a: ["Tab Design chọn Shading", "Chuột phải chọn Border and Shading chọn Shading", "Cả 2 phương trên đều đúng", "Không có phương án đúng"], c: 2, img: "Hinh_I5.png"},
+  {q: "89. Tại bảng 1, muốn sắp xếp cột ĐTB HK1 tăng dần hoặc giảm dần, ta thao tác thế nào?", a: ["Công cụ 16", "Công cụ 17 (Sort)", "Cả ba đáp án đều đúng", "Công cụ 15"], c: 1, img: "Hinh_I5.png"},
+  {q: "90. Tại bảng 1, muốn căn chỉnh lề cho văn bản trong bảng ta chọn công cụ nào?", a: ["Công cụ 10", "Công cụ 11", "Công cụ 14 (Alignment)", "Công cụ 15 (Text Direction)"], c: 2, img: "Hinh_I5.png"},
+  {q: "91. Hình trên, nếu ta tích chọn mục Ascending thì dữ liệu sẽ được sắp xếp thế nào?", a: ["Tăng dần.", "Giảm dần.", "Tùy ý và sắp xếp tiêu đề.", "Tùy ý và không sắp xếp tiêu đề."], c: 0, img: "Hinh_O1.png"},
+  {q: "92. Muốn dòng đầu tiên – dòng tiêu đề, không bị sắp xếp cùng với dữ liệu, ta chọn mục nào?", a: ["Ascending", "Descending", "Header row", "No header row"], c: 2},
+  {q: "93. Khi không kẻ đường viền cho bảng, để hiện đường lưới trong bảng ta thực hiện?", a: ["Layout > View Gridlines", "Design > View Gridlines", "Insert > View Gridlines", "View > View Gridlines"], c: 0},
+  {q: "94. Để chèn hộp văn bản vào Word, ta chọn công cụ nào? Hình K1", a: ["Công cụ 2", "Công cụ 4", "Công cụ 6 (Text Box)", "Công cụ 7"], c: 2, img: "Hinh_K1.png"},
+  {q: "95. Nêu thao tác thực hiện vẽ hình tròn? Hình K1.", a: ["Vào 3 chọn hình tròn, Outline đỏ, 3D.", "Vào 3 chọn hình tròn, Fill đỏ, Shadow.", "Vào 4 chọn hình tròn, Fill đỏ, Shadow.", "Vào 3 chọn hình tròn, Fill đỏ, 3D."], c: 3, img: "Hinh_K1.png"},
+  {q: "96. Chọn Shadow Effects máy sẽ áp dụng hiệu ứng gì cho hình?", a: ["Hiệu ứng bóng đổ", "Hiệu ứng 3-D", "Tô màu nền", "Tạo màu đường viền"], c: 0},
+  {q: "97. Vào 3 chọn hình, Shape Fill đỏ, Shape Effects Shadow. Kết quả cho hình nào? Hình K1", a: ["Hình vuông.", "Hình tròn.", "Hình ngôi sao.", "Không có đáp án đúng (Hình tròn đỏ có bóng)."], c: 3, img: "Hinh_K1.png"},
+  {q: "98. Để lật hình theo chiều dọc, tại hình 3 ta chọn?", a: ["Rotate Left.", "Rotate Right.", "Flip Horizontal.", "Flip Vertical."], c: 3, img: "Hinh_K2.png"},
+  {q: "99. Mục Align Middle ở hình 4 có chức năng?", a: ["Căn trái.", "Căn phải.", "Căn giữa theo chiều ngang.", "Căn giữa theo chiều dọc."], c: 2, img: "Hinh_K2.png"},
+  {q: "100. Muốn đưa hình tròn lên trên cùng, tại hình 1 ta chọn?", a: ["Bring Forward.", "Bring in Front of Text", "Bring to Front.", "Không có đáp án đúng."], c: 2, img: "Hinh_K2.png"},
+  {q: "101. Muốn đưa hình vuông lên trên cùng, tại hình 1 ta chọn?", a: ["Bring Forward.", "Bring to Front.", "Không có đáp án đúng.", "Cả hai đáp án đều đúng."], c: 3, img: "Hinh_K2.png"},
+  {q: "102. Để nhóm các đối tượng đồ họa thành một nhóm, ta thực hiện thế nào?", a: ["Format > Group > Ungroup.", "Format > Group > Group.", "Format > Group > Regroup.", "Không có phương án đúng."], c: 1},
+  {q: "103. Để trộn và gửi thư theo mẫu sẵn có ta thực hiện?", a: ["Mailings > Start Mail Merge, chọn Mail Merge wizard", "Insert...", "View...", "Edit..."], c: 0},
+  {q: "104. Để trộn thư và gửi thư hàng loạt, ta thực hiện?", a: ["Mailings > Envelopes", "Mailings > Start Mail Merge, chọn Letters", "Insert > Envelopes", "Mailings > Select Recipients"], c: 1},
+  {q: "105. Để tạo bì thư và nhãn, ta thực hiện?", a: ["Mailings > Start Mail Merge, chọn Envelopes", "Mailings > Start Mail Merge, chọn Letters", "Insert > Start Mail Merge, chọn Envelopes", "Mailings > Select Recipients, chọn Letters"], c: 0},
+  {q: "106. Tại hình 2, để tạo một tệp trình diễn mới, ta chọn?", a: ["Chọn 1 (Blank Presentation)", "Chọn 2", "Chọn 3", "Chọn 6"], c: 0, img: "Hinh_K11.png"},
+  {q: "107. Tại hình 2, muốn tạo một tệp trình chiếu từ templates do mình đã tạo hoặc download trước đó, ta chọn?", a: ["Chọn 3", "Chọn 4", "Chọn 5 (New from existing)", "Chọn 6"], c: 2, img: "Hinh_K11.png"},
+  {q: "108. Tại hình 2, muốn tạo một bản trình diễn sử dụng theme - chủ đề có sẵn, ta chọn?", a: ["Chọn 2", "Chọn 3", "Chọn 4 (Themes)", "Chọn 5"], c: 2, img: "Hinh_K11.png"},
+  {q: "109. Để thêm một trang slide mới trong khi đang thiết kế Powerpoint, ta thực hiện như thế nào?", a: ["Tab File > New > Blank Presentation.", "Tab Home > New Slide trong nhóm Slides, sau đó chọn một dạng Slide tùy ý.", "Nhấn tổ hợp phím Ctrl + L", "Nhấn tổ hợp phím Ctrl + N"], c: 1},
+  {q: "110. Để thêm một trang slide mới trong khi đang thiết kế Powerpoint (phím tắt), ta thực hiện thế nào?", a: ["Tab File > New > Blank Presentation.", "Nhấn tổ hợp phím Ctrl + M", "Nhấn tổ hợp phím Ctrl + L", "Nhấn tổ hợp phím Ctrl + N"], c: 1},
+  {q: "111. Muốn chèn sơ đồ tổ chức vào Slide, ta thực hiện thế nào?", a: ["Tab Insert > SmartArt > Hierachy, chọn một dạng sơ đồ tổ chức phù hợp.", "Tab Insert > SmartArt > Picture, chọn một dạng sơ đồ tổ chức phù hợp.", "Tab Insert > Picture, sau đó chọn sơ đồ cần chèn.", "Tab Insert > Chart, chọn một dạng sơ đồ tổ chức phù hợp."], c: 0},
+  {q: "112. Thao tác Tab Insert > Chart có chức năng gì?", a: ["Chèn sơ đồ tổ chức vào Slide.", "Chèn biểu đồ vào Slide", "Chèn hình ảnh từ vị trí bất kỳ trong máy vào Silde", "Chèn hình ảnh từ từ thư viện có sẵn trong máy vào Silde"], c: 1},
+  {q: "113. Để chèn hình ảnh có sẵn trong Office vào Slide, ta thực hiện?", a: ["Tab Insert > Clip Art...", "Tab Insert > Picture > Clip Art...", "Tab Home > Picture > Clip Art...", "Tab Home > Clip Art..."], c: 0},
+  {q: "114. Để chèn đánh dấu trang vào từng Slide, ta thực hiện?", a: ["Tab View > Date and Time", "Tab View > Slide Number", "Tab Insert > Date and Time", "Tab Insert > Slide Number"], c: 3},
+  {q: "115. Hãy cho biết phím tắt để phát lệnh trình diễn một tệp Powerpoint từ slide đầu tiên?", a: ["Ctrl+F5", "F5", "Shift+F5", "Alt+F5"], c: 1},
+  {q: "116. Tại hình 1, công cụ số 1 cho phép chuyển các slide về chế độ nào?", a: ["Normal View", "Reading View", "Slide Sorter View", "Slide Show"], c: 0, img: "Hinh_K11.png"},
+  {q: "117. Tại hình 1, công cụ số 2 cho phép chuyển các Slide về chế độ nào?", a: ["Normal View", "Reading View", "Slide Show", "Slide Sorter View"], c: 3, img: "Hinh_K11.png"},
+  {q: "118. Trong phần Hyperlink ta chọn Next Slide sẽ cho phép liên kết tới slide?", a: ["Di chuyển về Slide trước đó", "Di chuyển về Slide tiếp theo", "Di chuyển về Slide đầu tiên", "Di chuyển về Slide cuối cùng"], c: 1},
+  {q: "119. Trong phần Hyperlink to ta chọn First Slide sẽ cho phép liên kết tới slide?", a: ["Di chuyển về Slide trước đó", "Di chuyển về Slide tiếp theo", "Di chuyển về Slide đầu tiên", "Di chuyển về Slide cuối cùng"], c: 2},
+  {q: "120. Trong phần Hyperlink To để kết thúc trình diễn chọn?", a: ["Next Slide", "Previous Slide", "End Show", "Slide"], c: 2},
+  {q: "121. Tại hình 1, để chọn các nhóm hiệu ứng cho đối tượng, ta chọn?", a: ["Add Animation.", "Animation Pane.", "Trigger.", "Animation Painter."], c: 0, img: "Hinh_M12.png"},
+  {q: "122. Để tạo hiệu ứng làm xuất hiện đối tượng, ta chọn? Hình M12", a: ["Nhóm 2 - Entrance (Màu xanh).", "Nhóm 3 - Emphasis.", "Nhóm 4 - Exit.", "Nhóm 5 - Motion Paths."], c: 0, img: "Hinh_M12.png"},
+  {q: "123. Để tạo hiệu ứng nhấn mạnh nhằm tăng sự chú ý khi đối tượng trình chiếu, ta chọn nhóm?", a: ["Nhóm 2 - Entrance.", "Nhóm 3 - Emphasis (Màu vàng).", "Nhóm 4 - Exit.", "Nhóm 5 Motion Paths."], c: 1, img: "Hinh_M12.png"},
+  {q: "124. Thao tác vào Tab Animations chọn Add Animation trong nhóm Advanced Animation có chức năng gì?", a: ["Chọn các nhóm với các kiểu hiệu ứng trình chiếu cho đối tượng.", "Chọn các nhóm với các kiểu hiệu ứng trình chiếu cho trang trình chiếu.", "Thiết lập thời gian hiển thị của đối tượng trên trang trình chiếu.", "Xác định hướng di chuyển của đối tượng khi trình chiếu."], c: 0},
+  {q: "125. Các đối tượng trong nhóm 3 - Emphasis có chức năng gì?", a: ["Thiết lập thời gian hiển thị của các đối tượng khi trình chiếu.", "Chọn nhóm với các hiệu ứng làm xuất hiện đối tượng.", "Chọn nhóm với các hiệu ứng nhấn mạnh làm tăng sự chú ý khi đối tượng được trình chiếu.", "Chọn nhóm các hiệu ứng sau khi xuất hiện trình chiếu xong, đối tượng sẽ ẩn đi."], c: 2, img: "Hinh_M12.png"},
+  {q: "126. Để làm cho đối tượng ẩn đi sau khi trình chiếu hiệu ứng, ta thao tác thế nào?", a: ["Vào Tab Animations > Add Animation > Entrance", "Vào Tab Animations > Add Animation > Motion Paths", "Vào Tab Animations > Add Animation > Emphasis", "Vào Tab Animations > Add Animation > Exit"], c: 3},
+  {q: "127. Hình 1, muốn xem thêm những hiệu ứng khác ta chọn mục?", a: ["Chọn 1", "Chọn 3", "Chọn 5", "Chọn 6 (More...)"], c: 3, img: "Hinh_M12.png"},
+  {q: "128. Tại hình 1, quy định cách điều khiển để xuất hiện đối tượng, ta chọn?", a: ["Chọn 1 (Start)", "Chọn 2", "Chọn 3", "Chọn 2 và 3"], c: 0, img: "Hinh_M13.png"},
+  {q: "129. Tại hình 1, để thiết lập thời gian thực thi hiệu ứng chuyển từ slide này sang slide khác ta chọn?", a: ["Chọn 1", "Chọn 2 (Duration)", "Chọn 3", "Chọn 2 và 3"], c: 1, img: "Hinh_M13.png"},
+  {q: "130. Tại hình 2, đặt hiệu ứng diễn ra liền sau hiệu ứng trước ta chọn?", a: ["Chọn 2", "Chọn 3", "Chọn 4 (After Previous)", "Chọn 5"], c: 2, img: "Hinh_M13.png"},
+  {q: "131. Tại hình 3, để tạo liên kết, thiết lập điều khiển một hành động, ta chọn?", a: ["Chọn 1", "Chọn 2 (Action)", "Chọn 3", "Không có đáp án đúng"], c: 1, img: "Hinh_K23.png"},
+  {q: "132. Tại hình 3, khi tạo trigger, để chọn vị trí cần liên kết đến ta chọn?", a: ["Chọn 1", "Chọn 2", "Chọn 3 (Hyperlink to)", "Không có đáp án đúng"], c: 2, img: "Hinh_K23.png"},
+  {q: "133. Tại hình 4, thiết lập hiệu ứng âm thanh đi kèm với đối tượng khi trình chiếu, ta chọn?", a: ["Chọn 1 (Play sound)", "Chọn 2", "Chọn 3", "Không có đáp án đúng"], c: 0, img: "Hinh_K23.png"},
+  {q: "134. Để di chuyển đến một slide bất kỳ trong khi đang trình chiếu, ta thao tác?", a: ["Kích chuột phải vào slide hiện hành > Go to Slide > Chọn slide bạn muốn", "Kích chuột phải vào slide hiện hành > Next > Chọn slide bạn muốn", "Kích chuột phải vào slide hiện hành > End Show > Chọn slide bạn muốn", "Kích chuột phải vào slide hiện hành > Pause > Chọn slide bạn muốn"], c: 0},
+  {q: "135. Để trình diễn bắt đầu từ Slide đầu tiên của một tệp trình diễn, ta thao tác?", a: ["Từ Menu View > Reading View", "Shift + F5", "Sử dụng F5", "Không có đáp án đúng"], c: 2},
+  {q: "136. Để chuyển sang một slide tiếp theo trong khi đang trình chiếu?", a: ["Sử dụng phím Enter", "Ctrl + N", "Sử dụng phím End", "Ctrl + M"], c: 0},
+  {q: "137. Để di chuyển về slide trước đó trong khi trình chiếu, trên bàn phím ta ấn?", a: ["Sử dụng phím Enter", "Sử dụng phím mũi tên đi xuống", "Sử dụng phím mũi tên sang phải", "Sử dụng phím mũi tên đi lên"], c: 3},
+  {q: "138. Để ẩn một Slide, chọn Slide cần ẩn, sau đó tại H1 ta chọn?", a: ["Tab Slide Show > chọn Set Up Slide Show.", "Tab Slide Show > chọn Custom Slide Show.", "Tab Slide Show > chọn From Beginning.", "Tab Slide Show > chọn Hide Slide."], c: 3, img: "Hinh_L11.png"},
+  {q: "139. Để trình diễn bắt đầu từ Slide hiện tại của một trang trình chiếu, tại H1 ta chọn?", a: ["From Beginning.", "From Current Slide.", "Broadcast Slide Show.", "Custom Slide Show."], c: 1, img: "Hinh_L11.png"},
+  {q: "140. Muốn áp dụng background không được cung cấp sẵn trong bộ Office cho Silde đang làm việc, kích chuột phải lên vùng trống và tại H2 ta chọn?", a: ["Publish Slides", "Layout", "Format Background...", "Reset Slide"], c: 2, img: "Hinh_N11.png"},
+  {q: "141. Để đặt siêu liên kết cho các đối tượng trên slide ta thao tác:", a: ["Nhấn chuột phải lên đối tượng cần tạo siêu liên kết > Hyperlink... > chọn mục cần liên kết > OK.", "Nhấn chuột phải > vào Design > Hyperlink... > chọn mục cần liên kết > OK.", "Nhấn chuột phải > vào Home > Hyperlink... > chọn mục cần liên kết > OK.", "Không có đáp án đúng."], c: 0},
+  {q: "142. Để tạo siêu liên kết đến một File hoặc một trang Web, ta chọn? Hình K33", a: ["Chọn 1 (Existing File or Web Page)", "Chọn 4", "Chọn mục 3", "Chọn mục 2"], c: 0, img: "Hinh_K33.png"},
+  {q: "143. Để tạo siêu liên kết tới các slide khác trong Document, ta chọn?", a: ["Chọn 1", "Chọn 2 (Place in This Document)", "Chọn 4", "Không có đáp án đúng"], c: 1, img: "Hinh_K33.png"},
+  {q: "144. Để nhúng một đoạn phim từ một vị trí bất kỳ ở trong máy, vào menu Insert sau đó ta chọn?", a: ["Kích chọn Video > Video from File...", "Kích chọn Audio > Audio from File...", "Kích chọn Video > Clip Art Video...", "Kích chọn Audio > Record Audio..."], c: 0, img: "Hinh_L31.png"},
+  {q: "145. Kết quả của phép tính 1111 + 1101 + 1000 (hệ 2) = ?", a: ["100100", "111001", "110001", "111010"], c: 0},
+  {q: "146. 1011000 là kết quả của phép tính nào sau đây?", a: ["1001*1001", "1011*1010", "1001*1010", "1011*1000"], c: 3},
+  {q: "147. Hãy sắp xếp thứ tự của đơn vị đo thông tin, theo thứ tự từ nhỏ đến lớn?", a: ["Bit, Byte, PB, KB, MB, GB, TB.", "Bit, Byte, KB, MB, GB, TB, PB.", "Byte, MB, KB, GB, PB, TB, Bit.", "Byte, Bit, PB, KB, MB, GB, TB."], c: 1},
+  {q: "148. Trong các phần mềm sau: Ms DOS, Windows 3.1, Ms Word, Ms Power Point, Windows NT, Unix, Mozilla Firefox, MS Excel. Những phần mềm nào là phần mềm hệ thống?", a: ["Unix, Mozilla Firefox, MS Excel.", "Windows 3.1, Ms Word, Ms Power Point.", "Unix, Mozilla Firefox, MS Excel.", "Ms DOS, Windows 3.1, Windows NT, Unix."], c: 3},
+  {q: "149. Các hệ điều hành Windows đều có khả năng tự động nhận biết và cài đặt cấu hình cho các thiết bị phần cứng, đây là chức năng gì?", a: ["Windows Explorer.", "Control Panel.", "Plug and Play.", "Regionnal Options."], c: 2},
+  {q: "150. Quá trình truyền dữ liệu trên mạng bao gồm mấy bước?", a: ["2 bước (gói thông tin, gửi thông tin).", "3 bước (gói thông tin, truyền tín hiệu, nhận và giải mã).", "4 bước (gói thông tin, truyền tín hiệu, nhận thông tin, giải mã).", "5 bước (gói thông tin, gắn địa chỉ, truyền tín hiệu, nhận thông tin, giải mã)."], c: 3},
+  {q: "151. Bus, Ring, Star là các sơ đồ của mạng nào sau đây?", a: ["Mạng cục bộ LAN (Local Area Network)", "Mạng diện rộng WAN (Wide Area Network)", "Peer to peer.", "Client/server."], c: 0},
+  {q: "152. Mạng khách chủ (Client/Server) là mạng?", a: ["Có ít nhất một máy Server.", "Có ít nhất hai máy Server.", "Có ít nhất ba máy Server.", "Không cần máy Server."], c: 0},
+  {q: "153. Mạng nào trong đó vai trò của các máy trạm là tương đương nhau trong quá trình khai thác tài nguyên?", a: ["Mạng bình đẳng(Peer to peer).", "Mạng Khách chủ (Client/Server).", "Mạng cục bộ LAN (Local Area Network).", "Mạng diện rộng WAN (Wide Area network)."], c: 0},
+  {q: "154. Khi tạo tài khoản người dùng, mức truy cập nào có thể kiểm soát và loại bỏ phần cứng, phần mềm...?", a: ["Administrator.", "Standard.", "Restricted.", "Cả 3 quyền trên."], c: 0},
+  {q: "155. Hãy nêu thao tác tạo mật khẩu cho văn bản?", a: ["Tab File > Info > Protect Document > Encrypt with Password > gõ Password > OK.", "Tab File > Info > Prepare for Sharing > Encrypt with Password > gõ Password > OK.", "Tab Home > Info > Protect Document > Encrypt with Password > gõ Password > OK.", "Tab File > Save as > Tools > General Option > gõ Password > OK."], c: 0},
+  {q: "156. Hãy cho biết thao tác sau thực hiện công việc gì? Tab File > Info > Protect Document > Encrypt with Password > xóa Password > OK.", a: ["Tạo mật khẩu cho văn bản đang làm việc.", "Gỡ mật khẩu cho văn bản đang làm việc.", "Tạo mật khẩu chỉnh sửa cho văn bản đang làm việc.", "Tất cả các đáp án đều đúng."], c: 1},
+  {q: "157. Muốn mở thanh thước kẻ Ruler, tại cửa sổ Word ta chọn?", a: ["Tab View > Tích chọn Ruler trong nhóm Show.", "Tab Home > Tích chọn Ruler trong nhóm Zoom.", "Tab Insert > Tích chọn Ruler trong nhóm Show", "Tab View > Tích chọn Ruler trong nhóm Zoom."], c: 0},
+  {q: "158. Để hiển thị tổ hợp phím tắt bên cạnh các công cụ khi đưa chuột qua, ta chọn mục nào? Hình B23", a: ["Show all windows in the Tasbar", "Show horizontal scroll bar", "Show vertical scroll bar", "Show shortcut keys in Screentips."], c: 3, img: "Hinh_B23.png"},
+  {q: "159. Muốn đổi đơn vị đo của Word từ inches sang cm, ta thao tác thế nào?", a: ["Không có đáp án đúng.", "File > Options > Advanced > Display > mục Show measurements in units of đổi từ inches sang cm.", "File > Options > Display > General...", "File > Options > Save > Display..."], c: 1, img: "Hinh_B23.png"},
+  {q: "160. Trong đoạn 2, muốn căn tab cho cột Đơn giá, tại hình 2 ta chọn?", a: ["Chọn Decimal ở mục Alignment và mục Leader chọn 4.", "Chọn Left ở Alignment và mục Leader chọn 4.", "Chọn Center ở Alignment và 3 ở Leader.", "Chọn Decimal ở Alignment và 3 ở Leader."], c: 3, img: "Hinh_C12.png"},
+  {q: "161. Nếu ta gõ phím H, sau đó ấn Ctrl + Shift + =, gõ phím 2. Kết quả sẽ cho là? Hình H1", a: ["Chữ H với 2 là chỉ số dưới như mục 8.", "Chữ H với 2 là chỉ số trên như mục 8", "Không có đáp án đúng.", "H2."], c: 1, img: "Hinh_H1.png"},
+  {q: "162. Gõ H, tại hình 3, tích mục Subscript, gõ 2. Kết quả sẽ cho là? Hình H1", a: ["H2.", "H với chỉ số trên là 2 như mục 8", "H với chỉ số dưới là 2 như mục 8.", "Không có đáp án đúng."], c: 2, img: "Hinh_H1.png"},
+  {q: "163. Để đánh ký hiệu đầu dòng (chấm tròn) như hình 2, ta thao tác?", a: ["Tab Home chọn Bullets trong nhóm Paragraph.", "Tab Home chọn Numbering trong nhóm Paragraph.", "Tab Insert chọn Bullets trong nhóm Paragraph.", "Tab Insert chọn Numbering trong nhóm Paragraph."], c: 0, img: "Hinh_H1.png"},
+  {q: "164. Trong quá trình soạn thảo văn bản, muốn điều chỉnh khoảng cách dòng, ta thực hiện?", a: ["Tab Home > Paragraph > Line and Page Breaks > Line spacing.", "Tab Home > Paragraph > Line and Page Breaks > Special.", "Tab Home > Paragraph > Indents and Spacing > Line spacing chọn khoảng cách.", "Tab Home > Paragraph > Indents and Spacing > Special."], c: 2},
+  {q: "165. Trong khi soạn thảo, muốn thụt đầu dòng như Đoạn 1, ta thao tác? Hình H23", a: ["Bôi đen văn bản > Tab Home > Paragraph > Mục Special > Hanging.", "Bôi đen văn bản > Tab Home > Paragraph > Mục Special > First line.", "Bôi đen văn bản > Tab Insert > Paragraph > Mục Special > First line.", "Bôi đen văn bản > Tab Insert > Paragraph > Mục Special > Hanging."], c: 1, img: "Hinh_H23.png"},
+  {q: "166. Tính tổng cho cột ĐTB HK1, tại ô được đánh dấu B1 ta gõ công thức? Hình E12", a: ["Sum(D3:D6).", "Average(D3:D6).", "Sum(Above).", "Average(Above)."], c: 2, img: "Hinh_E12.png"},
+  {q: "167. Để chuyển dữ liệu ở dạng bảng sang dạng Text mà dữ liệu từ các cột trong bảng được ngăn cách bởi dấu ngắt đoạn, ta thực hiện thế nào?", a: ["Layout > Convert to Text rồi chọn Paragraph marks.", "Layout > Convert to Text rồi chọn Tab.", "Layout > Convert to Text rồi chọn Commas.", "Layout > Convert to Text rồi chọn other."], c: 0, img: "Hinh_T1.png"},
+  {q: "168. Trong quá trình trộn thư, công cụ 7 có chức năng gì khi được chọn? Hình G11", a: ["Chèn trường dữ liệu vào văn bản để trộn (Insert Merge Field).", "Hiển thị danh sách dữ liệu", "Hiển thị nội dung của tư liệu", "Hiển thị thứ tự xuất hiện của dữ liệu"], c: 0, img: "Hinh_G11.png"},
+  {q: "169. Để kiểm tra lỗi khi trộn thư, sử dụng công cụ? Hình G11", a: ["Chọn Find Recipient.", "Chọn Auto Check for Errors.", "Chọn Preview Results.", "Chọn Finish & Merge."], c: 1, img: "Hinh_G11.png"},
+  {q: "170. Để đưa tất cả các bản ghi đã được trộn sang một trang văn bản mới ta chọn? Hình G11", a: ["Edit Individual Documents...", "Print Documents...", "Preview Results.", "Highlight Merge Fields."], c: 0, img: "Hinh_G11.png"},
+  {q: "171. Tại hình 4, để khi hiển thị đối tượng mới có kèm theo âm thanh ta chọn mục? Hình D14", a: ["Sound chọn kiểu âm thanh.", "After Animation chọn kiểu âm thanh.", "Animate text chọn kiểu âm thanh.", "Direction chọn kiểu âm thanh."], c: 0, img: "Hinh_D14.png"},
+  {q: "172. Tại hình 1, để thiết lập thời gian chờ trước khi thực hiện hiệu ứng, ta chọn? Hình B12", a: ["Chọn 1", "Chọn 3", "Chọn 2 (Delay)", "Chọn 4"], c: 2, img: "Hinh_B12.png"},
+  {q: "173. Để đặt hiệu ứng cho toàn bộ biểu đồ xuất hiện trong một lần, trong mục Chart Animation, ta chọn? Hình F11", a: ["As one object", "By Series", "By Category", "By Element in Series"], c: 0, img: "Hinh_F11.png"},
+  {q: "174. Để đặt hiệu ứng cho biểu đồ xuất hiện với nhóm Hà Nội xuất hiện trước, sau đó đến Đà Nẵng, cuối cùng là TP. HCM, trong mục Chart Animation, ta chọn? Hình F11", a: ["As one object", "By Series (Theo chuỗi dữ liệu)", "By Category", "By Element in Series"], c: 1, img: "Hinh_F11.png"},
+  {q: "175. Để trình diễn báo cáo bắt đầu từ slide đầu tiên trong bài thuyết trình, tại hình trên ta chọn công cụ số mấy?", a: ["Công cụ 1.", "Công cụ 4.", "Công cụ 7.", "Công cụ 5."], c: 0, img: "Hinh_E24.png"},
+  {q: "176. Trên thanh công cụ Recording dùng để đặt thời gian tự động chạy cho các đối tượng trên Slide, công cụ số 9 có chức năng gì?", a: ["Di chuyển sang đối tượng kế tiếp (Next).", "Tạm dừng.", "Đặt lại thời gian cho từng đối tượng từ đầu.", "Chuyển sang Slide tiếp theo."], c: 0, img: "Hinh_E24.png"},
+  {q: "177. Để đặt hiệu ứng cho các đối tượng trên Slide, ta thực hiện?", a: ["Chọn Tab Rehearse Timings chọn hiệu ứng.", "Chọn Tab Animations... chọn hiệu ứng.", "Chọn Tab Transitions... chọn hiệu ứng.", "Chọn Tab Animation Schemes... chọn hiệu ứng."], c: 1},
+  {q: "178. Tại Tab Animations...chọn hiệu ứng. Thao tác này có chức năng gì?", a: ["Đặt hiệu ứng cho các đối tượng trên Slide.", "Đặt hiệu ứng chuyển Slide.", "Cài đặt thời gian chạy tự động cho các Slide.", "Đặt chế độ ẩn cho Slide."], c: 0},
+  {q: "179. Bảng tính Excel là gì?", a: ["Là tập hợp các bảng tính (Sheet).", "Là tập hợp các dòng và cột.", "Là vùng làm việc chính của Excel.", "Là nơi lưu trữ và xử lý dữ liệu."], c: 0},
+  {q: "180. Địa chỉ ô hỗn hợp là địa chỉ như thế nào?", a: ["Là địa chỉ có dòng hoặc cột được cố định ($). Ví dụ: $A1 hoặc A$1.", "Là địa chỉ được cố định cả dòng và cột. Ví dụ: $A$1.", "Là địa chỉ không có dấu $. Ví dụ: A1.", "Không có đáp án đúng."], c: 0},
+  {q: "181. Để tính tổng các giá trị trong một vùng dữ liệu, ta dùng hàm gì?", a: ["SUM", "AVERAGE", "MAX", "MIN"], c: 0},
+  {q: "182. Hàm IF trong Excel có bao nhiêu đối số?", a: ["2", "3 (Điều kiện, Giá trị nếu đúng, Giá trị nếu sai)", "4", "1"], c: 1},
+  {q: "183. Công thức =LEFT('Tin Học', 3) trả về kết quả gì?", a: ["Tin", "Hoc", "Tin ", "Học"], c: 2},
+  {q: "184. Công thức =RIGHT('Microsoft', 4) trả về kết quả gì?", a: ["soft", "Micro", "rosoft", "Miso"], c: 0},
+  {q: "185. Để đếm số ô có chứa số trong một vùng, ta dùng hàm?", a: ["COUNT", "COUNTA", "COUNTIF", "SUM"], c: 0},
+  {q: "186. Để đếm số ô không rỗng (chứa bất kỳ dữ liệu gì), ta dùng hàm?", a: ["COUNT", "COUNTA", "COUNTBLANK", "COUNTIF"], c: 1},
+  {q: "187. Hàm VLOOKUP dùng để làm gì?", a: ["Tìm kiếm giá trị theo cột.", "Tìm kiếm giá trị theo hàng.", "Tính tổng theo điều kiện.", "Đếm theo điều kiện."], c: 0},
+  {q: "188. Hàm HLOOKUP dùng để làm gì?", a: ["Tìm kiếm giá trị theo cột.", "Tìm kiếm giá trị theo hàng.", "Tính trung bình.", "Lấy giá trị lớn nhất."], c: 1},
+  {q: "189. Công thức =MID('Excel 2010', 7, 4) trả về kết quả gì?", a: ["Excel", "2010", "20", "l 20"], c: 1},
+  {q: "190. Để ghép 2 chuỗi ký tự lại với nhau, ta dùng toán tử nào?", a: ["&", "+", "%", "#"], c: 0},
+  {q: "191. Hàm NOW() trả về giá trị gì?", a: ["Ngày hiện tại.", "Giờ hiện tại.", "Ngày và giờ hiện tại của hệ thống.", "Năm hiện tại."], c: 2},
+  {q: "192. Hàm TODAY() trả về giá trị gì?", a: ["Ngày hiện tại của hệ thống.", "Giờ hiện tại.", "Ngày và giờ.", "Thứ trong tuần."], c: 0},
+  {q: "193. Địa chỉ tuyệt đối có đặc điểm gì?", a: ["Không thay đổi khi sao chép công thức. (Ví dụ: $A$1)", "Thay đổi cả dòng và cột khi sao chép.", "Chỉ thay đổi dòng.", "Chỉ thay đổi cột."], c: 0},
+  {q: "194. Để cố định địa chỉ ô (tạo địa chỉ tuyệt đối) khi nhập công thức, ta nhấn phím gì?", a: ["F2", "F3", "F4", "F5"], c: 2},
+  {q: "195. Hàm AND(True, False, True) trả về kết quả gì?", a: ["TRUE", "FALSE", "1", "0"], c: 1},
+  {q: "196. Hàm OR(True, False, True) trả về kết quả gì?", a: ["TRUE", "FALSE", "1", "0"], c: 0},
+  {q: "197. Lỗi #DIV/0! xuất hiện khi nào?", a: ["Khi chia một số cho 0.", "Khi sai tên hàm.", "Khi dữ liệu sai kiểu.", "Khi độ rộng cột không đủ."], c: 0},
+  {q: "198. Lỗi #VALUE! xuất hiện khi nào?", a: ["Khi công thức tham chiếu đến ô không hợp lệ.", "Khi tính toán với dữ liệu sai kiểu (ví dụ cộng chuỗi với số).", "Khi chia cho 0.", "Khi không tìm thấy giá trị."], c: 1},
+  {q: "199. Lỗi #NAME? xuất hiện khi nào?", a: ["Khi sai tên hàm hoặc tên vùng.", "Khi chia cho 0.", "Khi giá trị dò tìm không thấy.", "Khi cột hẹp."], c: 0},
+  {q: "200. Lỗi ##### xuất hiện khi nào?", a: ["Khi độ rộng cột không đủ để hiển thị dữ liệu số/ngày tháng.", "Khi công thức sai.", "Khi dữ liệu rỗng.", "Khi sai tên hàm."], c: 0},
+  {q: "201. Để lọc dữ liệu tự động, ta vào thẻ Data chọn lệnh gì?", a: ["Filter", "Sort", "Advanced", "Consolidate"], c: 0},
+  {q: "202. Để sắp xếp dữ liệu, ta vào thẻ Data chọn lệnh gì?", a: ["Filter", "Sort", "Form", "Subtotal"], c: 1},
+  {q: "203. Để vẽ biểu đồ trong Excel, ta vào thẻ nào?", a: ["Home", "Insert", "Page Layout", "Data"], c: 1},
+  {q: "204. Hàm ROUND(123.456, 2) trả về kết quả gì?", a: ["123.4", "123.45", "123.46", "123"], c: 2},
+  {q: "205. Hàm INT(123.99) trả về kết quả gì?", a: ["123", "124", "123.9", "123.0"], c: 0},
+  {q: "206. Hàm MOD(10, 3) trả về kết quả gì?", a: ["3", "1 (Phần dư)", "3.33", "0"], c: 1},
+  {q: "207. Để gộp nhiều ô thành một ô và căn giữa nội dung, ta dùng lệnh gì trên thẻ Home?", a: ["Wrap Text", "Merge & Center", "Shrink to fit", "Align Center"], c: 1},
+  {q: "208. Phím tắt để lưu bảng tính là gì?", a: ["Ctrl + S", "Ctrl + O", "Ctrl + N", "Ctrl + P"], c: 0},
+  {q: "209. Phím tắt để mở hộp thoại Format Cells?", a: ["Ctrl + 1", "Ctrl + F", "Ctrl + H", "Ctrl + P"], c: 0},
+  {q: "210. Để xuống dòng trong cùng một ô Excel, ta nhấn tổ hợp phím?", a: ["Enter", "Alt + Enter", "Ctrl + Enter", "Shift + Enter"], c: 1},
+  {q: "211. Hàm LEN('Excel') trả về giá trị bao nhiêu?", a: ["4", "5", "6", "1"], c: 1},
+  {q: "212. Hàm AVERAGE(4, 6, 8) trả về kết quả?", a: ["4", "6", "8", "18"], c: 1},
+  {q: "213. Hàm MAX(10, 20, 5) trả về?", a: ["5", "10", "20", "15"], c: 2},
+  {q: "214. Hàm MIN(10, 20, 5) trả về?", a: ["5", "10", "20", "0"], c: 0},
+  {q: "215. Để in bảng tính, ta nhấn tổ hợp phím?", a: ["Ctrl + P", "Ctrl + S", "Ctrl + O", "Alt + P"], c: 0},
+  {q: "216. Chế độ hiển thị nào cho phép xem ngắt trang?", a: ["Normal", "Page Layout", "Page Break Preview", "Custom Views"], c: 2},
+  {q: "217. Để đóng băng dòng tiêu đề (Freeze Panes), ta vào thẻ nào?", a: ["Home", "View", "Page Layout", "Data"], c: 1},
+  {q: "218. Trong Excel, 1 Sheet có tối đa bao nhiêu dòng (phiên bản 2010 trở lên)?", a: ["65536", "1,048,576", "Unlimited", "10,000"], c: 1},
+  {q: "219. Hàm RANK dùng để làm gì?", a: ["Xếp hạng.", "Tính tổng.", "Đếm.", "Làm tròn."], c: 0},
+  {q: "220. Để tính tổng phụ (Subtotal), dữ liệu cần phải làm gì trước?", a: ["Lọc (Filter)", "Sắp xếp (Sort) theo trường cần gom nhóm.", "Định dạng (Format)", "Không cần làm gì."], c: 1},
+  {q: "221. Biểu đồ hình tròn (Pie Chart) thích hợp để biểu diễn dữ liệu gì?", a: ["So sánh giữa các mục.", "Tỉ lệ phần trăm của các thành phần trong một tổng thể.", "Sự thay đổi theo thời gian.", "Mối quan hệ tương quan."], c: 1},
+  {q: "222. Để chèn thêm một cột vào bên trái cột hiện tại, ta chọn?", a: ["Insert > Insert Sheet Rows", "Insert > Insert Sheet Columns", "Delete Sheet Columns", "Format Column"], c: 1},
+  {q: "223. Hàm PRODUCT(2, 3, 4) trả về kết quả?", a: ["9", "24 (Tích)", "20", "12"], c: 1}
+];
+
+// LOGIC GAME (Giữ nguyên như cũ, tối ưu biến)
+let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
+
+const elInterface = document.getElementById("quiz-interface");
+const elResult = document.getElementById("result-interface");
+const elQuestion = document.getElementById("question");
+const elAnswers = document.getElementById("answers");
+const elCounter = document.getElementById("question-counter");
+const elCombo = document.getElementById("combo-display");
+const elProgressBar = document.getElementById("progress-bar");
+const elBtnNext = document.getElementById("btn-next");
+const elBtnSkip = document.getElementById("btn-skip");
+const elBtnPrev = document.getElementById("btn-prev");
+const elFailToast = document.getElementById("fail-toast");
+const elPhaseBadge = document.getElementById("phase-display");
+const elImage = document.getElementById("q-image");
+
+function initGame() {
+    score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
+    activeQueue = []; skippedQueue = []; userAnswers = {}; isPhaseSkipped = false;
+
+    // 1. ĐỌC CÀI ĐẶT TỪ URL (Trang chủ gửi sang)
+    const urlParams = new URLSearchParams(window.location.search);
+    // Nếu không có tham số (mở trực tiếp), mặc định là true (có đảo)
+    const configShuffleQ = urlParams.get('sq') !== 'false'; 
+    const configShuffleA = urlParams.get('sa') !== 'false';
+
+    // 2. XỬ LÝ DỮ LIỆU
+    sessionQuiz = rawData.map((item, originalIdx) => {
+        let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+        
+        // CHỈ ĐẢO ĐÁP ÁN NẾU ĐƯỢC BẬT
+        if (configShuffleA) {
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+        }
+        
+        const newCorrectIndex = options.findIndex(opt => opt.isCorrect);
+
+        return {
+            q: item.q,
+            a: options.map(opt => opt.text),
+            c: newCorrectIndex,
+            originalId: originalIdx,
+            image: item.img || null // (Dành cho file Tin học, file NN có thể bỏ dòng này nếu ko có ảnh)
+        };
+    });
+
+    // 3. TẠO HÀNG ĐỢI CÂU HỎI
+    let indices = sessionQuiz.map((_, i) => i);
+    
+    // CHỈ ĐẢO CÂU HỎI NẾU ĐƯỢC BẬT
+    if (configShuffleQ) {
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+    }
+    
+    activeQueue = indices;
+    
+    updateStats();
+    loadQuestion();
+}
+
+function loadQuestion() {
+    const qIndex = activeQueue[currentIndex];
+    const data = sessionQuiz[qIndex];
+    const hasAnswered = userAnswers.hasOwnProperty(qIndex);
+
+    elQuestion.classList.remove("fade-in");
+    void elQuestion.offsetWidth;
+    elQuestion.classList.add("fade-in");
+
+    elQuestion.innerText = data.q;
+    elAnswers.innerHTML = "";
+
+    if (data.image) {
+        elImage.src = data.image;
+        elImage.style.display = "block";
+    } else {
+        elImage.style.display = "none";
+    }
+
+    if (isPhaseSkipped) {
+        elPhaseBadge.style.display = "inline-block";
+        elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
+    } else {
+        elPhaseBadge.style.display = "none";
+        elCounter.innerText = `Câu ${currentIndex + 1}/${rawData.length}`;
+    }
+
+    const labels = ["A", "B", "C", "D"];
+    data.a.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<b>${labels[idx]}.</b> ${ans}`;
+        
+        if (hasAnswered) {
+            btn.disabled = true;
+            const userPick = userAnswers[qIndex];
+            if (idx === data.c) btn.classList.add("correct");
+            if (idx === userPick && userPick !== data.c) btn.classList.add("wrong");
+            if (idx === userPick) btn.classList.add("user-selected");
+        } else {
+            btn.onclick = () => checkAnswer(qIndex, idx);
+        }
+        elAnswers.appendChild(btn);
+    });
+
+    elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
+    elBtnSkip.style.display = hasAnswered ? "none" : "block";
+    elBtnNext.style.display = hasAnswered ? "block" : "none";
+
+    updateStats();
+}
+
+function checkAnswer(qIndex, selectedIdx) {
+    const data = sessionQuiz[qIndex];
+    const isCorrect = selectedIdx === data.c;
+    userAnswers[qIndex] = selectedIdx;
+
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === data.c) btn.classList.add("correct");
+        if (idx === selectedIdx && !isCorrect) btn.classList.add("wrong");
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+    } else {
+        combo = 0; wrongStreak++;
+        if (wrongStreak >= 3) {
+            elFailToast.classList.add("show");
+            setTimeout(() => elFailToast.classList.remove("show"), 3000);
+        }
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+}
+
+function nextQuestion() {
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        alert(`Hết lượt 1! Làm lại ${skippedQueue.length} câu đã bỏ qua.`);
+        isPhaseSkipped = true;
+        activeQueue = [...skippedQueue];
+        skippedQueue = [];
+        currentIndex = 0;
+        loadQuestion();
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const totalQ = rawData.length;
+    const answeredCount = Object.keys(userAnswers).length;
+    const pct = totalQ > 0 ? (answeredCount / totalQ) * 100 : 0;
+    elProgressBar.style.width = `${pct}%`;
+
+    elCombo.className = "combo-badge";
+    if (combo > 0) elCombo.classList.add("active");
+    if (combo >= 50) elCombo.classList.add("c-50");
+    else if (combo >= 20) elCombo.classList.add("c-20");
+    else if (combo >= 10) elCombo.classList.add("c-10");
+    else if (combo >= 5) elCombo.classList.add("c-5");
+    elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
+}
+
+function finishGame() {
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+    const total = rawData.length;
+    const correctCount = score;
+    const wrongCount = Object.keys(userAnswers).length - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, #e2e8f0 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+}
+
+initGame();
+</script>
+</body>
+</html>
         border-radius: 20px;
         box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
         position: relative;
