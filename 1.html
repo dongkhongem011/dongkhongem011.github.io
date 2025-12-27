@@ -55,7 +55,6 @@
     }
     .combo-badge.active { opacity: 1; transform: scale(1); }
     
-    /* Màu Combo */
     .c-5 { background: #f97316; box-shadow: 0 0 10px #f97316; }
     .c-10 { background: #ef4444; animation: pulse 1s infinite; }
     .c-20 { background: #b91c1c; border: 1px solid #fff; }
@@ -64,7 +63,7 @@
     .progress-container { width: 100%; height: 4px; background: #e2e8f0; flex-shrink: 0; }
     .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
 
-    /* Container chính */
+    /* Container */
     .container {
         width: 100%;
         max-width: 100%;
@@ -81,9 +80,10 @@
         padding: 20px; 
         overflow-y: auto; 
         flex-grow: 1;
-        /* Padding bottom cực lớn để nội dung không bị nút che khi cuộn hết */
         padding-bottom: 120px; 
         -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
     }
 
     .phase-badge { 
@@ -103,7 +103,7 @@
         word-wrap: break-word;
     }
 
-    .options-grid { display: flex; flex-direction: column; gap: 12px; }
+    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
 
     .option-btn {
         width: 100%;
@@ -123,19 +123,16 @@
     }
 
     .option-btn:active { background: #f1f5f9; }
-    
     .option-btn.correct { border-color: var(--success); background: #dcfce7; color: #14532d; }
     .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 1.2rem; }
-    
     .option-btn.wrong { border-color: var(--danger); background: #fee2e2; color: #7f1d1d; }
     .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 1.2rem; }
-    
     .option-btn.user-selected { border: 2px solid #475569; }
 
-    /* --- THANH ĐIỀU KHIỂN NỔI (POPUP STYLE) --- */
+    /* Footer Nổi */
     .control-bar {
         position: fixed;
-        bottom: 30px; /* Cách đáy 30px -> Tránh thanh Home ảo và Address bar */
+        bottom: 30px; 
         left: 50%;
         transform: translateX(-50%);
         width: 90%;
@@ -143,7 +140,7 @@
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         padding: 10px 15px;
-        border-radius: 50px; /* Bo tròn như viên thuốc */
+        border-radius: 50px;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
         display: flex;
         justify-content: space-between;
@@ -165,11 +162,11 @@
         white-space: nowrap;
     }
     .btn:active { transform: scale(0.95); }
-    .btn-prev { background: #f1f5f9; color: #64748b; flex: 0.4; font-size: 1.2rem; padding: 12px 0; } /* Nút quay lại nhỏ hơn */
+    .btn-prev { background: #f1f5f9; color: #64748b; flex: 0.4; font-size: 1.2rem; padding: 12px 0; }
     .btn-skip { background: #fef3c7; color: #d97706; }
     .btn-next { background: var(--primary); color: white; display: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
 
-    /* Màn hình kết quả */
+    /* Result Screen */
     .result-screen { 
         text-align: center; 
         padding: 40px 20px; 
@@ -179,7 +176,6 @@
         background: white;
         z-index: 50;
     }
-    
     .score-circle {
         width: 150px; height: 150px;
         border-radius: 50%;
@@ -232,7 +228,6 @@
             <div id="phase-display" class="phase-badge">LÀM LẠI CÂU BỎ QUA</div>
             <h2 class="question-text" id="question">Đang tải...</h2>
             <img id="q-image" style="display:none"> 
-            
             <div class="options-grid" id="answers"></div>
         </div>
 
@@ -265,6 +260,7 @@
 
 <script>
 // DỮ LIỆU CÂU HỎI (100 CÂU CHUẨN PDF)
+// c:0=A, 1=B, 2=C, 3=D
 const originalQuiz = [
   {q: "Câu 1: Ngôn ngữ là gì?", a: ["Ngôn ngữ là một hệ thống các đơn vị (âm vị, hình vị, từ, câu)", "Những quy tắc kết hợp để tạo thành lời nói trong giao tiếp", "Được cộng đồng sử dụng ngôn ngữ quy ước và phản ánh trong ý thức của họ", "Cả A, B, C"], c: 3},
   {q: "Câu 2: Phát biểu nào sau đây là sai?", a: ["Ngôn ngữ là một thuộc tính tinh thần", "Ngôn ngữ là một thuộc tính vật chất", "Ngôn ngữ là một hiện tượng xã hội đặc biệt", "Ngôn ngữ không thuộc về một kiến trúc thượng tầng nào"], c: 0},
