@@ -41,7 +41,7 @@
         flex-shrink: 0;
     }
     
-    .stats { font-weight: 800; font-size: 0.95rem; }
+    .stats { font-weight: 800; font-size: 1rem; }
     
     .combo-badge {
         background: rgba(255,255,255,0.2);
@@ -63,7 +63,7 @@
     .progress-container { width: 100%; height: 4px; background: #e2e8f0; flex-shrink: 0; }
     .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
 
-    /* Container chính */
+    /* Container */
     .container {
         width: 100%;
         max-width: 100%;
@@ -80,8 +80,10 @@
         padding: 20px; 
         overflow-y: auto; 
         flex-grow: 1;
-        padding-bottom: 120px; /* Chừa chỗ cho footer nổi */
+        padding-bottom: 120px; 
         -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
     }
 
     .phase-badge { 
@@ -101,12 +103,11 @@
         word-wrap: break-word;
     }
 
-    /* Ảnh minh họa */
     .question-image {
         display: none;
         max-width: 100%;
         height: auto;
-        max-height: 280px;
+        max-height: 300px;
         border-radius: 8px;
         border: 1px solid #cbd5e1;
         margin: 0 auto 15px auto;
@@ -114,7 +115,7 @@
         background: #f8fafc;
     }
 
-    .options-grid { display: flex; flex-direction: column; gap: 12px; }
+    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
 
     .option-btn {
         width: 100%;
@@ -134,16 +135,13 @@
     }
 
     .option-btn:active { background: #f1f5f9; }
-    
     .option-btn.correct { border-color: var(--success); background: #dcfce7; color: #14532d; }
     .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 1.2rem; }
-    
     .option-btn.wrong { border-color: var(--danger); background: #fee2e2; color: #7f1d1d; }
     .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 1.2rem; }
-    
     .option-btn.user-selected { border: 2px solid #475569; }
 
-    /* --- THANH ĐIỀU KHIỂN NỔI --- */
+    /* Thanh Điều Khiển Nổi */
     .control-bar {
         position: fixed;
         bottom: 30px; 
@@ -180,7 +178,7 @@
     .btn-skip { background: #fef3c7; color: #d97706; }
     .btn-next { background: var(--primary); color: white; display: none; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
-    /* Màn hình kết quả */
+    /* Result Screen */
     .result-screen { 
         text-align: center; 
         padding: 40px 20px; 
@@ -190,7 +188,6 @@
         background: white;
         z-index: 50;
     }
-    
     .score-circle {
         width: 150px; height: 150px;
         border-radius: 50%;
@@ -274,7 +271,7 @@
 </div>
 
 <script>
-// DỮ LIỆU CÂU HỎI (ĐÃ FIX CÚ PHÁP ĐỂ TRÁNH LỖI)
+// DỮ LIỆU CÂU HỎI (223 CÂU - ĐÃ SỬA TÊN ẢNH THÀNH 'I' HOA)
 const rawData = [
   {q: "1. Khái niệm dữ liệu là gì?", a: ["Dữ liệu là đối tượng mang thông tin.", "Dữ liệu là các tín hiệu vật lý và các số liệu.", "Dữ liệu là các kí hiệu, các hình ảnh.", "Dữ liệu là đối tượng mang thông tin, dữ liệu sau khi được xử lý sẽ cho ta thông tin."], c: 3},
   {q: "2. Dữ liệu trong máy tính có thể là gì?", a: ["Là các số liệu hoặc tài liệu cho trước chưa được xử lý.", "Là các tín hiệu vật lý như sóng điện từ, ánh sáng, âm thanh.", "Là các hình ảnh.", "Tất cả các đáp án trên đều đúng."], c: 3},
@@ -585,7 +582,7 @@ function loadQuestion() {
         elCounter.innerText = `Câu ${currentIndex + 1}/${rawData.length}`;
     }
 
-    const labels = ["A", "B", "C", "D", "E"];
+    const labels = ["A", "B", "C", "D"];
     data.a.forEach((ans, idx) => {
         const btn = document.createElement("button");
         btn.className = "option-btn";
