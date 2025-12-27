@@ -75,7 +75,7 @@
         overflow: hidden;
     }
 
-    /* Vùng nội dung cuộn */
+    /* Vùng nội dung */
     .quiz-body { 
         padding: 20px; 
         overflow-y: auto; 
@@ -107,7 +107,7 @@
         display: none;
         max-width: 100%;
         height: auto;
-        max-height: 300px;
+        max-height: 350px;
         border-radius: 8px;
         border: 1px solid #cbd5e1;
         margin: 0 auto 15px auto;
@@ -271,7 +271,7 @@
 </div>
 
 <script>
-// DỮ LIỆU CÂU HỎI (223 CÂU - ĐÃ SỬA TÊN ẢNH THÀNH 'I' HOA)
+// DỮ LIỆU CÂU HỎI (223 CÂU - ĐÃ GẮN ẢNH THỦ CÔNG)
 const rawData = [
   {q: "1. Khái niệm dữ liệu là gì?", a: ["Dữ liệu là đối tượng mang thông tin.", "Dữ liệu là các tín hiệu vật lý và các số liệu.", "Dữ liệu là các kí hiệu, các hình ảnh.", "Dữ liệu là đối tượng mang thông tin, dữ liệu sau khi được xử lý sẽ cho ta thông tin."], c: 3},
   {q: "2. Dữ liệu trong máy tính có thể là gì?", a: ["Là các số liệu hoặc tài liệu cho trước chưa được xử lý.", "Là các tín hiệu vật lý như sóng điện từ, ánh sáng, âm thanh.", "Là các hình ảnh.", "Tất cả các đáp án trên đều đúng."], c: 3},
@@ -539,7 +539,7 @@ function initGame() {
             a: options.map(opt => opt.text),
             c: newCorrectIndex,
             originalId: originalIdx,
-            image: item.image || null 
+            image: item.img || null 
         };
     });
 
