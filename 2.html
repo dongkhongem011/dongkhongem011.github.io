@@ -7,14 +7,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
-        --primary: #2563eb; /* Màu Xanh Dương đặc trưng cho Tin học */
+        --primary: #2563eb; /* Màu Xanh Dương */
         --secondary: #64748b;
         --success: #16a34a;
         --danger: #dc2626;
         --bg: #f1f5f9;
         --card-bg: #ffffff;
         --text: #0f172a;
-        --warning: #f59e0b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -31,7 +30,7 @@
 
     /* Header */
     .header {
-        padding: 12px 15px;
+        padding: 12px 20px;
         background: var(--primary);
         color: white;
         display: flex;
@@ -42,7 +41,7 @@
         flex-shrink: 0;
     }
     
-    .stats { font-weight: 800; font-size: 0.95rem; }
+    .stats { font-weight: 800; font-size: 1rem; }
     
     .combo-badge {
         background: rgba(255,255,255,0.2);
@@ -56,7 +55,6 @@
     }
     .combo-badge.active { opacity: 1; transform: scale(1); }
     
-    /* Màu Combo */
     .c-5 { background: #f97316; box-shadow: 0 0 10px #f97316; }
     .c-10 { background: #ef4444; animation: pulse 1s infinite; }
     .c-20 { background: #b91c1c; border: 1px solid #fff; }
@@ -79,10 +77,11 @@
 
     /* Vùng nội dung cuộn */
     .quiz-body { 
-        padding: 15px; 
+        padding: 20px; 
         overflow-y: auto; 
         flex-grow: 1;
-        padding-bottom: 80px; /* Chừa chỗ cho footer */
+        /* Padding bottom cực lớn để nội dung không bị nút che khi cuộn hết */
+        padding-bottom: 120px; 
         -webkit-overflow-scrolling: touch;
     }
 
@@ -91,13 +90,13 @@
         background: #0ea5e9; color: white; 
         padding: 4px 10px; border-radius: 4px; 
         font-size: 0.8rem; margin-bottom: 10px; 
-        font-weight: bold;
+        font-weight: bold; width: fit-content;
     }
 
     .question-text {
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         font-weight: 700;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
         line-height: 1.5;
         color: #1e293b;
         word-wrap: break-word;
@@ -108,11 +107,12 @@
         display: none;
         max-width: 100%;
         height: auto;
-        max-height: 250px;
+        max-height: 280px;
         border-radius: 8px;
         border: 1px solid #cbd5e1;
         margin: 0 auto 15px auto;
         object-fit: contain;
+        background: #f8fafc;
     }
 
     .options-grid { display: flex; flex-direction: column; gap: 12px; }
@@ -120,7 +120,7 @@
     .option-btn {
         width: 100%;
         text-align: left;
-        padding: 14px 16px;
+        padding: 15px 18px;
         border: 1px solid #cbd5e1;
         background: white;
         border-radius: 12px;
@@ -136,48 +136,37 @@
 
     .option-btn:active { background: #f1f5f9; }
     
-    .option-btn.correct { 
-        border-color: var(--success); 
-        background: #dcfce7; 
-        color: #14532d; 
-    }
-    .option-btn.correct::after { 
-        content: "✓"; 
-        position: absolute; right: 15px; top: 50%; transform: translateY(-50%); 
-        font-weight: bold; font-size: 1.2rem;
-    }
+    .option-btn.correct { border-color: var(--success); background: #dcfce7; color: #14532d; }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 1.2rem; }
     
-    .option-btn.wrong { 
-        border-color: var(--danger); 
-        background: #fee2e2; 
-        color: #7f1d1d; 
-    }
-    .option-btn.wrong::after { 
-        content: "✕"; 
-        position: absolute; right: 15px; top: 50%; transform: translateY(-50%); 
-        font-weight: bold; font-size: 1.2rem;
-    }
+    .option-btn.wrong { border-color: var(--danger); background: #fee2e2; color: #7f1d1d; }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 1.2rem; }
     
     .option-btn.user-selected { border: 2px solid #475569; }
 
-    /* Footer Cố định */
-    .footer {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        padding: 12px 15px;
-        background: white;
-        border-top: 1px solid #e2e8f0;
+    /* --- THANH ĐIỀU KHIỂN NỔI (POPUP STYLE) --- */
+    .control-bar {
+        position: fixed;
+        bottom: 30px; 
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 10px 15px;
+        border-radius: 50px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
         display: flex;
         justify-content: space-between;
         gap: 10px;
-        z-index: 20;
-        padding-bottom: calc(12px + env(safe-area-inset-bottom));
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+        z-index: 100;
+        border: 1px solid rgba(255,255,255,0.5);
     }
 
     .btn {
-        padding: 12px 0;
-        border-radius: 10px;
+        padding: 12px 20px;
+        border-radius: 30px;
         font-weight: 700;
         border: none;
         cursor: pointer;
@@ -185,13 +174,14 @@
         flex: 1;
         text-align: center;
         transition: transform 0.1s;
+        white-space: nowrap;
     }
-    .btn:active { transform: scale(0.96); }
-    .btn-prev { background: #e2e8f0; color: #475569; flex: 0.6; }
-    .btn-skip { background: #f59e0b; color: white; }
-    .btn-next { background: var(--primary); color: white; display: none; }
+    .btn:active { transform: scale(0.95); }
+    .btn-prev { background: #f1f5f9; color: #64748b; flex: 0.4; font-size: 1.2rem; padding: 12px 0; }
+    .btn-skip { background: #fef3c7; color: #d97706; }
+    .btn-next { background: var(--primary); color: white; display: none; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
-    /* Kết quả & Thông báo */
+    /* Màn hình kết quả */
     .result-screen { 
         text-align: center; 
         padding: 40px 20px; 
@@ -219,7 +209,7 @@
         background: #991b1b; color: white;
         padding: 12px 25px; border-radius: 30px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        font-weight: 700; z-index: 100;
+        font-weight: 700; z-index: 200;
         display: flex; align-items: center; gap: 8px;
         opacity: 0; transition: opacity 0.3s; pointer-events: none;
         font-size: 0.95rem; white-space: nowrap; border: 2px solid #fca5a5;
@@ -257,16 +247,16 @@
             <div class="options-grid" id="answers"></div>
         </div>
 
-        <div class="footer" id="footer-controls">
-            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">Quay lại</button>
-            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">Bỏ qua</button>
-            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">Tiếp tục</button>
+        <div class="control-bar" id="footer-controls">
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">⬅</button>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">Bỏ qua ⤵</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">Tiếp theo ➜</button>
         </div>
     </div>
 
     <div id="result-interface" class="result-screen">
         <h2>🎉 Hoàn thành!</h2>
-        <p style="color: #64748b; margin-bottom: 25px;">Bạn đã hoàn thành bài thi.</p>
+        <p style="color: #64748b; margin-bottom: 25px;">Bạn đã chiến đấu hết mình!</p>
         
         <div class="score-circle" id="score-circle">
             <span class="score-text" id="final-score">0%</span>
@@ -285,8 +275,7 @@
 </div>
 
 <script>
-// DỮ LIỆU CÂU HỎI (223 Câu Chuẩn)
-// Đã sửa tên ảnh Hinh_1X -> Hinh_IX (I viết hoa)
+// DỮ LIỆU CÂU HỎI (223 CÂU - ĐÃ SỬA TÊN ẢNH THÀNH 'I' HOA)
 const rawData = [
   {q: "1. Khái niệm dữ liệu là gì?", a: ["Dữ liệu là đối tượng mang thông tin.", "Dữ liệu là các tín hiệu vật lý và các số liệu.", "Dữ liệu là các kí hiệu, các hình ảnh.", "Dữ liệu là đối tượng mang thông tin, dữ liệu sau khi được xử lý sẽ cho ta thông tin."], c: 3},
   {q: "2. Dữ liệu trong máy tính có thể là gì?", a: ["Là các số liệu hoặc tài liệu cho trước chưa được xử lý.", "Là các tín hiệu vật lý như sóng điện từ, ánh sáng, âm thanh.", "Là các hình ảnh.", "Tất cả các đáp án trên đều đúng."], c: 3},
@@ -513,9 +502,10 @@ const rawData = [
   {q: "223. Hàm PRODUCT(2, 3, 4) trả về kết quả?", a: ["9", "24 (Tích)", "20", "12"], c: 1}
 ];
 
-// LOGIC GAME (Giữ nguyên như cũ, tối ưu biến)
+// --- LOGIC GAME (Dùng chung cho cả 2 file) ---
 let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
 
+// DOM Elements
 const elInterface = document.getElementById("quiz-interface");
 const elResult = document.getElementById("result-interface");
 const elQuestion = document.getElementById("question");
@@ -529,28 +519,41 @@ const elBtnPrev = document.getElementById("btn-prev");
 const elFailToast = document.getElementById("fail-toast");
 const elPhaseBadge = document.getElementById("phase-display");
 const elImage = document.getElementById("q-image");
+const elFooter = document.getElementById("footer-controls");
 
 function initGame() {
     score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
     activeQueue = []; skippedQueue = []; userAnswers = {}; isPhaseSkipped = false;
 
-    // Shuffle Data & Options
-    sessionQuiz = rawData.map((item, originalIdx) => {
+    // 1. ĐỌC CÀI ĐẶT TỪ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const configShuffleQ = urlParams.get('sq') !== 'false'; 
+    const configShuffleA = false; // Tắt đảo đáp án
+
+    // 2. XỬ LÝ DỮ LIỆU
+    sessionQuiz = originalQuiz.map((item, originalIdx) => {
         let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
-        // Không đảo đáp án để giữ nguyên thứ tự A, B, C, D
+        
+        // (Bỏ đảo đáp án)
+        
+        const newCorrectIndex = options.findIndex(opt => opt.isCorrect);
+
         return {
             q: item.q,
             a: options.map(opt => opt.text),
-            c: options.findIndex(opt => opt.isCorrect),
-            image: item.image || null
+            c: newCorrectIndex,
+            originalId: originalIdx,
+            image: null // File này không có ảnh
         };
     });
 
-    // Shuffle Questions Only
+    // 3. TẠO HÀNG ĐỢI
     let indices = sessionQuiz.map((_, i) => i);
-    for (let i = indices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [indices[i], indices[j]] = [indices[j], indices[i]];
+    if (configShuffleQ) {
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
     }
     activeQueue = indices;
     
@@ -563,13 +566,10 @@ function loadQuestion() {
     const data = sessionQuiz[qIndex];
     const hasAnswered = userAnswers.hasOwnProperty(qIndex);
 
-    elQuestion.classList.remove("fade-in");
-    void elQuestion.offsetWidth;
-    elQuestion.classList.add("fade-in");
-
     elQuestion.innerText = data.q;
     elAnswers.innerHTML = "";
 
+    // Xử lý ảnh (nếu có)
     if (data.image) {
         elImage.src = data.image;
         elImage.style.display = "block";
@@ -577,12 +577,13 @@ function loadQuestion() {
         elImage.style.display = "none";
     }
 
+    // Hiển thị Phase
     if (isPhaseSkipped) {
         elPhaseBadge.style.display = "inline-block";
         elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
     } else {
         elPhaseBadge.style.display = "none";
-        elCounter.innerText = `Câu ${currentIndex + 1}/${rawData.length}`;
+        elCounter.innerText = `Câu ${currentIndex + 1}/${originalQuiz.length}`;
     }
 
     const labels = ["A", "B", "C", "D"];
@@ -604,8 +605,15 @@ function loadQuestion() {
     });
 
     elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
-    elBtnSkip.style.display = hasAnswered ? "none" : "block";
-    elBtnNext.style.display = hasAnswered ? "block" : "none";
+    
+    // Nút Bỏ qua / Tiếp tục
+    if (hasAnswered) {
+        elBtnSkip.style.display = "none";
+        elBtnNext.style.display = "block";
+    } else {
+        elBtnSkip.style.display = "block";
+        elBtnNext.style.display = "none";
+    }
 
     updateStats();
 }
@@ -615,78 +623,4 @@ function checkAnswer(qIndex, selectedIdx) {
     const isCorrect = selectedIdx === data.c;
     userAnswers[qIndex] = selectedIdx;
 
-    const allBtns = elAnswers.querySelectorAll(".option-btn");
-    allBtns.forEach((btn, idx) => {
-        btn.disabled = true;
-        if (idx === data.c) btn.classList.add("correct");
-        if (idx === selectedIdx && !isCorrect) btn.classList.add("wrong");
-    });
-
-    if (isCorrect) {
-        score++; combo++; wrongStreak = 0;
-    } else {
-        combo = 0; wrongStreak++;
-        if (wrongStreak >= 3) {
-            elFailToast.classList.add("show");
-            setTimeout(() => elFailToast.classList.remove("show"), 3000);
-        }
-    }
-
-    elBtnNext.style.display = "block";
-    elBtnSkip.style.display = "none";
-    updateStats();
-}
-
-function nextQuestion() {
-    if (currentIndex < activeQueue.length - 1) {
-        currentIndex++;
-        loadQuestion();
-    } else {
-        handleEndOfQueue();
-    }
-}
-
-function skipQuestion() {
-    const qIndex = activeQueue[currentIndex];
-    skippedQueue.push(qIndex);
-    if (currentIndex < activeQueue.length - 1) {
-        currentIndex++;
-        loadQuestion();
-    } else {
-        handleEndOfQueue();
-    }
-}
-
-function goBack() {
-    if (currentIndex > 0) {
-        currentIndex--;
-        loadQuestion();
-    }
-}
-
-function handleEndOfQueue() {
-    if (!isPhaseSkipped && skippedQueue.length > 0) {
-        alert(`Hết lượt 1! Làm lại ${skippedQueue.length} câu đã bỏ qua.`);
-        isPhaseSkipped = true;
-        activeQueue = [...skippedQueue];
-        skippedQueue = [];
-        currentIndex = 0;
-        loadQuestion();
-    } else {
-        finishGame();
-    }
-}
-
-function updateStats() {
-    const totalQ = rawData.length;
-    const answeredCount = Object.keys(userAnswers).length;
-    const pct = totalQ > 0 ? (answeredCount / totalQ) * 100 : 0;
-    elProgressBar.style.width = `${pct}%`;
-
-    elCombo.className = "combo-badge";
-    if (combo > 0) elCombo.classList.add("active");
-    if (combo >= 50) elCombo.classList.add("c-50");
-    else if (combo >= 20) elCombo.classList.add("c-20");
-    else if (combo >= 10) elCombo.classList.add("c-10");
-    else if (combo >= 5) elCombo.classList.add("c-5");
-    elCombo.innerText = combo > 0
+    const allBtns = elAnswers.querySelectorAll(".
