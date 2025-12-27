@@ -24,13 +24,13 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 20px 15px; /* Padding nhỏ hơn cho mobile */
+        padding: 20px 15px;
     }
 
     /* --- MAIN LAYOUT --- */
     .container {
         width: 100%;
-        max-width: 600px; /* Giới hạn chiều rộng để đẹp trên iPad/PC */
+        max-width: 600px;
         text-align: center;
         z-index: 1;
         margin-top: auto;
@@ -39,7 +39,7 @@
 
     .main-title {
         color: white;
-        font-size: 2.2rem; /* Giảm size chữ tiêu đề */
+        font-size: 2.2rem;
         font-weight: 800;
         margin-bottom: 5px;
         text-shadow: 0 3px 6px rgba(0,0,0,0.2);
@@ -55,7 +55,7 @@
 
     .grid-menu {
         display: flex;
-        flex-direction: column; /* Xếp dọc trên mobile */
+        flex-direction: column;
         gap: 15px;
     }
 
@@ -67,7 +67,7 @@
         color: var(--text);
         box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         display: flex;
-        flex-direction: row; /* Icon bên trái, chữ bên phải */
+        flex-direction: row;
         align-items: center;
         cursor: pointer;
         position: relative;
@@ -108,7 +108,7 @@
         font-weight: 600;
     }
 
-    /* --- MODAL (CỬA SỔ NỔI) --- */
+    /* --- MODAL POPUP --- */
     .modal-overlay {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -117,17 +117,14 @@
         z-index: 1000;
         display: flex;
         justify-content: center;
-        align-items: center; /* Căn giữa màn hình */
+        align-items: center;
         opacity: 0;
         visibility: hidden;
         transition: all 0.2s ease;
         padding: 20px;
     }
 
-    .modal-overlay.active {
-        opacity: 1;
-        visibility: visible;
-    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
 
     .modal-box {
         background: white;
@@ -139,13 +136,11 @@
         transform: translateY(20px);
         transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-        max-height: 90vh; /* Tránh tràn màn hình dọc */
+        max-height: 90vh;
         overflow-y: auto;
     }
 
-    .modal-overlay.active .modal-box {
-        transform: translateY(0);
-    }
+    .modal-overlay.active .modal-box { transform: translateY(0); }
 
     .close-btn {
         position: absolute;
@@ -177,15 +172,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
-        padding-bottom: 12px;
-        border-bottom: 1px dashed #e5e7eb;
     }
-    .toggle-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
 
     .toggle-label { font-weight: 700; color: #374151; font-size: 0.95rem; }
     
-    /* Toggle Switch - Làm to hơn cho dễ bấm */
+    /* Toggle Switch */
     .switch { position: relative; display: inline-block; width: 52px; height: 30px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
@@ -220,13 +211,13 @@
 
     .contact-area {
         display: flex;
-        justify-content: space-between; /* Dàn đều nút */
+        justify-content: space-between;
         gap: 10px;
         margin-bottom: 20px;
     }
 
     .social-btn {
-        flex: 1; /* Nút tự giãn đều */
+        flex: 1;
         display: flex; align-items: center; justify-content: center; gap: 6px;
         padding: 10px; border-radius: 12px;
         text-decoration: none; color: white; font-weight: 700; font-size: 0.85rem;
@@ -255,7 +246,6 @@
     }
     .start-btn:active { background: #4338ca; transform: scale(0.98); }
 
-    /* Animation */
     .fade-in { animation: fadeIn 0.6s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -307,25 +297,18 @@
                     <span class="slider"></span>
                 </label>
             </div>
-            <div class="toggle-row">
-                <div class="toggle-label">🔠 Đảo vị trí đáp án</div>
-                <label class="switch">
-                    <input type="checkbox" id="shuffleA" checked>
-                    <span class="slider"></span>
-                </label>
             </div>
-        </div>
 
         <div class="warning-box">
-            ⚠️ <b>Lưu ý:</b> Dữ liệu có thể còn sai sót. Nếu phát hiện lỗi, hãy báo cáo để mình sửa nhé!
+            ⚠️ <b>Lưu ý:</b> Dữ liệu có thể còn sai sót. Nếu phát hiện lỗi, hãy báo cáo ngay cho mình nhé!
         </div>
 
         <div class="contact-area">
             <a href="https://www.facebook.com/pna1301" target="_blank" class="social-btn btn-fb">
-                <span>📘</span> Báo lỗi FB
+                <span>📘</span> Facebook
             </a>
             <a href="https://t.me/justn1" target="_blank" class="social-btn btn-tele">
-                <span>✈️</span> Báo lỗi Tele
+                <span>✈️</span> Telegram
             </a>
         </div>
 
@@ -357,10 +340,9 @@
         
         // Lấy trạng thái cài đặt
         const sQ = document.getElementById('shuffleQ').checked;
-        const sA = document.getElementById('shuffleA').checked;
         
-        // Chuyển hướng
-        window.location.href = `${currentUrl}?sq=${sQ}&sa=${sA}`;
+        // Chuyển hướng (luôn tắt đảo đáp án sa=false)
+        window.location.href = `${currentUrl}?sq=${sQ}&sa=false`;
     }
 </script>
 
