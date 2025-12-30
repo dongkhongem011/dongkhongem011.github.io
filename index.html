@@ -20,11 +20,11 @@
     .sub-title { color: #e0e7ff; font-size: 0.95rem; margin-bottom: 30px; }
     
     .grid-menu { display: flex; flex-direction: column; gap: 15px; }
-    .card { background: var(--card-bg); border-radius: 20px; padding: 18px; text-decoration: none; color: var(--text); box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; align-items: center; transition: transform 0.2s; cursor: pointer; }
+    .card { background: var(--card-bg); border-radius: 20px; padding: 18px; text-decoration: none; color: var(--text); box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; align-items: center; transition: transform 0.2s; cursor: pointer; border: 2px solid transparent;}
     .card:active { transform: scale(0.98); background: #fff; }
-    .card-icon { font-size: 2.5rem; margin-right: 15px; background: #f3f4f6; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    .card-icon { font-size: 2.5rem; margin-right: 15px; background: #f3f4f6; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
     .card-content { text-align: left; flex-grow: 1; }
-    .card-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 3px; }
+    .card-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 3px; line-height: 1.2;}
     .card-desc { font-size: 0.8rem; color: #6b7280; }
     .badge { display: inline-block; background: #e0e7ff; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; color: var(--primary); margin-top: 5px; }
     .creator-badge { margin-top: 30px; color: rgba(255,255,255,0.7); font-size: 0.8rem; }
@@ -39,7 +39,6 @@
     .modal-header { margin-bottom: 20px; text-align: center; }
     .modal-title { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
 
-    /* Settings */
     .settings-group { background: #f9fafb; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e7eb; }
     .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .toggle-row:last-child { margin-bottom: 0; }
@@ -52,13 +51,11 @@
     input:checked + .slider { background-color: var(--primary); }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* Time Input */
     .time-input-container { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e7eb; animation: slideDown 0.3s; }
     .time-input-group { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
     .time-input { width: 60px; padding: 5px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1rem; }
     .time-unit { font-size: 0.9rem; color: #6b7280; font-weight: 600; }
 
-    /* Warning & Contact */
     .warning-box { text-align:left; font-size:0.85rem; color:#be123c; background:#fff1f2; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #fecdd3; }
     
     #tin-hoc-note { display: none; background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; padding: 10px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 15px; font-weight: 600; text-align: left; }
@@ -91,6 +88,7 @@
                 <div class="badge">100 Câu</div>
             </div>
         </div>
+
         <div onclick="openModal('2.html', 'Tin học Đại cương', true)" class="card">
             <div class="card-icon">💻</div>
             <div class="card-content">
@@ -99,6 +97,25 @@
                 <div class="badge">223 Câu</div>
             </div>
         </div>
+
+        <div onclick="openModal('3.html', 'Kinh tế chính trị', false)" class="card">
+            <div class="card-icon">⚖️</div>
+            <div class="card-content">
+                <div class="card-title">Kinh tế chính trị</div>
+                <div class="card-desc">Mác - Lênin HUBT</div>
+                <div class="badge">150 Câu</div>
+            </div>
+        </div>
+
+        <div onclick="openModal('4.html', 'Lịch sử Đảng', false)" class="card">
+            <div class="card-icon">🚩</div>
+            <div class="card-content">
+                <div class="card-title">Lịch sử Đảng</div>
+                <div class="card-desc">Đường lối Cách mạng ĐCSVN</div>
+                <div class="badge">Mới - Cập nhật</div>
+            </div>
+        </div>
+
     </div>
     <div class="creator-badge">Designed by <b>Nahhh</b></div>
 </div>
@@ -163,15 +180,8 @@
     function openModal(url, title, showNote = false) {
         currentUrl = url;
         document.getElementById('modalSubject').innerText = title;
-        
-        // Hiện thông báo riêng nếu cần
         const note = document.getElementById('tin-hoc-note');
-        if (showNote) {
-            note.style.display = 'block';
-        } else {
-            note.style.display = 'none';
-        }
-
+        if (showNote) { note.style.display = 'block'; } else { note.style.display = 'none'; }
         document.getElementById('setupModal').classList.add('active');
     }
 
@@ -186,12 +196,10 @@
     function startExam() {
         if (!currentUrl) return;
         const sQ = document.getElementById('shuffleQ').checked;
-        
         let timeParam = 0;
         if (document.getElementById('timeLimitToggle').checked) {
             timeParam = document.getElementById('timeMinutes').value;
         }
-        
         window.location.href = `${currentUrl}?sq=${sQ}&sa=false&time=${timeParam}`;
     }
 </script>
