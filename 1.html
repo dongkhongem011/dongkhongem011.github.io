@@ -113,6 +113,13 @@
     .score-circle::before { content: ''; position: absolute; width: 110px; height: 110px; background: white; border-radius: 50%; }
     .score-text { position: relative; z-index: 2; }
 
+    /* Review Wrong Answers */
+    .review-box { text-align: left; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+    .review-item { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px; margin-bottom: 10px; cursor: pointer; }
+    .review-question { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; }
+    .review-detail { display: none; margin-top: 10px; border-top: 1px dashed #fecdd3; padding-top: 5px; font-size: 0.9rem; }
+    .review-item.active .review-detail { display: block; }
+
     .toast-fail { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #991b1b; color: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: 700; z-index: 100; font-size: 0.9rem; white-space: nowrap; border: 2px solid #fca5a5; display: none; }
     .toast-fail.show { display: block; animation: shake 0.5s; }
 
@@ -122,7 +129,7 @@
 </head>
 <body>
 
-<div class="toast-fail" id="fail-toast">😒 Trượt môn rồi cưng!</div>
+<div class="toast-fail" id="fail-toast">😒 Trượt môn rồi cưng (Hieu ngu)!</div>
 
 <div class="header">
     <div class="header-item" id="timer-display">00:00</div>
@@ -158,14 +165,22 @@
             <span class="score-text" id="final-score">0%</span>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:30px; text-align:left">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
             <div style="background:#f1f5f9; padding:15px; border-radius:12px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.3rem; color:var(--success)">0</span></div>
             <div style="background:#f1f5f9; padding:15px; border-radius:12px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.3rem; color:var(--danger)">0</span></div>
         </div>
 
-        <div style="display:flex; gap:10px;">
-            <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
-            <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px" onclick="location.reload()">🔄 Làm lại</button>
+        <div style="display:flex; flex-direction: column; gap:10px; margin-bottom: 30px;">
+             <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
+                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="location.reload()">🔄 Làm lại tất cả</button>
+             </div>
+             <button id="btn-retry-wrong" class="btn" style="background:#dc2626; color:white; width:100%; border-radius:15px; display:none; font-size: 1rem;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
+        </div>
+
+        <h3 style="text-align: left; color: #dc2626; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px;">Xem lại câu sai 👇</h3>
+        <div id="review-container" class="review-box">
+            <p style="color: #64748b; font-style: italic;">Bạn làm đúng hết rồi! Giỏi quá! 👏</p>
         </div>
     </div>
 </div>
@@ -278,6 +293,7 @@ const originalQuiz = [
 let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
 let timerInterval;
 let timeLeft = 0; // seconds
+let autoNextTimer; // Timer cho auto next
 
 const elInterface = document.getElementById("quiz-interface");
 const elResult = document.getElementById("result-interface");
@@ -295,40 +311,85 @@ const elImage = document.getElementById("q-image");
 const elTimer = document.getElementById("timer-display");
 const elResultTime = document.getElementById("result-time");
 const elControlPopup = document.getElementById("control-popup");
+const elReviewContainer = document.getElementById("review-container");
+const elBtnRetryWrong = document.getElementById("btn-retry-wrong");
 
-function initGame() {
+function initGame(retryWrongOnly = false) {
     score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
-    activeQueue = []; skippedQueue = []; userAnswers = {}; isPhaseSkipped = false;
+    activeQueue = []; skippedQueue = []; isPhaseSkipped = false;
+    
+    // Nếu là chế độ làm lại câu sai, giữ nguyên userAnswers để biết câu nào sai cũ
+    // Nhưng cần reset userAnswers cho session mới
+    if (!retryWrongOnly) {
+        userAnswers = {};
+    }
 
     // 1. ĐỌC CÀI ĐẶT TỪ URL
     const urlParams = new URLSearchParams(window.location.search);
     const configShuffleQ = urlParams.get('sq') !== 'false'; 
-    const configShuffleA = false; 
     const configTime = parseInt(urlParams.get('time')) || 0; // 0 = no limit
 
     // 2. XỬ LÝ DỮ LIỆU
-    sessionQuiz = originalQuiz.map((item, originalIdx) => {
-        let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
-        // No Shuffle Options (giữ nguyên A, B, C, D)
-        return {
-            q: item.q,
-            a: options.map(opt => opt.text),
-            c: options.findIndex(opt => opt.isCorrect),
-            originalId: originalIdx,
-            image: item.image || null 
-        };
-    });
-
-    // 3. TẠO HÀNG ĐỢI
-    let indices = sessionQuiz.map((_, i) => i);
-    if (configShuffleQ) {
-        for (let i = indices.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [indices[i], indices[j]] = [indices[j], indices[i]];
+    if (retryWrongOnly) {
+        // Lọc ra các câu đã làm sai hoặc chưa làm
+        // userAnswers chứa index của đáp án đã chọn. Check với originalQuiz
+        // Tuy nhiên, logic đơn giản là: Lấy danh sách câu sai từ lần chơi trước
+        let wrongIndices = [];
+        originalQuiz.forEach((item, idx) => {
+            if (userAnswers.hasOwnProperty(idx)) {
+                if (userAnswers[idx] !== item.c) {
+                    wrongIndices.push(idx);
+                }
+            } else {
+                // Câu chưa làm cũng coi như cần làm lại? Tùy logic. Ở đây ta chỉ lấy câu sai.
+            }
+        });
+        
+        if (wrongIndices.length === 0) {
+            alert("Bạn không có câu sai nào để làm lại!");
+            return;
         }
+
+        // Reset userAnswers cho session mới (chỉ chứa các câu sai)
+        userAnswers = {}; 
+
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+             let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+             return {
+                q: item.q,
+                a: options.map(opt => opt.text),
+                c: options.findIndex(opt => opt.isCorrect),
+                originalId: originalIdx,
+                image: item.image || null 
+            };
+        });
+        
+        activeQueue = wrongIndices; // Chỉ queue những câu sai
+        if (configShuffleQ) shuffleArray(activeQueue);
+
+    } else {
+        // Chế độ chơi mới hoàn toàn
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+            let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+            return {
+                q: item.q,
+                a: options.map(opt => opt.text),
+                c: options.findIndex(opt => opt.isCorrect),
+                originalId: originalIdx,
+                image: item.image || null 
+            };
+        });
+
+        let indices = sessionQuiz.map((_, i) => i);
+        if (configShuffleQ) shuffleArray(indices);
+        activeQueue = indices;
     }
-    activeQueue = indices;
     
+    // 3. UI RESET
+    elInterface.style.display = "flex";
+    elResult.style.display = "none";
+    elControlPopup.style.display = "flex";
+
     // 4. BẮT ĐẦU TIMER
     if (configTime > 0) {
         timeLeft = configTime * 60;
@@ -340,6 +401,13 @@ function initGame() {
 
     updateStats();
     loadQuestion();
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
 }
 
 function startCountdown() {
@@ -370,7 +438,6 @@ function updateTimerDisplay(seconds) {
     const s = (seconds % 60).toString().padStart(2, '0');
     elTimer.innerText = `${m}:${s}`;
     
-    // Hiệu ứng sắp hết giờ (chỉ áp dụng khi đếm ngược)
     const urlParams = new URLSearchParams(window.location.search);
     const limit = parseInt(urlParams.get('time')) || 0;
     
@@ -382,6 +449,8 @@ function updateTimerDisplay(seconds) {
 }
 
 function loadQuestion() {
+    clearTimeout(autoNextTimer); // Clear timer cũ nếu có
+
     const qIndex = activeQueue[currentIndex];
     const data = sessionQuiz[qIndex];
     const hasAnswered = userAnswers.hasOwnProperty(qIndex);
@@ -389,7 +458,6 @@ function loadQuestion() {
     elQuestion.innerText = data.q;
     elAnswers.innerHTML = "";
 
-    // Xử lý ảnh (nếu có)
     if (data.image) {
         elImage.src = data.image;
         elImage.style.display = "block";
@@ -402,7 +470,8 @@ function loadQuestion() {
         elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
     } else {
         elPhaseBadge.style.display = "none";
-        elCounter.innerText = `Câu ${currentIndex + 1}/${originalQuiz.length}`;
+        // Hiển thị số câu hiện tại / tổng số câu trong lượt chơi này
+        elCounter.innerText = `Câu ${currentIndex + 1}/${activeQueue.length}`;
     }
 
     const labels = ["A", "B", "C", "D"];
@@ -461,9 +530,15 @@ function checkAnswer(qIndex, selectedIdx) {
     elBtnNext.style.display = "block";
     elBtnSkip.style.display = "none";
     updateStats();
+
+    // AUTO NEXT: Chuyển câu sau 1.5s
+    autoNextTimer = setTimeout(() => {
+        nextQuestion();
+    }, 1500);
 }
 
 function nextQuestion() {
+    clearTimeout(autoNextTimer); // Cancel auto next nếu người dùng bấm thủ công
     if (currentIndex < activeQueue.length - 1) {
         currentIndex++;
         loadQuestion();
@@ -473,6 +548,7 @@ function nextQuestion() {
 }
 
 function skipQuestion() {
+    clearTimeout(autoNextTimer);
     const qIndex = activeQueue[currentIndex];
     skippedQueue.push(qIndex);
     if (currentIndex < activeQueue.length - 1) {
@@ -484,6 +560,7 @@ function skipQuestion() {
 }
 
 function goBack() {
+    clearTimeout(autoNextTimer);
     if (currentIndex > 0) {
         currentIndex--;
         loadQuestion();
@@ -492,21 +569,34 @@ function goBack() {
 
 function handleEndOfQueue() {
     if (!isPhaseSkipped && skippedQueue.length > 0) {
-        alert(`Hết lượt 1! Làm lại ${skippedQueue.length} câu đã bỏ qua.`);
-        isPhaseSkipped = true;
-        activeQueue = [...skippedQueue];
-        skippedQueue = [];
-        currentIndex = 0;
-        loadQuestion();
+        if(confirm(`Bạn đã bỏ qua ${skippedQueue.length} câu. Bạn có muốn làm lại ngay bây giờ không?`)) {
+             isPhaseSkipped = true;
+            activeQueue = [...skippedQueue];
+            skippedQueue = [];
+            currentIndex = 0;
+            loadQuestion();
+        } else {
+            finishGame();
+        }
     } else {
         finishGame();
     }
 }
 
 function updateStats() {
-    const totalQ = originalQuiz.length;
+    // Tính phần trăm dựa trên số câu đã làm so với tổng số câu CỦA LƯỢT CHƠI NÀY
+    const totalQ = activeQueue.length + (isPhaseSkipped ? 0 : skippedQueue.length); // Tương đối
+    // Cách tính đơn giản hơn: Số câu đã trả lời / Tổng số câu trong activeQueue ban đầu
+    // Tuy nhiên activeQueue thay đổi.
+    // Dùng originalQuiz.length làm mẫu số thì chuẩn nhất cho chế độ thường.
+    // Chế độ Retry thì mẫu số là số câu sai.
+    
+    // UI ProgressBar chỉ mang tính chất minh họa độ tiến độ
     const answeredCount = Object.keys(userAnswers).length;
-    const pct = totalQ > 0 ? (answeredCount / totalQ) * 100 : 0;
+    // Để thanh progress bar chạy mượt, ta lấy số câu đã làm / tổng số câu hỏi đang có trong session
+    const totalSessionQ = activeQueue.length; // Không chính xác tuyệt đối nhưng đủ dùng
+    // Tạm thời lấy currentIndex
+    const pct = ((currentIndex + 1) / activeQueue.length) * 100;
     elProgressBar.style.width = `${pct}%`;
     elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
 }
@@ -520,9 +610,12 @@ function finishGame() {
     // Hiển thị thời gian
     elResultTime.innerText = `Thời gian làm bài: ${elTimer.innerText}`;
 
-    const total = originalQuiz.length;
+    // Tính điểm
+    // Lưu ý: score hiện tại tính theo session.
+    // Nếu là retry mode, score là số câu đúng trong các câu làm lại.
+    const total = activeQueue.length; // Số câu trong phiên này
     const correctCount = score;
-    const wrongCount = Object.keys(userAnswers).length - score;
+    const wrongCount = total - score;
     const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
     const circle = document.getElementById("score-circle");
@@ -531,13 +624,58 @@ function finishGame() {
 
     document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
     document.getElementById("txt-wrong").innerText = wrongCount;
+
+    // XỬ LÝ HIỂN THỊ CÂU SAI VÀ NÚT LÀM LẠI
+    elReviewContainer.innerHTML = "";
+    let hasWrong = false;
+
+    // Duyệt qua tất cả các câu trong lượt chơi này
+    activeQueue.forEach((qIndex, idx) => {
+        const uAns = userAnswers[qIndex];
+        const correctAns = sessionQuiz[qIndex].c;
+        
+        if (uAns !== undefined && uAns !== correctAns) {
+            hasWrong = true;
+            const qData = sessionQuiz[qIndex];
+            const labels = ["A", "B", "C", "D"];
+            
+            const div = document.createElement("div");
+            div.className = "review-item";
+            div.innerHTML = `
+                <div class="review-question">Câu ${idx + 1}: ${qData.q}</div>
+                <div class="review-detail">
+                    <div style="color: var(--danger)">❌ Bạn chọn: ${labels[uAns]}. ${qData.a[uAns]}</div>
+                    <div style="color: var(--success)">✅ Đáp án đúng: ${labels[correctAns]}. ${qData.a[correctAns]}</div>
+                </div>
+            `;
+            // Toggle view detail
+            div.onclick = function() {
+                this.classList.toggle("active");
+            }
+            elReviewContainer.appendChild(div);
+        }
+    });
+
+    if (!hasWrong) {
+        elReviewContainer.innerHTML = `<p style="color: var(--success); font-weight: bold;">Xuất sắc! Bạn không sai câu nào! 🎉</p>`;
+        elBtnRetryWrong.style.display = "none";
+    } else {
+        elBtnRetryWrong.style.display = "block";
+    }
+}
+
+function retryWrongAnswers() {
+    // Gọi hàm init với cờ true
+    initGame(true);
 }
 
 function togglePopupPos() {
     elControlPopup.classList.toggle("left-side");
 }
 
-initGame();
+// Bắt đầu game lần đầu (chế độ thường)
+initGame(false);
+
 </script>
 </body>
 </html>
