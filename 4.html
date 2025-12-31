@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lịch sử Đảng Cộng sản Việt Nam</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary: #d32f2f; /* Màu đỏ cho Lịch sử Đảng */
+        --secondary: #64748b;
+        --success: #16a34a;
+        --danger: #dc2626;
+        --bg: #fef2f2; /* Nền hồng nhạt */
+        --card-bg: #ffffff;
+        --text: #0f172a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* HEADER */
+    .header {
+        padding: 8px 15px;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 10;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+    }
+    .header-item { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+    #timer-display { background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px; font-family: monospace; font-size: 1rem; letter-spacing: 0.5px; }
+    #timer-display.danger { background: #ef4444; animation: pulse 1s infinite; }
+    .combo-badge { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; }
+    
+    .progress-container { width: 100%; height: 3px; background: #e2e8f0; flex-shrink: 0; }
+    .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+    /* CONTAINER */
+    .container { width: 100%; max-width: 100%; background: var(--card-bg); display: flex; flex-direction: column; flex-grow: 1; position: relative; overflow: hidden; }
+
+    /* VÙNG NỘI DUNG */
+    .quiz-body { padding: 15px; overflow-y: auto; flex-grow: 1; padding-bottom: 90px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+
+    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 10px; font-weight: bold; width: fit-content; }
+    .question-text { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; line-height: 1.4; color: #1e293b; word-wrap: break-word; }
+    .options-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+
+    .option-btn { width: 100%; text-align: left; padding: 12px 15px; border: 1px solid #cbd5e1; background: white; border-radius: 12px; font-size: 0.95rem; font-weight: 600; color: #475569; cursor: pointer; position: relative; line-height: 1.4; word-wrap: break-word; transition: background 0.1s; }
+    .option-btn:active { background: #f1f5f9; }
+    .option-btn.correct { border-color: var(--success); background: #dcfce7; color: #14532d; }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 1.1rem; }
+    .option-btn.wrong { border-color: var(--danger); background: #fee2e2; color: #7f1d1d; }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 1.1rem; }
+    .option-btn.user-selected { border: 2px solid #475569; }
+
+    /* POPUP CONTROL (NÚT NỔI) */
+    .control-popup {
+        position: fixed;
+        bottom: 120px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        padding: 8px;
+        border-radius: 25px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        z-index: 100;
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .control-popup.left-side { right: auto; left: 15px; }
+
+    .btn {
+        width: 45px; height: 45px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+        transition: transform 0.1s;
+        flex-shrink: 0;
+    }
+    .btn:active { transform: scale(0.9); }
+    
+    .btn-prev { background: #f1f5f9; color: #64748b; }
+    .btn-skip { background: #fff7ed; color: #d97706; border: 1px solid #ffedd5; }
+    .btn-next { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3); }
+    
+    .btn-move {
+        width: 30px; height: 30px;
+        background: #e2e8f0; color: #64748b;
+        font-size: 0.9rem;
+        border-radius: 50%;
+        position: absolute;
+        top: -15px; right: -5px;
+        border: 2px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        z-index: 101;
+    }
+    .control-popup.left-side .btn-move { right: auto; left: -5px; }
+
+    /* RESULT */
+    .result-screen { text-align: center; padding: 40px 20px; display: none; overflow-y: auto; height: 100%; background: white; z-index: 50; }
+    .score-circle { width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(var(--success) 0%, #e2e8f0 0%); margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 800; color: var(--text); position: relative; }
+    .score-circle::before { content: ''; position: absolute; width: 110px; height: 110px; background: white; border-radius: 50%; }
+    .score-text { position: relative; z-index: 2; }
+
+    /* Review Wrong Answers */
+    .review-box { text-align: left; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+    .review-item { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px; margin-bottom: 10px; cursor: pointer; }
+    .review-question { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; }
+    .review-detail { display: none; margin-top: 10px; border-top: 1px dashed #fecdd3; padding-top: 5px; font-size: 0.9rem; }
+    .review-item.active .review-detail { display: block; }
+
+    .toast-fail { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #991b1b; color: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: 700; z-index: 100; font-size: 0.9rem; white-space: nowrap; border: 2px solid #fca5a5; display: none; }
+    .toast-fail.show { display: block; animation: shake 0.5s; }
+
+    @keyframes shake { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 5px)); } 75% { transform: translateX(calc(-50% + 5px)); } }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="toast-fail" id="fail-toast">Sai rồi! Cố lên nhé!</div>
+
+<div class="header">
+    <div class="header-item" id="timer-display">00:00</div>
+    <div class="header-item" id="question-counter">1/120</div>
+    <div class="combo-badge" id="combo-display">🔥 0</div>
+</div>
+<div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<div class="container">
+    <div id="quiz-interface" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="quiz-body">
+            <div id="phase-display" class="phase-badge">LÀM LẠI CÂU BỎ QUA</div>
+            <h2 class="question-text" id="question">Đang tải...</h2>
+            <div class="options-grid" id="answers"></div>
+        </div>
+
+        <div class="control-popup" id="control-popup">
+            <button class="btn btn-move" onclick="togglePopupPos()">⇄</button>
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">⬅</button>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">⤵</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">➜</button>
+        </div>
+    </div>
+
+    <div id="result-interface" class="result-screen">
+        <h2>🎉 Hoàn thành!</h2>
+        <div style="font-size: 1rem; color: #64748b; margin-bottom: 20px;" id="result-time">Thời gian: 00:00</div>
+        
+        <div class="score-circle" id="score-circle">
+            <span class="score-text" id="final-score">0%</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
+            <div style="background:#f1f5f9; padding:15px; border-radius:12px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.3rem; color:var(--success)">0</span></div>
+            <div style="background:#f1f5f9; padding:15px; border-radius:12px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.3rem; color:var(--danger)">0</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction: column; gap:10px; margin-bottom: 30px;">
+             <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
+                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="location.reload()">🔄 Làm lại tất cả</button>
+             </div>
+             <button id="btn-retry-wrong" class="btn" style="background:#dc2626; color:white; width:100%; border-radius:15px; display:none; font-size: 1rem;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
+        </div>
+
+        <h3 style="text-align: left; color: #dc2626; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px;">Xem lại câu sai 👇</h3>
+        <div id="review-container" class="review-box">
+            <p style="color: #64748b; font-style: italic;">Bạn làm đúng hết rồi! Giỏi quá! 👏</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// DỮ LIỆU CÂU HỎI LỊCH SỬ ĐẢNG (120 CÂU)
+const originalQuiz = [
+  {q: "Câu 1. Hãy cho biết phong trào Xô Viết Nghệ - Tĩnh diễn ra trong khoảng thời gian nào dưới đây:", a: ["1939-1945", "1936-1939", "1946-1954", "1930 1931"], c: 3},
+  {q: "Câu 2. Hãy cho biết Chủ tịch Hồ Chí Minh ra lời “kêu gọi toàn quốc kháng chiến vào thời gian nào dưới đây:", a: ["Ngày 2/9/1945.", "Ngày 19/12/1946.", "Ngày 6/3/1946.", "Ngày 14/9/1946."], c: 1},
+  {q: "Câu 3. Hãy cho biết chiến dịch Điện Biên Phủ diễn ra vào thời gian nào dưới đây:", a: ["Năm 1947.", "Năm 1950.", "Năm 1954.", "Năm 1953."], c: 2},
+  {q: "Câu 4. Đáp án viết dưới đây là một nội dung của đường lối kháng chiến chống Mỹ cứu nước kế thừa kinh nghiệm từ cuộc kháng chiến chống thực dân Pháp. Đáp án nào đầy đủ nhất:", a: ["Chiến lược chiến tranh nhân dân, toàn dân, toàn diện, lâu dài, dựa vào sức mình là chính được phát triển trong hoàn cảnh mới.", "Chiến lược chiến tranh nhân dân.", "Vừa kháng chiến, vừa kiến quốc.", "Chiến lược chiến tranh nhân dân, toàn dân, toàn diện, lâu dài."], c: 0},
+  {q: "Câu 5. Hãy cho biết Hiệp định Paris “về chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam được ký kết vào năm nào dướii đây:", a: ["Năm 1954.", "Năm 1972.", "Năm 1973.", "Năm 1975."], c: 2},
+  {q: "Câu 6. Luận điểm nào dưới đây mang ý nghĩa thời đại với thắng lợi của cuộc kháng chiến chống Mỹ cứu nước:", a: ["Chấm dứt ách thống trị tàn bạo của đế quốc Mỹ và sự chia cắt đất nước.", "Mở đầu sự sụp đổ không thể tránh khỏi của chủ nghĩa thực dân mới trên phạm vi thế giới.", "Mở ra kỷ nguyên mới cho dân tộc Việt Nam: kỷ nguyên cả nước hoà bình, độc lập thống nhất và đi lên chủ nghĩa xã hội.", "Tăng cường uy tín các nước xã hội chủ nghĩa, phong trào độc lập dân tộc."], c: 1},
+  {q: "Câu 7. Tìm đáp án đúng về tính chất của xã hội Việt Nam sau khi thực dân Pháp thiết lập bộ máy thống trị trên toàn bộ đất nước ta:", a: ["Xã hội phong kiến.", "Xã hội thuộc địa, nửa phong kiến.", "Xã hội nửa thuộc địa, nửa phong kiến.", "Xã hội thuộc địa và phong kiến."], c: 1},
+  {q: "Câu 8. Đại hội lần thứ mấy của Đảng cộng sản Việt Nam đã đề ra mục tiêu “sớm đưa nước ta trở thành nước công nghiệp theo hướng hiện đại\":", a: ["Đại hội Đảng toàn quốc lần thứ VIII (6/1996)", "Đại hội Đảng toàn quốc lần thứ IX (4/2001)", "Đại hội Đảng toàn quốc lần thứ X (4/2006)", "Đại hội Đảng toàn quốc lần thứ XII (1/2016)"], c: 3},
+  {q: "Câu 9. Bước đột phá đầu tiên về chủ trương mở cửa hội nhập của Đảng ta được xác định tại Đại hội nào dưới đây:", a: ["Đại hội IV (1976).", "Đại hội VI (1986).", "Đại hội VII (1991).", "Đại hội VIII (1996)."], c: 2},
+  {q: "Câu 10. Yếu tố nào dưới đây là động lực chính thúc đẩy quá trình toàn cầu hóa kinh tế:", a: ["Nhu cầu mở rộng thị trường.", "Sự phát triển không ngừng của lực lượng sản xuất và quan hệ kinh tế quốc tế vượt ra khỏi biên giới quốc gia, phạm vi từng khu vực, lan tỏa ra phạm vi toàn cầu.", "Sự phát triển của hợp tác và phân công lao động trên phạm vi quốc tế.", "Nhu cầu hợp tác cùng giải quyết các vấn đề toàn cầu."], c: 1},
+  {q: "Câu 11. Nội dung nào dưới đây không đúng với chủ trương công nghiệp hóa của Đảng cộng Sản Việt Nam trước đổi mới:", a: ["Công nghiệp hóa thiên về phát triển công nghiệp nặng.", "Công nghiệp hóa chủ yếu dựa vào lợi thế về lao động, tài nguyên, đất đai và nguồn viện trợ của các nước xã hội chủ nghĩa.", "Tiến hành công nghiệp hóa thông qua cơ chế kế hoạch hóa tập trung, quan liêu, bao cấp.", "Ưu tiên phát triển nông nghiệp và công nghiệp nhẹ."], c: 3},
+  {q: "Câu 12. Nội dung nào dưới đây không đúng với tính chất của nền kinh tế thị trường hiện đại:", a: ["Các chủ thể kinh tế có tính độc lập trong sản xuất kinh doanh.", "Hệ thống thị trường phát triển đồng bộ và hoàn hảo.", "Giá cả cơ bản do nhà nước điều tiết.", "Có hệ thống pháp quy kiện toàn."], c: 2},
+  {q: "Câu 13. Đáp án nào dưới đây thể hiện đúng và đầy đủ nhất về mục tiêu đổi mới mô hình tăng trưởng:", a: ["Kết hợp có hiệu quả phát triển chiều rộng với chiều sâu, nhưng chú trọng chiều sâu.", "Chú trọng phát triển chiều rộng.", "Chú trọng phát triển chiều sâu.", "Chú trọng mục tiêu trước mắt."], c: 0},
+  {q: "Câu 14. Trung Quốc xâm lược và chiếm đóng trái phép quần đảo Hoàng Sa của Việt Nam từ năm nào trong các đáp án dưới đây:", a: ["Năm 1972", "Năm 1974", "Năm 1979", "Năm 1988"], c: 1},
+  {q: "Câu 15. Nội dung nào dưới đây không phải là cơ sở và nhu cầu trực tiếp đòi hỏi Việt Nam phải đổi mới quan hệ đối ngoại theo hướng mở cửa, hội nhập với thế giới:", a: ["Toàn cầu hóa là một xu thế tất yếu khách quan.", "Xu thế các quốc gia chạy đua phát triển kinh tế.", "Nguy cơ Việt Nam bị tụt hậu xa hơn về kinh tế.", "Sự chống phá của các thế lực thù địch trong nước."], c: 3},
+  {q: "Câu 16. Đáp án nào dưới đây không đúng với tư duy kinh tế thị trường của Đảng Cộng sản Việt Nam thời kỳ đổi mới?", a: ["Coi kinh tế thị trường là sản phẩm do chủ nghĩa tư bản sinh ra.", "Có thể và cần thiết sử dụng kinh tế thị trường để xây dựng chủ nghĩa xã hội ở nước ta.", "Phát triển kinh tế thị trường định hướng xã hội chủ nghĩa là mô hình kinh tế tổng quát của nước ta trong thời kỳ quá độ lên chủ nghĩa xã hội", "Gắn nền kinh tế thị trường ở Việt Nam với quá trình hội nhập quốc tế, tham gia vào mạng sản xuất và chuỗi giá trị toàn cầu."], c: 0},
+  {q: "Câu 17. Luận điểm nào dưới đây thể hiện đúng và đầy đủ nhất đường lối kháng chiến chống Mỹ cứu nước:", a: ["Kiên định tư tưởng chiến lược tiến công, tinh thần độc lập tự chủ.", "Thể hiện quyết tâm đánh và thắng đế quốc Mỹ xâm lược.", "Nắm vững và giương cao ngọn cờ độc lập dân tộc và chủ nghĩa xã hội, tiến hành đồng thời và kết hợp chặt chẽ hai chiến lược cách mạng trong hoàn cảnh cả nước có chiến tranh ở mức độ khác nhau, phù hợp với thực tế đất nước và bối cảnh quốc tế.", "Chiến lược chiến tranh nhân dân, toàn dân, toàn diện, lâu dài, dựa vào sức mình là chính được phát triển trong hoàn cảnh mới."], c: 2},
+  {q: "Câu 18. Đáp án nào dưới đây không đúng với các đặc trưng của toàn cầu hóa kinh tế:", a: ["Quá trình lực lượng sản xuất và quan hệ kinh tế quốc tế vượt khỏi biên giới quốc gia và phạm vi từng khu vực, lan toả ra toàn cầu.", "Sự phân công lao động mang tính quốc gia.", "Mối quan hệ kinh tế giữa các quốc gia, khu vực đan xen nhau hình thành mạng lưới đa tuyến vận hành theo các “luật chơi” chung.", "Các nền kinh tế trở nên tuỳ thuộc lẫn nhau hơn."], c: 1},
+  {q: "Câu 19. Đội Việt Nam tuyên truyền giải phóng quân thành lập vào năm nào dưới đây:", a: ["1944", "1943", "1942", "1941"], c: 0},
+  {q: "Câu 20. Cơ chế quản lý kinh tế kế hoạch hóa, tập trung, quan liêu, bao cấp có nhiều nhược điểm. Nhược điểm nào dưới đây cơ bản nhất:", a: ["Nhà nước quản lý nền kinh tế chủ yếu bằng kế hoạch, chỉ tiêu, pháp lệnh được thực hiện triệt để theo công thức 1 lên 2 xuống.", "Giá cả, lãi suất, tiền lương được tính toán một cách hình thức.", "Nhà nước thực hiện chế độ bao cấp đối với mọi đơn vị cấp dưới, kể cả các doanh nghiệp nhà nước và hợp tác xã.", "Bộ máy quản lý cồng kềnh, phong cách của quyền, quan liêu."], c: 0},
+  {q: "Câu 21. Đáp án nào dưới đây không đúng với các bước “đột phá vào tư duy kinh tế trước Đại hội VI (12/1986)", a: ["Hội nghị TW 6 khóa IV (8/1979) với quyết tâm “cởi trói”? làm cho sản xuất bung ra.", "Hội nghị TW 8 khóa V (6/1985) với chủ trương xóa bỏ cơ chế tập trung quan liêu bao cấp.", "Chỉ thị 100 (1981) công nhận một phần “Khoán hộ”.", "Kết luận của Bộ chính trị về 3 quan điểm kinh tế 8/1986."], c: 2},
+  {q: "Câu 22. Luận điểm nào dưới đây không thuộc về đường lối đối ngoại trong thời kỳ đổi mới:", a: ["“Việt Nam muốn là bạn với tất cả các nước trong cộng đồng thế giới, phấn đấu vì hòa bình, độc lập và phát triển\".", "“Việt Nam sẵn sàng là bạn, là đối tác tin cậy của các nước trong cộng đồng quốc tế, phấn đấu vì hòa bình, độc lập và phát triển, chủ động và tích cực hội nhập kinh tế quốc tế\".", "“Việt Nam sẵn sàng là bạn, đối tác tin cậy và là thành viên có trách nhiệm trong cộng đồng quốc tế, chủ động và tích cực hội nhập quốc tế .", "“Việt Nam sẵn sàng là bạn, đối tác tin cậy với các nước trong phe xã hội chủ nghĩa”."], c: 3},
+  {q: "Câu 23. Lý do nào dưới đây khiến Khoán hộ ở Vĩnh Phúc năm 1966 bị Trung ương cấm:", a: ["Khoán hộ xóa bỏ tình trạng: cha chung không ai khóc\".", "Khoán hộ gắn lợi ích người nông dân với ruộng đồng.", "Khoán hộ làm tăng sản xuất nông nghiệp của tỉnh Vĩnh phúc.", "Khoán hộ là đưa nông dân quay trở về làm ăn “tư hữu”, phá vỡ quan hệ sản xuất xã hội chủ nghĩa, cản trở áp dụng tiến bộ khoa học kỹ thuật."], c: 3},
+  {q: "Câu 24. Hãy cho biết đế quốc Pháp nổ súng tấn công bán đảo Sơn Trà (Đà Nẵng) xâm lược nước ta vào năm nào?", a: ["Năm 1858.", "Năm 1883.", "Năm 1884.", "Năm 1897."], c: 0},
+  {q: "Câu 25. Nguyên nhân nào dưới đây có vai trò trực tiếp quyết định nhất dẫn tới thắng lợi của cuộc kháng chiến chống Mỹ cứu nước :", a: ["Phong trào phản chiến ở trong lòng nước Mỹ.", "Nhân dân ta có truyền thống yêu nước chống xâm lược và sự lãnh đạo đúng đắn của Đảng.", "Có sự giúp đỡ của các nước xã hội chủ nghĩa.", "Tình đoàn kết Việt - Miên - Lào."], c: 1},
+  {q: "Câu 26. Cách mạng tháng Tám (1945) giành chính quyền từ tay kẻ thù nào dưới đây:", a: ["Quân đồng minh.", "Thực dân Pháp và phát xít Nhật.", "Phát xít Nhật.", "Chính quyền phong kiến nhà Nguyễn."], c: 2},
+  {q: "Câu 27. Tìm câu viết sai về nguyên nhân dẫn đến thắng lợi của cuộc kháng chiến chống Mỹ cứu nước trong các câu dưới đây:", a: ["Sự lãnh đạo đúng đắn của Đảng Cộng sản Việt Nam.", "Cuộc chiến đấu đầy gian khổ hi sinh của nhân dân và quân đội cả nước, đặc biệt là cán bộ chiến sỹ và hàng chục triệu đồng bào yêu nước ở miền Nam “thành đồng tổ quốc”.", "Miền Bắc hoàn thành xuất sắc nghĩa vụ của hậu phương lớn chi viện cho miền Nam đánh thắng giặc Mỹ.", "Sự ủng hộ hết lòng và giúp đỡ to lớn của các nước ASEAN."], c: 3},
+  {q: "Câu 28. Quân dân ta đã đánh bại chiến lược chiến tranh cục bộ của Mỹ trong khoảng thời gian nào dưới đây:", a: ["Giai đoạn 1954-1960.", "Giai đoạn 1961-1965.", "Giai đoạn 1965-1968.", "Giai đoạn 1969-1975."], c: 2},
+  {q: "Câu 29. Trong các yếu tố dẫn đến sự ra đời của Đảng Cộng sản Việt Nam, yếu tố nào dưới đây không đúng:", a: ["Chủ nghĩa Mác-Lênin, tư tưởng Hồ Chí Minh", "Phong trào yêu nước của nhân dân Việt Nam cuối thế kỷ XIX, đầu thế kỷ XX.", "Phong trào công nhân Việt Nam đầu thế kỷ XX.", "Phong trào Xô Viết Nghệ - Tĩnh."], c: 3},
+  {q: "Câu 30. Yếu tố nào dưới đây đóng vai trò nền tảng tư tưởng của Đảng Cộng sản Việt Nam:", a: ["Chủ nghĩa Mác-Lênin, tư tưởng Hồ Chí Minh", "Tinh thần yêu nước của nhân dân Việt Nam", "Tư tưởng xã hội chủ nghĩa.", "Tư tưởng Phật Giáo"], c: 0},
+  {q: "Câu 31. Đáp án nào dưới đây không đúng khi đánh giá về ý nghĩa của cách mạng tháng Tám năm 1945:", a: ["Nhà nước Việt Nam dân chủ cộng hòa ra đời", "Đập tan xiềng xích nô lệ của đế quốc Mỹ", "Chấm dứt chế độ phong kiến ở Việt Nam", "Làm phong phú thêm kho tàng lý luận của chủ nghĩa Mác - Lênin"], c: 1},
+  {q: "Câu 32. Trong các giải pháp thực hiện tiến bộ và công bằng xã hội viết dưới đây, giải pháp nào không chính xác:", a: ["Tạo cơ hội để mọi người có việc làm và cải thiện thu nhập.", "Mở rộng đối tượng và nâng cao hiệu quả của hệ thống an sinh xã hội đến mọi người dân.", "Thực hiện tốt các chính sách hỗ trợ nhà ở cho mọi đối tượng người dân Việt Nam.", "Phát triển thể dục thể thao toàn dân."], c: 2},
+  {q: "Câu 33. Nguyễn Ái Quốc đã chuẩn bị những điều kiện nào cho sự ra đời của Đảng cộng sản Việt Nam. Tìm đáp án đúng và đầy đủ nhất trong các đáp án sau:", a: ["Chuẩn bị về tư tưởng", "Chuẩn bị về tổ chức", "Chuẩn bị về tư tưởng chính trị và tổ chức", "Chuẩn bị về chính trị"], c: 2},
+  {q: "Câu 34. Tìm luận điểm đúng về cơ sở kinh tế của Nhà nước chuyên chính vô sản (giai đoạn 1958 - 1986) trong các đáp án sau:", a: ["Cơ sở kinh tế của Nhà nước chuyên chính vô sản là nền kinh tế thị trường định hướng xã hội chủ nghĩa.", "Cơ sở kinh tế của Nhà nước chuyên chính vô sản là nền kinh tế tự cấp tự túc.", "Cơ sở kinh tế của Nhà nước chuyên chính vô sản là sở hữu toàn dân, loại trừ sở hữu tư nhân, là nền kinh tế kế hoạch hóa tập, trung quan, liêu bao cấp.", "Cơ sở kinh tế của Nhà nước chuyên chính vô sản là nền kinh tế nhiều chế độ sở hữu, nhiều thành phần kinh tế."], c: 2},
+  {q: "Câu 35. Dưới đây là những trích dẫn về Nhà nước chuyên chính vô sản ở Việt nam (giai đoạn 1958-1985). Tìm trích dẫn sai?", a: ["Đại hội IV của Đảng nhận định rằng, muốn đưa sự nghiệp cách mạng tới toàn thắng thì điều kiện tiên quyết là phải thiết lập và không ngừng tăng cường chuyên chính vô sản.", "Cơ sở xã hội của Nhà nước chuyên chính vô sản là một kết cấu xã hội bao gồm giai cấp công nhân, giai cấp nông dân và giai cấp tiểu tư sản.", "Nhà nước chuyên chính vô sản ở nước ta được hiểu là nhà nước có sử mệnh lịch sử xóa bỏ giai cấp tư sản, tiêu diệt thành phần tư bản chủ nghĩa, tiêu diệt tư hữu.", "Cơ sở kinh tế của Nhà nước chuyên chính vô sản là nền kinh tế kế hoạch hóa tập trung."], c: 1},
+  {q: "Câu 36. Đại hội lần thứ mấy của Đảng Cộng sản Việt Nam đã xác định chủ trương về hội nhập quốc tế?", a: ["Đại hội VI (1986).", "Đại hội VII (1991).", "Đại hội IX (2001).", "Đại hội XI (2011)."], c: 3},
+  {q: "Câu 37. Đáp án nào dưới đây thể hiện đầy đủ nhất về lĩnh vực hội nhập quốc tế:", a: ["Hội nhập Chính trị, quốc phòng, an ninh.", "Hội nhập kinh tế.", "Hội nhập văn hóa, xã hội, y tế, giáo dục khoa học, công nghệ.", "Hội nhập toàn diện trên tất cả các lĩnh vực."], c: 3},
+  {q: "Câu 38. Thành phần kinh tế nào sau đây được xác định giữ vai trò chủ đạo trong nền kinh tế?", a: ["Kinh tế tư nhân.", "Kinh tế tập thể.", "Kinh tế nhà nước.", "Kinh tế có vốn đầu tư nước ngoài."], c: 2},
+  {q: "Câu 39. Nội dung nào dưới đây không thuộc về tác động tích cực của hội nhập kinh tế quốc tế đối với các doanh nghiệp Việt Nam:", a: ["Mở rộng thị trường xuất khẩu.", "Tiếp thu khoa học – công nghệ mới và kỹ năng quản lý tiên tiến trên nhiều lĩnh vực", "Có cơ hội tham gia chuỗi giá trị và mạng lưới sản xuất khu vực, toàn cầu.", "Nguy cơ thua ngay trên sân nhà"], c: 3},
+  {q: "Câu 40. Đại hội lần nào thực hiện bước đột phá mở đầu quá trình đổi mới tư duy đối ngoại?", a: ["Đại hội VI (1986).", "Đại hội VII (1991).", "Đại hội IX (2001).", "Đại hội XII (2016)."], c: 1},
+  {q: "Câu 41. Tìm nguyên nhân sâu xa và bao quát dẫn đến khủng hoảng kinh tế xã hội (1976 – 1996)?", a: ["Do áp dụng cơ chế kế hoạch hóa, tập trung quan liêu bao cấp.", "Do sai lầm về chủ trương chính sách, chỉ đạo chiến lược và tổ chức thực hiện.", "Do bố trí cơ cấu kinh tế, đầu tư thiên về phát triển công nghiệp nặng.", "Do sai lầm trong cải tạo các thành phần kinh tế."], c: 1},
+  {q: "Câu 42. Chọn đáp án đúng về sự ra đời của Đảng Cộng sản Việt Nam:", a: ["Sự kết hợp giữa chủ nghĩa Mác - Lênin với phong trào công nhân và phong trào yêu nước của Việt Nam.", "Sự kết hợp giữa phong trào công nhân Việt Nam với chủ nghĩa Mác - Lênin và phong trào công nhân quốc tế.", "Sự kết hợp giữa phong trào yêu nước, phong trào nông dân và chủ nghĩa Mác - Lênin.", "Sự kết hợp giữa phong trào công nhân Việt Nam, phong trào trí thức yêu nước và học thuyết “Tam dân” của Tôn Trung Sơn."], c: 0},
+  {q: "Câu 43. Thực tế “xé rào” nào dưới đây đã tạo cơ sở trực tiếp cho sự ra đời chủ trương “khoán 100 và “Khoán 10 trong nông nghiệp:", a: ["Khoán hộ ở Vĩnh Phúc (1966).", "Thành phố Hồ Chí Minh chạy gạo phá cơ chế giá thu mua lương thực lỗi thời của nhà nước.", "An Giang đem hàng công nghiệp bán theo giá chợ, rồi lấy tiền đó mua lúa của nông dân cũng theo giá chợ.", "Dệt Thành công lách kẽ hở của chính sách để tự cân đối sản xuất theo theo quy luật của kinh tế thị trường."], c: 0},
+  {q: "Câu 44. Nội dung nào dưới đây không nằm trong 3 chương trình kinh tế lớn được đề ra tại Đại hội Đảng lần thứ VI (1986):", a: ["Chương trình lương thực thực phẩm.", "Chương trình công nghệ thông tin.", "Chương trình hàng tiêu dùng.", "Chương trình hàng xuất khẩu."], c: 1},
+  {q: "Câu 45. Nội dung nào dưới đây đánh giá đầy đủ nhất về bản chất của toàn cầu hoá kinh tế:", a: ["Toàn cầu hóa kinh tế là một xu thế khách quan, chứa đựng nhiều mâu thuẫn.", "Toàn cầu hóa kinh tế là một xu thế khách quan, vừa có mặt tích cực vừa có mặt tiêu cực.", "Toàn cầu hóa kinh tế là một xu thế khách quan, lôi cuốn ngày càng nhiều nước tham gia, xu thế này đang bị một số nước phát triển và các tập đoàn kinh tế tư bản xuyên quốc gia chi phối, chứa đựng nhiều mâu thuẫn, vừa có mặt tích cực vừa có mặt tiêu cực.", "Toàn cầu hóa kinh tế là một xu thế khách quan, đang bị một số nước phát triển và các tập đoàn kinh tế tư bản xuyên quốc gia chi phối."], c: 2},
+  {q: "Câu 46. Nội dung nào dưới đây nói về thách thức đối với các quốc gia chậm phát triển khi hội nhập kinh tế quốc tế:", a: ["Mở rộng được thị trường xuất khẩu.", "Tiếp nhận được những công nghệ và kỹ thuật quản lý tiên tiến, hiện đại.", "Được đối xử công bằng hơn trên thị trường quốc tế.", "Sự yếu thế trong cạnh tranh trên cả 3 phương diện: quốc gia, doanh nghiệp, sản phẩm."], c: 3},
+  {q: "Câu 47. Những câu sau đây đánh giá về thực trạng đổi mới thể chế chính trị ở nước ta. Tìm đánh giá sai:", a: ["Đổi mới chính trị chưa đồng bộ với đổi mới kinh tế.", "Đổi mới thể chế chính trị đã phù hợp hoàn toàn với yêu cầu phát triển kinh tế thị trường, hội nhập quốc tế.", "Năng lực và hiệu quả hoạt động của hệ thống chính trị chưa ngang tầm nhiệm vụ.", "Cải cách hành chính chậm đổi mới."], c: 1},
+  {q: "Câu 48. Nội dung nào dưới đây thuộc về “Mô hình tăng trưởng kinh tế theo chiều rộng\":", a: ["Tăng trưởng kinh tế chủ yếu dựa vào năng suất của các yếu tố tổng hợp.", "Tăng trưởng dựa đồng thời vốn đầu tư, xuất khẩu và thị trường trong nước.", "Tăng trưởng kinh tế chủ yếu sử dụng lợi thế tài nguyên thiên nhiên và nhân công rẻ", "Tăng trưởng dựa vào nội lực đồng thời thu hút và sử dụng có hiệu quả các nguồn lực bên ngoài."], c: 2},
+  {q: "Câu 49. Các nội dung dưới đây thuộc về đường lối đấu tranh giành chính quyền giai đoạn 1930 – 1945. Nội dung nào quan trọng nhất?", a: ["Giương cao ngọn cờ độc lập dân tộc, kết hợp đúng đắn hai nhiệm vụ chống đế quốc và chống phong kiến, đặt lên hàng đầu nhiệm vụ chống đế quốc.", "Toàn dân nổi dậy trên nền tảng khối liên minh công nông.", "Lợi dụng mâu thuẫn trong hàng ngũ kẻ thù.", "Chọn đúng thời cơ."], c: 0},
+  {q: "Câu 50: Tìm luận điểm không đúng với nhận thức và chính sách đối ngoại của Đảng cộng sản Việt Nam thời kỳ trước đổi mới?", a: ["Nhận thức chủ quan, phiến diện về chủ nghĩa tư bản: cho rằng chế độ tư bản “đang trong cơn hấp hối\"", "Nhìn thế giới như một vũ đài đấu tranh quyết liệt, một mất một còn giữa chủ nghĩa xã hội và chủ nghĩa đế quốc.", "Đánh giá chủ quan về chủ nghĩa xã hội, cho rằng chủ nghĩa xã hội là vô địch.", "Việt Nam muốn làm bạn với tất cả các nước trong cộng đồng thế giới, phấn đấu vì hòa bình, độc lập và phát triển."], c: 3},
+  {q: "Câu 51. Nội dung nào dưới đây không thuộc về đặc trưng của mô hình tăng trưởng kinh tế theo chiều rộng:", a: ["Tăng trưởng chủ yếu dựa vào năng lực sáng tạo và ứng dụng khoa học – công nghệ.", "Tăng trưởng kinh tế chủ yếu nhờ vào việc tăng vốn, lao động.", "Tăng trưởng chủ yếu nhờ vào xuất khẩu các sản phẩm thô.", "Tăng trưởng chủ yếu dựa vào khai thác tài nguyên thiên nhiên."], c: 0},
+  {q: "Câu 52. Nội dung nào dưới đây không thuộc về chủ trương Khoán 10 của Bộ chính trị năm 1988:", a: ["Hộ nông dân là đơn vị sản xuất tự chủ.", "Hợp tác xã nông nghiệp được tổ chức một cách ồ ạt, cưỡng ép nông dân vào hợp tác xã.", "Thu hoạch vượt khoán sẽ được hưởng và tự do mua bán.", "Nhà nước chỉ làm chức năng quản lý về kinh tế."], c: 1},
+  {q: "Câu 53. Tìm nhận thức không đúng so với tư duy đối ngoại của thời kỳ đổi mới (sau 1986) trong các đáp án sau:", a: ["Nhìn thế giới như một vũ đài đấu tranh quyết liệt, một mất một còn giữa chủ nghĩa xã hội và chủ nghĩa đế quốc.", "Việt Nam muốn làm bạn với tất cả các nước trong cộng đồng thế giới, phấn đấu vì hòa bình, độc lập và phát triển.", "Việt Nam sẵn sàng là bạn, là đối tác tin cây của các nước trong cộng động quốc tế, phấn đấu vì hòa bình, độc lập và phát triển.", "Việt Nam sẵn sàng là bạn, là đối tác tin cậy và là thành viên có trách nhiệm trong cộng đồng quốc tế, chủ động và tích cực Hội nhập quốc tế."], c: 0},
+  {q: "Câu 54. Đại hội VI (1986) đã rút ra nhiều bài học kinh nghiệm. Bài học nào dưới đây bị viết sai:", a: ["Trong hoạt động của mình Đảng phải quán triệt tư tưởng lấy dân làm gốc.", "Mọi chính sách phải xuất phát từ ý chí chủ quan của các nhà lãnh đạo.", "Phải biết kết hợp sức mạnh dân tộc với sức mạnh của thời đại trong điều kiện mới.", "Phải xây dựng đảng ngang tầm nhiệm vụ chính trị của một đảng cầm quyền."], c: 1},
+  {q: "Câu 55. Nội dung nào dưới đây bị viết sai về nguyên nhân gây ra khủng hoảng kinh tế - xã hội trong giai đoạn 1976 – 1996 ở nước ta:", a: ["Trong bố trí cơ cấu đầu tư không tính đến điều kiện và khả năng thực tế.", "Không thừa nhận nền kinh tế nhiều thành phần.", "Địch phá hoại bằng hải lục, không quân.", "Nhà nước quản lý nền kinh tế bằng kế hoạch, mệnh lệnh và chỉ tiêu.."], c: 2},
+  {q: "Câu 56. Chỉ ra nguyên nhân khách quan khiến tăng trưởng nông nghiệp Việt Nam giảm dần trong những năm gần đây:", a: ["Thiếu sự liên kết giữa các chủ thể tham gia chuỗi nông sản hàng hóa.", "Nền kinh tế nông nghiệp dựa trên kinh tế hộ manh mún, qui mô nhỏ, lạc hậu.", "Tác động kép từ biến đổi khí hậu toàn cầu.", "Nông sản Việt nam đứng ở phân khúc thấp trong chuỗi giá trị toàn cầu."], c: 2},
+  {q: "Câu 57. Đáp án nào dưới đây không đúng với quan niệm của Đảng về nền kinh tế thị trường định hướng xã hội chủ nghĩa ở nước ta:", a: ["Nền kinh tế được đảm bảo tính định hướng xã hội chủ nghĩa, phù hợp với từng giai đoạn của đất nước.", "Nền kinh tế thị trường hội nhập với các nước xã hội chủ nghĩa.", "Nền kinh tế vận hành đầy đủ, đồng bộ theo các quy luật của nền kinh tế thị trường.", "Nền kinh tế thị trường nhằm mục tiêu: dân giầu, nước mạnh, dân chủ, công bằng, văn minh"], c: 1},
+  {q: "Câu 58. Nội dung nào dưới đây trong Cương lĩnh chính trị đầu tiên của Đảng thể hiện tư tưởng đại đoàn kết dân tộc của Hồ Chí Minh:", a: ["Vạch ra đường lối của cách mạng Việt Nam là: làm tư sản dân quyền cách mạng và thổ địa cách mạng để đi tới xã hội cộng sản.", "Nhiệm vụ cách mạng bao gồm cả 2 nội dung: Dân tộc và dân chủ, chống đế quốc và chống phong kiến, song nổi lên hàng đầu là nhiệm vụ chống để quốc.", "Đảng có chủ trương tập hợp giai cấp công nhân, nông dân và phân hóa, lôi kéo các giai cấp, tầng lớp khác trong xã hội về phía cách mạng.", "Cương lĩnh khẳng định lãnh đạo cách mạng là giai cấp vô sản, thông qua chính Đảng là Đảng Cộng sản Việt Nam."], c: 2},
+  {q: "Câu 59. Nhận thức nào dưới đây của Luận Cương chính trị 10/1930 là cơ sở dẫn tới các nhận thức hạn chế khác:", a: ["Không vạch rõ mâu thuẫn chủ yếu của xã hội Việt Nam thuộc địa là mâu thuẫn giữa toàn thể dân tộc Việt Nam với đế quốc Pháp xâm lược và tay sai của chúng.", "Không nhấn mạnh nhiệm vụ giải phóng dân tộc mà còn nặng về cách mạng ruộng đất.", "Chưa đánh giá đúng vai trò cách mạng của giai cấp tiểu tư sản, tư sản dân tộc, một bộ phận địa chủ vừa và nhỏ trong cách mạng giải phóng dân tộc.", "Không đề ra được chiến lược liên minh dân tộc và giai cấp rộng rãi trong cuộc đấu tranh chống đế quốc xâm lược và tay sai."], c: 0},
+  {q: "Câu 60. Hạn chế nào dưới đây của Luận Cương chính trị 10/1930 trái với tư tưởng đại đoàn kết dân tộc được nêu trong Cương lĩnh chính trị đầu tiên:", a: ["Không vạch rõ mâu thuẫn chủ yếu của xã hội Việt Nam thuộc địa.", "Không nhấn mạnh nhiệm vụ giải phóng dân tộc mà còn nặng về cách mạng ruộng đất.", "Chưa đánh giá đúng vai trò cách mạng của giai cấp tiểu tư sản, tư sản dân tộc, một bộ phận địa chủ vừa và nhỏ trong cách mạng giải phóng dân tộc.", "Không đề ra được chiến lược liên minh dân tộc và giai cấp rộng rãi trong cuộc đấu tranh chống đế quốc xâm lược và tay sai."], c: 3},
+  {q: "Câu 61. Tìm nội dung không đúng về những thành tựu đạt được sau 30 năm đổi mới, xây dựng, phát triển văn hóa, con người Việt Nam:", a: ["Nhiều giá trị văn hóa truyền thống của dân tộc và của từng vùng, miền được kế thừa, nhiều di sản văn hóa được bảo tồn, tôn tạo.", "Không gắn được nhiệm vụ xây dựng văn hóa, con người với nhiệm vụ xây dựng và phát triển đất nước và không gắn xây dựng môi trường văn hóa với xây dựng con người.", "Xã hội hóa hoạt động văn hóa ngày càng được mở rộng.", "Hệ thống thể chế, thiết chế văn hóa và công tác quản lý Nhà nước về văn hóa. Giao lưu và hợp tác quốc tế về văn hóa có nhiều khởi sắc."], c: 1},
+  {q: "Câu 62. Nội dung nào dưới đây đúng với mục tiêu xây dựng, phát triển văn hóa, con người người Việt Nam hiện nay:", a: ["Xây dựng nền văn hoá và con người Việt Nam phát triển toàn diện, hướng đến Chân - Thiện - Mỹ, thấm nhuần tinh thần dân tộc, nhân văn, dân chủ và khoa học.", "Xã hội hóa hoạt động văn hóa ngày càng mở rộng.", "Nhiều giá trị văn hóa truyền thống của dân tộc và của từng vùng, miền được kế thừa; nhiều di sản văn hóa được bảo tồn, tôn tạo.", "Hệ thống thể chế, thiết chế văn hóa và công tác quản lý nhà nước về văn hóa từng bước được tăng cường."], c: 0},
+  {q: "Câu 63. Nội dung nào dưới đây nói về thành tựu đạt được trong 30 năm đổi mới xây dựng, phát triển văn hóa, con người người Việt Nam:", a: ["Môi trường văn hóa tồn tại những biểu hiện thiếu lành mạnh, ngoại lai, trái thuần phong mỹ tục; tệ nạn xã hội và một số loại tội phạm có chiều hướng gia tăng.", "Gắn nhiệm vụ xây dựng văn hóa, con người với nhiệm vụ xây dựng và phát triển đất nước. Gắn xây dựng môi trường văn hóa với xây dựng con người.", "Đạo đức, lối sống có mặt xuống cấp đáng lo ngại.", "Việc bảo tồn, phát huy giá trị di sản văn hóa đạt hiệu quả chưa cao."], c: 1},
+  {q: "Câu 64. Nội dung nào dưới đây bàn về hạn chế trong xây dựng, phát triển văn hóa, con người người Việt Nam hiện nay:", a: ["Môi trường văn hóa tồn tại những biểu hiện thiếu lành mạnh, ngoại lai, trái thuần phong mỹ tục; tệ nạn xã hội và một số loại tội phạm có chiều hướng gia tăng.", "Gắn nhiệm vụ xây dựng văn hóa, con người với nhiệm vụ xây dựng và phát triển đất nước. Gắn xây dựng môi trường văn hóa với xây dựng con người.", "Nhiều giá trị văn hóa truyền thống của dân tộc và của từng vùng, miền được kế thừa; nhiều di sản văn hóa được bảo tồn, tôn tạo.", "Hệ thống thể chế, thiết chế văn hóa và công tác quản lý nhà nước về văn hóa từng bước được tăng cường."], c: 0},
+  {q: "Câu 65. Nội dung nào dưới đây không thuộc về nhiệm vụ xây dựng, phát triển văn hóa, con người người Việt Nam hiện nay:", a: ["Xây dựng con người Việt Nam phát triển toàn diện phải trở thành một mục tiêu của chiến lược phát triển.", "Hệ thống thể chế, thiết chế văn hóa và công tác quản lý nhà nước về văn hóa từng bước được tăng cường.", "Xây dựng môi trường văn hoá lành mạnh, phù hợp với bối cảnh phát triển kinh tế thị trường định hướng xã hội chủ nghĩa và hội nhập quốc tế.", "Xây dựng văn hoá trong chính trị và kinh tế; nâng cao chất lượng, hiệu quả hoạt động văn hóa; phát triển công nghiệp văn hoá đi đôi với xây dựng, hoàn thiện thị trường dịch vụ và sản phẩm văn hoá."], c: 1},
+  {q: "Câu 66. Tìm điểm mới trong phương hướng đổi mới mô hình tăng trưởng và cơ cấu lại nền kinh tế của Đại hội XIII trong thời đại cách mạng 4.0:", a: ["Kết hợp hợp lý giữa tăng trưởng theo chiều rộng với chiều sâu, lấy tăng trưởng theo chiều sâu là hướng chủ đạo", "Kết hợp hài hòa mục tiêu trước mắt và mục tiêu lâu dài.", "Phát huy vai trò quyết định của nội lực, đồng thời thu hút và sử dụng có hiệu quả các nguồn lực bên ngoài.", "Cải thiện môi trường đầu tư, kinh doanh, thúc đẩy khởi nghiệp sáng tạo, phát triển các ngành, lĩnh vực, các doanh nghiệp trên nền tảng ứng dụng mạnh mẽ các thành tựu của khoa học và công nghệ, nhất là cuộc cách mạng công nghiệp lần thứ tư."], c: 3},
+  {q: "Câu 67. Tìm đáp án không đúng trong đổi mới cơ cấu kinh tế của Đại hội XIII nhấn mạnh một số loại dịch vụ cần được ưu tiên phát triển:", a: ["Tập trung ưu tiên phát triển dịch vụ du lịch, thương mại, viễn thông, công nghệ - thông tin.", "Tập trung ưu tiên phát triển dịch vụ du lịch, thương mại, viễn thông, công nghệ - thông tin và nông nghiệp", "Phát triển dịch vụ vận tải, lô-gi-stíc, dịch vụ kỹ thuật, dịch vụ tư vấn pháp lý...", "Phát triển dịch vụ công nghiệp."], c: 3},
+  {q: "Câu 68. Tìm đáp án thể hiện đúng nhu cầu cấp bách phải đổi mới mô hình tăng trưởng và tái cơ cấu nền kinh tế của Việt Nam:", a: ["Do tác động của cách mạng khoa học công nghệ", "Do tác động của toàn cầu hóa kinh tế", "Do tác động của biến đổi khí hậu toàn cầu", "Do nguy cơ tụt hậu về kinh tế và sớm ra khỏi “bẫy thu nhập trung bình”"], c: 3},
+  {q: "Câu 69. Tìm đáp án sai so với mục tiêu của Đại hội XII về đổi mới mô hình tăng trưởng kinh tế nước ta:", a: ["Phát triển kinh tế gắn liền với đảm bảo quốc phòng, an ninh", "Phát triển kinh tế gắn liền với phát triển văn hóa, tiến bộ công bằng xã hội", "Phát triển kinh tế gắn liền với bảo vệ môi trường", "Chú trọng phát triển chiều rộng"], c: 3},
+  {q: "Câu 70. Tìm đáp án sai khi đánh giá về nguy cơ “sập bẫy thu nhập trung bình ở nước ta hiện nay:", a: ["Sử dụng hiệu quả mô hình tăng trưởng theo chiều sâu", "Sử dụng lao động trình độ thấp", "Sử dụng vốn kém hiệu quả khoa học công nghệ thấp", "Quản lý vĩ mô kém hiệu quả"], c: 0},
+  {q: "Câu 71. Nhận thức nào dưới đây của Đảng về kinh tế thị trường định hướng xã hội chủ nghĩa trước đổi mới:", a: ["Coi kinh tế thị trường là cái riêng có của chủ nghĩa tư bản, không phải là thành tựu của văn minh chung nhân loại.", "Phát triển nền kinh tế thị trường định hướng xã hội chủ nghĩa là mô hình phát triển tổng quát của nước ta trong thời kỳ quá độ lên chủ nghĩa xã hội.", "Đã thừa nhận có thể và cần thiết sử dụng kinh tế thị trường để xây dựng chủ nghĩa xã hội ở nước ta.", "Gắn nền kinh tế thị trường của nước ta với quá trình toàn cầu hóa, hội nhập quốc tế, tham gia sâu rộng vào mạng sản xuất và chuỗi cung ứng toàn cầu."], c: 0},
+  {q: "Câu 72. Đáp án nào dưới đây không đúng khi xác định nguyên nhân dẫn đến những hạn chế trong đường lối đối ngoại thời kỳ trước đổi mới:", a: ["Do chịu nhiều ảnh hưởng các quan điểm quốc tế của Liên Xô.", "Do tư tưởng chủ quan, say sưa với thắng lợi sau giải phóng miền Nam.", "Do phân tích đúng và kịp thời tình hình thế giới", "Do không nhận thức được xu thế chuyển từ đối đầu sang hòa hoãn, chạy đua phát triển kinh tế của các nước trên thế giới."], c: 2},
+  {q: "Câu 73. Đáp án nào dưới đây giải thích đúng với quan niệm về độc lập, tự chủ trong đường lối đối ngoại của Đảng ta:", a: ["Đối ngoại độc lập là không phụ thuộc vào đường lối đối ngoại của các nước khác, tự chủ là không để đường lối đối ngoại của nước khác chi phối đường lối đối ngoại của nước mình.", "Đối ngoại độc lập, tự chủ là không đối đầu, không gây chiến tranh", "Đối ngoại độc lập, tự chủ là triển khai hoạt động đối ngoại trên nhiều mặt, nhiều phương diện, thiết lập quan hệ với nhiều nhóm nước, nhiều quốc gia, khu vực.", "Đối ngoại độc lập, tự chủ là tăng cường ngoại giao nhân dân."], c: 0},
+  {q: "Câu 74. Đáp án nào dưới đây giải thích đúng với quan niệm về đa dạng hóa, đa phương hóa trong đường lối đối ngoại của Đảng ta:", a: ["Đa phương hoá, đa dạng hoá các quan hệ đối ngoại là đưa ra những quyết định về đường lối, chính sách không rơi vào thế bị động.", "Đa phương hoá, đa dạng hoá các quan hệ đối ngoại là triển khai hoạt động đối ngoại trên nhiều mặt, nhiều phương diện, thiết lập quan hệ với nhiều nhóm nước, nhiều quốc gia, khu vực.", "Đa phương hoá, đa dạng hoá các quan hệ đối ngoại là không đối đầu, không gây chiến tranh.", "Đa phương hoá, đa dạng hoá các quan hệ đối ngoại là không phụ thuộc vào đường lối đối ngoại của các nước khác, không để đường lối đối ngoại của nước khác chi phối đường lối đối ngoại của nước mình."], c: 1},
+  {q: "Câu 75. Đáp án nào dưới đây giải thích đúng với quan niệm về đường lối đối ngoại vì hoà bình, hợp tác và phát triển mà Đại hội XII nêu ra:", a: ["Đối ngoại vì hoà bình, hợp tác và phát triển là không đối đầu, không gây chiến tranh mà là tăng cường hợp tác, cùng nhau xây dựng, cùng nhau phát triển.", "Đối ngoại vì hoà bình, hợp tác là không phụ thuộc vào đường lối đối ngoại của các nước khác, không để đường lối đối ngoại của nước khác chi phối đường lối đối ngoại của nước mình.", "Đối ngoại vì hoà bình, hợp tác là đưa ra những quyết định về đường lối, chính sách không rơi vào thế bị động.", "Đối ngoại vì hoà bình, hợp tác là triển khai hoạt động đối ngoại trên nhiều mặt, nhiều phương diện, thiết lập quan hệ với nhiều nhóm nước, nhiều quốc gia, khu vực."], c: 0},
+  {q: "Câu 76. Đáp án nào dưới đây viết đầy đủ nhất về chủ trương hội nhập toàn diện của Đảng ta:", a: ["“Việt Nam sẵn sàng là bạn, đối tác tin cậy và là thành viên có trách nhiệm trong cộng đồng quốc tế, chủ động và tích cực hội nhập quốc tế”.", "“Việt Nam muốn là bạn với tất cả các nước trong cộng đồng thế giới, phấn đấu vì hòa bình, độc lập và phát triển”.", "“Việt Nam sẵn sàng là bạn, là đối tác tin cậy của các nước trong cộng đồng quốc tế, phấn đấu vì hòa bình, độc lập và phát triển, chủ động và tích cực hội nhập kinh tế quốc tế”.", "“Đối với các nước dân chủ, Việt Nam sẵn sàng thực thi chính sách mở cửa và hợp tác mọi lĩnh vực”."], c: 0},
+  {q: "Câu 77. Luận điểm nào dưới đây giải thích đúng vai trò của nhà nước trong nền kinh tế thị trường định hướng xã hội chủ nghĩa:", a: ["Nhà nước đóng vai trò xây dựng và hoàn thiện thể chế để định hướng, quản lý nền kinh tế, tạo môi trường cạnh tranh bình đẳng.", "Nhà nước đóng vai trò chủ yếu trong kinh doanh, tạo ra của cải cho xã hội", "Nhà nước đóng vai trò giải quyết phân bổ các nguồn lực kinh tế.", "Nhà nước đóng vài trò cấp phát, xin - cho."], c: 0},
+  {q: "Câu 78. Tìm nguyên nhân chủ quan cơ bản nhất dẫn đến khủng hoảng kinh tế - xã hội trong thời kỳ trước đổi mới?", a: ["Cơ sở vật chất kỹ thuật còn quá yếu.", "Thiên tai liên miên.", "Viện trợ của nước ngoài bị giảm.", "Sử dụng cơ chế kinh tế kế hoạch hóa tập trung, quan liêu, bao cấp."], c: 3},
+  {q: "Câu 79. Nội dung nào dưới đây là đổi mới quan trọng nhất trong các chủ trương chính sách của Đại hội Đảng lần thứ VI (1986):", a: ["Kiên quyết xóa bỏ cơ chế kế hoạch hóa tập trung quan liêu bao cấp.", "Ba chương trình kinh tế lớn: Lương thực - thực phẩm; hàng tiêu dùng; hàng xuất khẩu.", "Chính sách đối ngoại dựa chủ yếu vào Liên Xô và các nước xã hội chủ nghĩa.", "Lần đầu tiên, chính sách xã hội và mối tương quan của nó với chính sách kinh tế được đặt đúng tầm."], c: 0},
+  {q: "Câu 80. Nội dung nào dưới đây xác định những đặc trưng của kinh tế thị trường định hướng xã hội chủ nghĩa ở nước ta:", a: ["Là nền kinh tế hiện vật.", "Là nền kinh tế quản lý theo kiểu tập trung, quan liêu bao cấp.", "Là nền kinh tế thị trường tư bản chủ nghĩa.", "Kinh tế thị trường là nền kinh tế vận hành đầy đủ, đồng bộ theo các quy luật của kinh tế thị trường, đồng thời bảo đảm định hướng xã hội chủ nghĩa phù hợp với từng giai đoạn phát triển của đất nước."], c: 3},
+  {q: "Câu 81. Luận điểm nào dưới đây nói lên cơ sở kinh tế của Nhà nước chuyên chính vô sản:", a: ["Là nền kinh tế thị trường định hướng xã hội chủ nghĩa.", "Là nền kinh tế kế hoạch hóa tập trung quan liêu bao cấp với chế độ sở hữu toàn dân, loại trừ kinh tế tư nhân.", "Là nền kinh tế tự nhiên, tự cung, tự cấp.", "Là nền kinh tế nhiều chế độ sở hữu, nhiều thành phần."], c: 1},
+  {q: "Câu 82. Hạn chế, yếu kém nào sau đây chứng tỏ cơ chế kinh tế cũ vẫn chưa bị xóa bỏ hoàn toàn ở Việt Nam hiện nay:", a: ["Doanh nghiệp Nhà nước hoạt động kém hiệu quả, chưa thể hiện là vai trò nòng cốt của nền kinh tế.", "Hiệu lực, hiệu quả quản lý nhà nước chưa cao, kỷ luật, kỷ cương không nghiêm.", "Vẫn còn tình trạng bao cấp, xin - cho trong nhiều kĩnh vực quản lý.", "Trình độ phát triển của các loại thị trường còn thấp, vận hành chưa đồng bộ."], c: 2},
+  {q: "Câu 83. Tìm đáp án có nội dung sai?", a: ["Giai đoạn 1955-1957 thực hiện kinh tế thị trường với nền kinh tế nhiều thành phần, duy trì kinh tế tư nhân và cơ chế thị trường.", "Giai đoạn 1958 – 1975, thực hiện mô hình kinh tế kế hoạch hóa tập trung quan liêu bao cấp ở miền Nam.", "Giai đoạn 1975 – 1985, thực hiện mô hình kinh tế kế hoạch hóa tập trung trên quy mô cả nước.", "Giai đoạn 1986 – nay, thực hiện mô hình kinh tế thị trường định hướng xã hội chủ nghĩa."], c: 1},
+  {q: "Câu 84. Nội dung nào dưới đây trong Cương lĩnh chính trị đầu tiên của Đảng xác định đường lối tổng quát của cách mạng Việt Nam:", a: ["Đường lối của cách mạng Việt Nam là làm tư sản dân quyền cách mạng và thổ địa cách mạng để đi tới xã hội cộng sản.", "Nhiệm vụ cách mạng bao gồm cả 2 nội dung: Dân tộc và dân chủ, chống đế quốc và chống phong kiến, song nổi lên hàng đầu là nhiệm vụ chống để quốc.", "Đảng có nhiệm vụ tập hợp giai cấp công nhân, nông dân và phân hóa, lôi kéo các giai cấp, tầng lớp khác trong xã hội về phía cách mạng.", "Cương lĩnh khẳng định lãnh đạo cách mạng là giai cấp vô sản, thông qua chính Đảng là Đảng Cộng sản Việt Nam."], c: 0},
+  {q: "Câu 85. Luận điểm nào sau đây bị viết sai về đặc trưng nhà nước của Nhà nước pháp quyền xã hội chủ nghĩa ở Việt Nam:", a: ["Là nhà nước của dân, do dân và vì dân, tất cả quyền lực nhà nước thuộc về nhân dân.", "Quyền lực nhà nước là thống nhất, không có sự phân công rành mạch và phối hợp chặt chẽ giữa các cơ quan nhà nước trong thực hiện các quyền lập pháp, hành pháp và tư pháp.", "Nhà nước được tổ chức và hoạt động trong khuôn khổ Hiến pháp và pháp luật.", "Nhà nước tôn trọng và bảo vệ quyền con người, quyền công dân."], c: 1},
+  {q: "Câu 86. Đại hội lần thứ mấy của Đảng cộng sản Việt Nam đã đề ra các định hướng lớn để từng bước ra khỏi khủng hoảng kinh tế - xã hội nghiêm trọng kéo dài nhiều năm?", a: ["Đại hội Đảng toàn quốc lần thứ V (1981)", "Đại hội Đảng toàn quốc lần thứ VI (1986)", "Đại hội Đảng toàn quốc lần thứ VII (1991)", "Đại hội Đảng toàn quốc lần thứ IX (2001)"], c: 1},
+  {q: "Câu 87. Nội dung nào dưới đây không đúng với thực trạng thể chế kinh tế thị trường ở nước ta hiện nay:", a: ["Hệ thống pháp luật, cơ chế, chính sách chưa hoàn chỉnh và đồng bộ, chất lượng không cao, chưa đáp ứng được yêu cầu đổi mới mô hình tăng trưởng.", "Thể chế kinh tế thị trường định hướng xã hội chủ nghĩa còn hạn chế, chưa tạo được đột phá lớn trong huy động, phân bổ và sử dụng hiệu quả các nguồn lực phát triển.", "Quyền tự do kinh doanh chưa được tôn trọng đầy đủ, môi trường đầu tư, kinh doanh không thật sự thông thoáng.", "Môi trường đầu tư kinh doanh đã bảo đảm tốt cạnh tranh lành mạnh, bình đẳng giữa các thành phần kinh tế."], c: 3},
+  {q: "Câu 88. Tìm nguyên nhân của mọi nguyên nhân dẫn đến khủng hoảng kinh tế - xã hội thời kỳ trước đổi mới?", a: ["Sai lầm trong bố trí cơ cấu đầu tư.", "Sai lầm trong công nghiệp hóa.", "Sai lầm trong hoạt động tư tưởng, tổ chức và công tác cán bộ của Đảng.", "Sai lầm trong phân phối lưu thông."], c: 2},
+  {q: "Câu 89. Luận điểm nào dưới đây là định hướng quyết tâm chính trị để từng bước ra khỏi khủng hoảng kinh tế - xã hội được nêu trong văn kiện Đại hội VI (1986):", a: ["Đổi mới là vấn đề có ý nghĩa sống còn, phải đổi mới toàn diện, trước hết là đổi mới tư duy.", "Đổi mới nhận thức và chính sách cải tạo xã hội chủ nghĩa.", "Đổi mới cơ chế quản lí kinh tế.", "Đổi mới thể chế đối ngoại."], c: 0},
+  {q: "Câu 90. Nội dung nào dưới đây không có trong các định hướng lớn để từng bước ra khỏi khủng hoảng kinh tế - xã hội được nêu trong văn kiện Đại hội VI (1986):", a: ["Định hướng quyết tâm chính trị.", "Định hướng đổi mới tư duy chính trị.", "Định hướng chính sách kinh tế - xã hội.", "Định hướng đổi mới hệ thống chính trị."], c: 3},
+  {q: "Câu 91. Nội dung nào dưới đây không nằm trong các định hướng về chính sách kinh tế - xã hội được đề ra tại Đại hội Đảng lần thứ VI (1986):", a: ["Bố trí lại cơ cấu kinh tế, điều chỉnh cơ cấu đầu tư", "Tăng cường quốc phòng, an ninh", "Mở rộng và nâng cao hiệu quả kinh tế đối ngoại", "Phát huy mạnh mẽ động lực khoa học - kỹ thuật"], c: 1},
+  {q: "Câu 92. Đáp án nào dưới đây viết sai về định đướng đổi mới tư duy chính trị được Đại hội VI (1986) tổng kết:", a: ["Nhìn thẳng vào sự thật, đánh giá đúng sự thật, nói rõ sự thật", "Xuất phát từ thực tế, tôn trọng và hành động theo quy luật khách quan", "Lấy dân làm gốc", "Tăng cường chuyên chính vô sản."], c: 3},
+  {q: "Câu 93. Nền kinh tế thị trường định hướng xã hội chủ nghĩa ở Việt Nam hiện nay có nhiều hình thức sở hữu. Tìm đáp án đúng và đầy đủ nhất trong các đáp án sau đây:", a: ["Sở hữu toàn dân, sở hữu tập thể.", "Sở hữu tư nhân, sở hữu tập thể.", "Sở hữu toàn dân, sở hữu tập thể, sở hữu tư nhân.", "Sở hữu toàn dân, sở hữu tư nhân."], c: 2},
+  {q: "Câu 94. Nền kinh tế thị trường định hướng xã hội chủ nghĩa ở Việt Nam hiện nay có nhiều thành phần kinh tế. Tìm đáp án đúng và đầy đủ nhất?", a: ["Kinh tế nhà nước, kinh tế tập thể, kinh tế tư nhân, kinh tế cá thể.", "Kinh tế nhà nước, kinh tế tư nhân, kinh tế có vốn đầu tư nước ngoài.", "Kinh tế tư nhân, kinh tế tập thể, kinh tế có vốn đầu tư nước ngoài.", "Kinh tế nhà nước, kinh tế tập thể, kinh tế tư nhân, kinh tế có vốn đầu tư nước ngoài."], c: 3},
+  {q: "Câu 95. Hãy cho biết nội dung nào dưới đây không đúng với tính chất chung của kinh tế thị trường:", a: ["Chủ thể thị trường phải độc lập.", "Thủ tiêu cạnh trạnh.", "Hệ thống thị trường hoàn hảo.", "Giá cả cơ bản do cung cầu điều tiết."], c: 1},
+  {q: "Câu 96. Hãy cho biết Việt Nam bắt đầu quá trình chuyển sang thể chế kinh tế thị trường định hướng xã hội chủ nghĩa từ năm nào?", a: ["Năm 1958.", "Năm 1975.", "Năm 1986.", "Năm 1988."], c: 2},
+  {q: "Câu 97. Tính chất nào dưới đây của kinh tế thị trưởng khẳng định doanh nghiệp có quyền tự chủ trong hoạt động sản xuất kinh doanh:", a: ["Chủ thể thị trường phải độc lập.", "Giá cả cơ bản do cung cầu điều tiết.", "Hệ thống pháp quy kiện toàn.", "Tính mở của hoạt động kinh tế."], c: 0},
+  {q: "Câu 98. Nội dung nào dưới đây không đúng với quy luật của kinh tế thị trường:", a: ["Có tự do cạnh tranh.", "Giá cả cơ bản do nhà nước quyết định.", "Tính mở của hoạt động kinh tế.", "Giá cả cơ bản do cung cầu điều tiết."], c: 1},
+  {q: "Câu 99. Nền kinh tế thị trường ở Việt Nam có tên gọi là gì?", a: ["Nền kinh tế thị trường tự do.", "Nền kinh tế thị trường xã hội.", "Nền kinh tế thị trường xã hội chủ nghĩa", "Nền kinh tế thị trường định hướng xã hội chủ nghĩa."], c: 3},
+  {q: "Câu 100. Nội dung nào sau đây bị lạc đề khi viết về hậu quả của mô hình tăng trưởng theo chiều rộng:", a: ["Quốc gia tăng trưởng theo chiều rộng sẽ phụ thuộc nhiều vào vốn đầu tư.", "Quốc gia tăng trưởng theo chiều rộng sẽ cạn kiệt tài nguyên và ô nhiễm môi trường.", "Quốc gia tăng trưởng theo chiều rộng sẽ tận dụng được lợi thế nhân công giá rẻ và dồi dào.", "Quốc gia tăng trưởng theo chiều rộng sẽ gây bất ổn về kinh tế và xã hội."], c: 2},
+  {q: "Câu 101. Nội dung nào dưới đây không đúng với nhận thức về nền kinh tế thị trường định hướng xã hội chủ nghĩa ở Việt Nam:", a: ["Là nền kinh tề vận hành đầy đủ, đồng bộ theo các quy luật của kinh tế thị trường.", "Đồng thời bảo đảm định hướng xã hôi chủ nghĩa phù hợp với từng giai đoạn phát triển của đất nước.", "Là nền kinh tế do nhà nước quản lý bằng mệnh lệnh hành chính.", "Đó là nền kinh tế thị trường hiện đại và hội nhập quốc tế."], c: 2},
+  {q: "Câu 102: Các đáp án sau đây viết về các thành tố trong hệ thống chính trị ở Việt Nam hiện nay. Đáp án nào có điểm viết sai?", a: ["Đảng Cộng sản Việt Nam", "Nhà nước pháp quyền xã hội chủ nghĩa", "Mặt trận Tổ quốc Việt Nam", "Các tổ chức chính trị - xã hội: Đoàn Thanh niên, Hội Phụ nữ, Hội Nông dân, Tổng Liên đoàn Lao động Việt Nam, Hội người mù Việt Nam."], c: 3},
+  {q: "Câu 103. Nhận thức nào sau đây không đúng với đặc trưng của toàn cầu hóa kinh tế:", a: ["Các nước nghèo ngày càng có vai trò lớn trong toàn cầu hóa kinh tế.", "Quá trình quốc tế hóa sản xuất và sự phân công lao động diễn ra ngày càng sâu rộng.", "Việc tham gia vào mạng sản xuất, chuỗi cung ứng toàn cầu đã trở thành yêu cầu đối với các nền kinh tế.", "Các nền kinh tế ngày càng tùy thuộc lẫn nhau, cạnh tranh và hợp tác giữa các nước ngày càng trở thành phổ biến."], c: 0},
+  {q: "Câu 104. Tìm đáp án lạc đề so với mục tiêu phát triển văn hóa, con người Việt Nam được Đại hội XII nêu ra?", a: ["Xây dựng nền văn hóa và con người Việt Nam phát triển toàn diện, hướng đến Chân – Thiện – Mỹ.", "Gắn kết chặt chẽ chính sách kinh tế với chính sách xã hội", "Xây dựng nền văn hóa và con người Việt Nam thấm nhuần tinh thần dân tộc, nhân văn, dân chủ và khoa học.", "Xây dựng nền văn hóa thực sự trở thành nền tảng tinh thần vững chắc của xã hội, là sức mạnh nội sinh quan trọng đảm bảo sự phát triển bền vững."], c: 1},
+  {q: "Câu 105. Tìm đáp án khái quát nhất làm căn cứ để xác định nước ta không đạt mục tiêu công nghiệp hóa, hiện đại hóa vào năm 2020 như mong muốn?", a: ["Nhiều chỉ tiêu, tiêu chí đến năm 2020 đưa nước ta trở thành nước công nghiệp theo hướng hiện đại không đạt được.", "GDP bình quân đầu người mới chỉ đạt 3200 - 3500 USD/người/ năm (tiêu chí nước công nghiệp là 5000 USD/ người/ năm", "Tỷ trọng công nghiệp chế tạo đạt 15% (tiêu chí trên 20%)", "Tỷ trọng nông nghiệp trong GDP dự kiến đạt 15% (tiêu chí dưới 10%)"], c: 0},
+  {q: "Câu 106. Luận điểm nào sau đây không đúng với quan điểm của Đảng về công nghiệp hóa, hiện đại hóa:", a: ["Công nghiệp hóa gắn liền hiện đại hóa, phát triển kinh tế tri thức.", "Công nghiệp hóa, hiện đại hóa gắn liền kinh tế thị trường và hội nhập quốc tế.", "Công nghiệp hóa, hiện đại hóa không gắn với phát triển công nghiệp phụ trợ.", "Công nghiệp hóa, hiện đại hóa ưu tiên các sản phẩm có khả năng tham gia vào mạng sản xuất và chuỗi giá trị toàn cầu."], c: 2},
+  {q: "Câu 107. Luận điểm nào sau đây sai với quan điểm của Đại hội XII về nội dung đổi mới mô hình tăng trưởng:", a: ["Đổi mới mô hình tăng trưởng chuyển từ chủ yếu dựa vào xuất khẩu và vốn đầu tư sang phát triển đồng thời dựa cả vốn đầu tư, xuất khẩu và thị trường trong nước.", "Phát huy vai trò quyết định của nội lực, đồng thời thu hút, sử dụng có hiệu quả các nguồn lực bên ngoài.", "Phát huy đầy đủ, đúng đắn, vai trò chủ đạo của doanh nghiệp nhà nước và kinh tế tập thể, song coi nhẹ vai trò cuả kinh tế tư nhân.", "Thực hiện phương thức quản lý, quản trị nhà nước kiến tạo phát triển, đẩy mạnh ứng dụng tiến bộ khoa học – công nghệ để nâng cao năng suất lao động."], c: 2},
+  {q: "Câu 108. Nội dung nào sau đây sai với quan điểm của Đảng về quản lý phát triển xã hội:", a: ["Nhận thức sâu sắc vị trí, tầm quan trọng của phát triển xã hội bền vững và quản lý phát triển xã hội đối với sự nghiệp xây dựng, bảo vệ Tổ quốc.", "Thực hiện chính sách kinh tế không gắn chặt chẽ với chính sách xã hội.", "Giải quyết tốt lao động, việc làm, tiếp tục hoàn thiện chính sách an sinh xã hội phù hợp với quá trình phát triển kinh tế - xã hội.", "Thực hiện tốt chiến lược dân số, gia đình, chương trình hành động vì trẻ em, đầu tư nâng cao chất lượng dân số, chỉ số phát triển con người."], c: 1},
+  {q: "Câu 109. Luận điểm nào sau đây viết đúng về cơ sở kinh tế của Nhà nước pháp quyền xã hội chủ nghĩa Việt Nam:", a: ["Là nền kinh tế thị trường tự do", "Là nền kinh tế thị trường Xã hội chủ nghĩa", "Là nền kinh tế thị trường định hướng Xã hội chủ nghĩa", "Là nền kinh tế kế hoạch hóa trực tiếp."], c: 2},
+  {q: "Câu 110. Nhiệm vụ tổng quát của quản lý xã, phát triển xã hội được Đại hội XII (2016) nếu ra là gì?", a: ["Phát triển kinh tế, đưa Việt Nam thoát khỏi tình trạng tụt hậu.", "Vì con người, phục vụ con người cá nhân và cộng đồng, đem lại hạnh phúc thực sự cho con người.", "Bảo đảm phát triển xã hội bền vững.", "Bảo vệ môi trường sinh thái."], c: 2},
+  {q: "Câu 111. Tìm điểm mới trong thành tố của chủ đề Đại hội XIII (1/2021) về xây dựng hệ thống chính trị?", a: ["Tăng cường xây dựng, chỉnh đốn Đảng và hệ thống chính trị trong sạch, vững mạnh.", "Phát huy ý chí, khát vọng, sức mạnh đại đoàn kết toàn dân tộc kết hợp với sức mạnh thời đại.", "Đẩy mạnh đổi mới sáng tạo, phát triển nhanh và bền vững đất nước.", "Bảo vệ vững chắc Tổ quốc, giữ vững môi trường hòa bình, ổn định, phấn đấu đến giữa thế kỷ XXI nước ta trở thành nước phát triển, theo định hướng xã hội chủ nghĩa"], c: 0},
+  {q: "Câu 112. Tìm điểm mới trong thành tố của chủ đề Đại hội XIII (1/2021) về các động lực xây dựng đất nước?", a: ["Đẩy mạnh đổi mới sáng tạo, phát triển nhanh và bền vững đất nước.", "Bảo vệ vững chắc Tổ quốc, giữ vững môi trường hòa bình, ổn định, phấn đấu đến giữa thế kỷ XXI nước ta trở thành nước phát triển, theo định hướng xã hội chủ nghĩa", "Tăng cường xây dựng, chỉnh đốn Đảng và hệ thống chính trị trong sạch, vững mạnh.", "Phát huy ý chí, khát vọng, sức mạnh đại đoàn kết toàn dân tộc kết hợp với sức mạnh thời đại."], c: 3},
+  {q: "Câu 113. Tìm điểm mới trong thành tố của chủ đề Đại hội XIII (1/2021) phản ánh phương thức phát triển đất nước?", a: ["Bảo vệ vững chắc Tổ quốc, giữ vững môi trường hòa bình, ổn định, phấn đấu đến giữa thế kỷ XXI nước ta trở thành nước phát triển, theo định hướng xã hội chủ nghĩa", "Đẩy mạnh đổi mới sáng tạo, phát triển nhanh và bền vững đất nước.", "Tăng cường xây dựng, chỉnh đốn Đảng và hệ thống chính trị trong sạch, vững mạnh.", "Phát huy ý chí, khát vọng, sức mạnh đại đoàn kết toàn dân tộc kết hợp với sức mạnh thời đại."], c: 1},
+  {q: "Câu 114. Tìm điểm mới trong thành tố của chủ đề Đại hội XIII (1/2021) khẳng định mục tiêu phát triển đất nước?", a: ["Bảo vệ vững chắc Tổ quốc, giữ vững môi trường hòa bình, ổn định, phấn đấu đến giữa thế kỷ XXI nước ta trở thành nước phát triển, theo định hướng xã hội chủ nghĩa", "Đẩy mạnh đổi mới sáng tạo, phát triển nhanh và bền vững đất nước.", "Tăng cường xây dựng, chỉnh đốn Đảng và hệ thống chính trị trong sạch, vững mạnh.", "Phát huy ý chí, khát vọng, sức mạnh đại đoàn kết toàn dân tộc kết hợp với sức mạnh thời đại."], c: 0},
+  {q: "Câu 115. Tìm đáp án nào dưới đây không đúng với phương hướng sớm đưa nước ta trở thành nước công nghiệp theo hướng hiện đại của Đại hội XII:", a: ["Tham gia sâu rộng vào mạng sản xuất và chuỗi giá trị toàn cầu", "Chú trọng công nghiệp hóa, hiện đại hóa nông nghiệp, nông thôn phát triển nhanh, bền vững", "Ứng dụng có hiệu quả những thành tựu của cuộc cách mạng 4.0", "Ưu tiên phát triển nông nghiệp truyền thống."], c: 3},
+  {q: "Câu 116. Tìm đáp án sai khi đánh giá về nguyên nhân nước ta không đạt mục tiêu công nghiệp hóa, hiện đại hóa:", a: ["Các ngành nền tảng và công nghiệp hỗ trợ quy hoạch thiếu chiến lược", "Chưa xác định rõ những ngành, lĩnh vực trọng tâm", "Hệ thống kết cấu hạ tầng kinh tế - xã hội yếu kém, lạc hậu, thiếu tính liên kết", "Đã tận dụng được nội lực và ngoại lực cho phát triển."], c: 3},
+  {q: "Câu 117. Tìm đánh giá đúng về nền công nghiệp nước ta hiện nay:", a: ["Là nền công nghiệp hiện đại", "Là nền công nghiệp mang tính gia công", "Là nền công nghiệp phụ trợ.", "Là nền công nghiệp nặng."], c: 1},
+  {q: "Câu 118: Tìm đáp án không đúng với phương hướng, nhiệm vụ của Đảng về quản lý phát triển xã hội, thực hiện tiến bộ và công bằng xã hội?", a: ["Chú trong xây dựng, thực hiện các chính sách phù hợp với các giai tầng trong xã hội.", "Gắn kết chặt chẽ chính sách kinh tế với chính sách xã hội, phát triển kinh tế với nâng cao chất lượng cuộc sống của nhân dân.", "Bảo đảm để nhân dân được hưởng thụ ngày một tốt hơn thành quả của công cuộc đổi mới, xây dựng và phát triển đất nước.", "Thực hiện có hiệu quả nhiều chính sách đối với người cao tuổi, người khuyết tật, trẻ em, phụ nữ, đồng bào dân tộc thiểu số ở vùng cao, vùng sâu, vùng xa."], c: 3},
+  {q: "Câu 119: Nội dung nào dưới đây thuộc về phương hướng, nhiệm vụ của Đảng về quản lý phát triển xã hội, thực hiện tiến bộ và công bằng xã hội?", a: ["Gắn kết chặt chẽ chính sách kinh tế với chính sách xã hội, phát triển kinh tế với nâng cao chất lượng cuộc sống của nhân dân.", "Phát triển các lĩnh vực thiếu đồng bộ, thiếu bền vững cả về kinh tế, văn hóa, xã hội và môi trường.", "Giảm nghèo chưa bền vững, chênh lệch giàu - nghèo và bất bình đẳng có xu hướng gia tăng.", "Một bộ phận nhân dân chưa được thụ hưởng đầy đủ, công bằng thành quả của công cuộc đổi mới."], c: 0},
+  {q: "Câu 120: Tìm nội dung không đúng với những thành tựu đạt được trong quản lý phát triển xã hội ở Việt Nam sau hơn 30 năm đổi mới?", a: ["Đảng và Nhà nước luôn quan tâm xây dựng, tổ chức thực hiện các chính sách an sinh xã hội, phúc lợi xã hội, dân tộc, tôn giáo để giải quyết các vấn đề xã hội.", "Nhận thức của toàn xã hội về tăng trưởng kinh tế đi đôi với phát triển văn hóa, thực hiện tiến bộ và công bằng xã hội được nâng lên.", "Chú trong xây dựng, thực hiện các chính sách phù hợp với các giai tầng trong xã hội.", "Hệ thống luật pháp và chính sách được bổ sung nhằm điều tiết các quan hệ xã hội."], c: 2}
+];
+
+let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
+let timerInterval;
+let timeLeft = 0;
+let autoNextTimer;
+
+const elInterface = document.getElementById("quiz-interface");
+const elResult = document.getElementById("result-interface");
+const elQuestion = document.getElementById("question");
+const elAnswers = document.getElementById("answers");
+const elCounter = document.getElementById("question-counter");
+const elCombo = document.getElementById("combo-display");
+const elProgressBar = document.getElementById("progress-bar");
+const elBtnNext = document.getElementById("btn-next");
+const elBtnSkip = document.getElementById("btn-skip");
+const elBtnPrev = document.getElementById("btn-prev");
+const elFailToast = document.getElementById("fail-toast");
+const elPhaseBadge = document.getElementById("phase-display");
+const elTimer = document.getElementById("timer-display");
+const elResultTime = document.getElementById("result-time");
+const elControlPopup = document.getElementById("control-popup");
+const elReviewContainer = document.getElementById("review-container");
+const elBtnRetryWrong = document.getElementById("btn-retry-wrong");
+
+function initGame(retryWrongOnly = false) {
+    score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
+    activeQueue = []; skippedQueue = []; isPhaseSkipped = false;
+    
+    if (!retryWrongOnly) userAnswers = {};
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const configShuffleQ = urlParams.get('sq') !== 'false'; 
+    const configTime = parseInt(urlParams.get('time')) || 0;
+
+    if (retryWrongOnly) {
+        let wrongIndices = [];
+        originalQuiz.forEach((item, idx) => {
+            if (userAnswers.hasOwnProperty(idx)) {
+                if (userAnswers[idx] !== item.c) wrongIndices.push(idx);
+            }
+        });
+        
+        if (wrongIndices.length === 0) {
+            alert("Bạn không có câu sai nào để làm lại!");
+            return;
+        }
+
+        userAnswers = {}; 
+
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+             let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+             return {
+                q: item.q,
+                a: options.map(opt => opt.text),
+                c: options.findIndex(opt => opt.isCorrect),
+                originalId: originalIdx
+            };
+        });
+        
+        activeQueue = wrongIndices;
+        if (configShuffleQ) shuffleArray(activeQueue);
+
+    } else {
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+            let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+            return {
+                q: item.q,
+                a: options.map(opt => opt.text),
+                c: options.findIndex(opt => opt.isCorrect),
+                originalId: originalIdx
+            };
+        });
+
+        let indices = sessionQuiz.map((_, i) => i);
+        if (configShuffleQ) shuffleArray(indices);
+        activeQueue = indices;
+    }
+    
+    elInterface.style.display = "flex";
+    elResult.style.display = "none";
+    elControlPopup.style.display = "flex";
+
+    if (configTime > 0) {
+        timeLeft = configTime * 60;
+        startCountdown();
+    } else {
+        timeLeft = 0;
+        startCountUp();
+    }
+
+    updateStats();
+    loadQuestion();
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function startCountdown() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay(timeLeft);
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("⏰ Hết giờ! Bài thi sẽ tự động nộp.");
+            finishGame();
+        }
+    }, 1000);
+}
+
+function startCountUp() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft++;
+        updateTimerDisplay(timeLeft);
+    }, 1000);
+}
+
+function updateTimerDisplay(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    elTimer.innerText = `${m}:${s}`;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const limit = parseInt(urlParams.get('time')) || 0;
+    
+    if (limit > 0 && seconds < 60) elTimer.classList.add('danger');
+    else elTimer.classList.remove('danger');
+}
+
+function loadQuestion() {
+    clearTimeout(autoNextTimer);
+
+    const qIndex = activeQueue[currentIndex];
+    const data = sessionQuiz[qIndex];
+    const hasAnswered = userAnswers.hasOwnProperty(qIndex);
+
+    elQuestion.innerText = data.q;
+    elAnswers.innerHTML = "";
+
+    if (isPhaseSkipped) {
+        elPhaseBadge.style.display = "inline-block";
+        elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
+    } else {
+        elPhaseBadge.style.display = "none";
+        elCounter.innerText = `Câu ${currentIndex + 1}/${activeQueue.length}`;
+    }
+
+    const labels = ["A", "B", "C", "D"];
+    data.a.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        // ans text might already contain "A. ", strip it if needed, but strict mode says keep content.
+        // We will just display it as is, maybe bold the label we generate.
+        btn.innerHTML = `<b>${labels[idx]}.</b> ${ans}`;
+        
+        if (hasAnswered) {
+            btn.disabled = true;
+            const userPick = userAnswers[qIndex];
+            if (idx === data.c) btn.classList.add("correct");
+            if (idx === userPick && userPick !== data.c) btn.classList.add("wrong");
+            if (idx === userPick) btn.classList.add("user-selected");
+        } else {
+            btn.onclick = () => checkAnswer(qIndex, idx);
+        }
+        elAnswers.appendChild(btn);
+    });
+
+    elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
+    
+    if (hasAnswered) {
+        elBtnSkip.style.display = "none";
+        elBtnNext.style.display = "block";
+    } else {
+        elBtnSkip.style.display = "block";
+        elBtnNext.style.display = "none";
+    }
+
+    updateStats();
+}
+
+function checkAnswer(qIndex, selectedIdx) {
+    const data = sessionQuiz[qIndex];
+    const isCorrect = selectedIdx === data.c;
+    userAnswers[qIndex] = selectedIdx;
+
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === data.c) btn.classList.add("correct");
+        if (idx === selectedIdx && !isCorrect) btn.classList.add("wrong");
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+    } else {
+        combo = 0; wrongStreak++;
+        if (wrongStreak >= 3) {
+            elFailToast.classList.add("show");
+            setTimeout(() => elFailToast.classList.remove("show"), 3000);
+        }
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+
+    // AUTO NEXT 1.5s
+    autoNextTimer = setTimeout(() => {
+        nextQuestion();
+    }, 1500);
+}
+
+function nextQuestion() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    clearTimeout(autoNextTimer);
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        if(confirm(`Bạn đã bỏ qua ${skippedQueue.length} câu. Bạn có muốn làm lại ngay bây giờ không?`)) {
+             isPhaseSkipped = true;
+            activeQueue = [...skippedQueue];
+            skippedQueue = [];
+            currentIndex = 0;
+            loadQuestion();
+        } else {
+            finishGame();
+        }
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const pct = ((currentIndex + 1) / activeQueue.length) * 100;
+    elProgressBar.style.width = `${pct}%`;
+    elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
+}
+
+function finishGame() {
+    clearInterval(timerInterval);
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+    elControlPopup.style.display = "none"; 
+    
+    elResultTime.innerText = `Thời gian làm bài: ${elTimer.innerText}`;
+
+    const total = activeQueue.length;
+    const correctCount = score;
+    const wrongCount = total - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, #e2e8f0 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+
+    elReviewContainer.innerHTML = "";
+    let hasWrong = false;
+
+    activeQueue.forEach((qIndex, idx) => {
+        const uAns = userAnswers[qIndex];
+        const correctAns = sessionQuiz[qIndex].c;
+        
+        if (uAns !== undefined && uAns !== correctAns) {
+            hasWrong = true;
+            const qData = sessionQuiz[qIndex];
+            const labels = ["A", "B", "C", "D"];
+            
+            const div = document.createElement("div");
+            div.className = "review-item";
+            div.innerHTML = `
+                <div class="review-question">Câu ${idx + 1}: ${qData.q}</div>
+                <div class="review-detail">
+                    <div style="color: var(--danger)">❌ Bạn chọn: ${labels[uAns]}. ${qData.a[uAns]}</div>
+                    <div style="color: var(--success)">✅ Đáp án đúng: ${labels[correctAns]}. ${qData.a[correctAns]}</div>
+                </div>
+            `;
+            div.onclick = function() {
+                this.classList.toggle("active");
+            }
+            elReviewContainer.appendChild(div);
+        }
+    });
+
+    if (!hasWrong) {
+        elReviewContainer.innerHTML = `<p style="color: var(--success); font-weight: bold;">Xuất sắc! Bạn không sai câu nào! 🎉</p>`;
+        elBtnRetryWrong.style.display = "none";
+    } else {
+        elBtnRetryWrong.style.display = "block";
+    }
+}
+
+function retryWrongAnswers() {
+    initGame(true);
+}
+
+function togglePopupPos() {
+    elControlPopup.classList.toggle("left-side");
+}
+
+initGame(false);
+
+</script>
+</body>
+</html>
