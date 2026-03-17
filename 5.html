@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cơ sở Văn hóa Việt Nam - Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    /* --- CSS BIẾN ĐỔI GIAO DIỆN --- */
+    :root {
+        --primary: #d32f2f;
+        --secondary: #64748b;
+        --success: #16a34a;
+        --danger: #dc2626;
+        
+        --bg-color: #fef2f2;
+        --card-bg: #ffffff;
+        --text-main: #0f172a;
+        --text-sub: #475569;
+        --border-color: #e2e8f0;
+        --btn-bg: #f1f5f9;
+        --shadow: rgba(0,0,0,0.1);
+    }
+
+    body.dark-mode {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-main: #e2e8f0;
+        --text-sub: #94a3b8;
+        --border-color: #333333;
+        --btn-bg: #2d2d2d;
+        --shadow: rgba(0,0,0,0.5);
+        --danger: #ef5350; 
+        --success: #66bb6a; 
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+    /* HEADER */
+    .header {
+        padding: 10px 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px var(--shadow); z-index: 10; flex-shrink: 0; font-size: 0.95rem;
+    }
+    .header-item { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+    #timer-display { background: rgba(0,0,0,0.25); padding: 4px 12px; border-radius: 12px; font-family: monospace; font-size: 1.1rem; letter-spacing: 0.5px; }
+    #timer-display.danger { background: #ef4444; animation: pulse 1s infinite; }
+    .combo-badge { background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; }
+    
+    .progress-container { width: 100%; height: 4px; background: var(--border-color); flex-shrink: 0; }
+    .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+    /* CONTAINER */
+    .container { width: 100%; max-width: 100%; background: var(--card-bg); display: flex; flex-direction: column; flex-grow: 1; position: relative; overflow: hidden; transition: background 0.3s; }
+
+    /* VÙNG NỘI DUNG */
+    .quiz-body { padding: 20px 15px; overflow-y: auto; flex-grow: 1; padding-bottom: 120px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+
+    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px; font-weight: bold; width: fit-content; }
+    .question-text { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; line-height: 1.5; color: var(--text-main); word-wrap: break-word; }
+    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+
+    .option-btn { 
+        width: 100%; text-align: left; padding: 15px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 14px; font-size: 1rem; font-weight: 600; color: var(--text-sub); cursor: pointer; position: relative; line-height: 1.4; word-wrap: break-word; transition: all 0.2s; 
+    }
+    .option-btn:active { background: var(--btn-bg); transform: scale(0.98); }
+    
+    .option-btn.correct { border-color: var(--success); background: rgba(22, 163, 74, 0.1); color: var(--success); }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    
+    .option-btn.wrong { border-color: var(--danger); background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    .option-btn.user-selected { border-width: 2px; }
+
+    /* HIỆU ỨNG NHÁY XANH ĐÁP ÁN ĐÚNG KHI CHỌN SAI */
+    @keyframes flashGreen {
+        0%, 100% { background: rgba(22, 163, 74, 0.1); border-color: var(--success); transform: scale(1); }
+        50% { background: rgba(22, 163, 74, 0.35); border-color: #15803d; transform: scale(1.02); }
+    }
+    .flash-correct { animation: flashGreen 1s ease; }
+
+    /* POPUP MENU */
+    .control-popup {
+        position: fixed; bottom: 50px; right: 15px; background: var(--card-bg); backdrop-filter: blur(10px); padding: 8px; border-radius: 30px; box-shadow: 0 5px 25px var(--shadow); display: flex; flex-direction: row; gap: 10px; z-index: 100; border: 1px solid var(--border-color); touch-action: none; 
+    }
+    
+    .btn { width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: transform 0.1s; flex-shrink: 0; background: var(--btn-bg); color: var(--text-sub); }
+    .btn:active { transform: scale(0.9); }
+    .btn-skip { background: #fff7ed; color: #d97706; }
+    body.dark-mode .btn-skip { background: #451a03; color: #fbbf24; }
+    .btn-next { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3); }
+    
+    .btn-move { width: 32px; height: 32px; font-size: 1.1rem; position: absolute; top: -15px; right: 5px; border: 2px solid var(--card-bg); background: var(--secondary); color: white; z-index: 101; cursor: grab; }
+    .btn-move:active { cursor: grabbing; }
+    .btn-theme { width: 32px; height: 32px; font-size: 1rem; position: absolute; top: -15px; left: 5px; border: 2px solid var(--card-bg); background: #333; color: #ffd700; z-index: 101; }
+
+    /* RESULT SCREEN */
+    .result-screen { text-align: center; padding: 30px 20px; display: none; overflow-y: auto; height: 100%; background: var(--card-bg); z-index: 50; }
+    .score-circle { width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(var(--success) 0%, var(--border-color) 0%); margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--text-main); position: relative; }
+    .score-circle::before { content: ''; position: absolute; width: 120px; height: 120px; background: var(--card-bg); border-radius: 50%; transition: background 0.3s; }
+    .score-text { position: relative; z-index: 2; }
+
+    .review-box { text-align: left; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+    .review-item { background: rgba(220, 38, 38, 0.05); border: 1px solid var(--danger); border-radius: 12px; padding: 15px; margin-bottom: 12px; cursor: pointer; }
+    .review-question { font-weight: bold; font-size: 1rem; margin-bottom: 8px; color: var(--text-main); }
+    .review-detail { display: none; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 0.95rem; }
+    .review-item.active .review-detail { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-item" id="timer-display">00:00</div>
+    <div class="header-item" id="question-counter">1/110</div>
+    <div class="combo-badge" id="combo-display">🔥 0</div>
+</div>
+<div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<div class="container">
+    <div id="quiz-interface" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="quiz-body">
+            <div id="phase-display" class="phase-badge">LÀM LẠI CÂU BỎ QUA</div>
+            <h2 class="question-text" id="question">Đang tải...</h2>
+            <div class="options-grid" id="answers"></div>
+        </div>
+
+        <div class="control-popup" id="control-popup">
+            <button class="btn btn-theme" onclick="toggleTheme()">🌗</button>
+            <button class="btn btn-move" id="drag-handle">⇄</button>
+            
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">⬅</button>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">⤵</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">➜</button>
+        </div>
+    </div>
+
+    <div id="result-interface" class="result-screen">
+        <h2>🎉 Hoàn thành!</h2>
+        <div style="font-size: 1rem; color: var(--text-sub); margin-bottom: 20px;" id="result-time">Thời gian: 00:00</div>
+        
+        <div class="score-circle" id="score-circle">
+            <span class="score-text" id="final-score">0%</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.3rem; color:var(--success)">0</span></div>
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.3rem; color:var(--danger)">0</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction: column; gap:10px; margin-bottom: 30px;">
+             <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
+                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="location.reload()">🔄 Làm lại tất cả</button>
+             </div>
+             <button id="btn-retry-wrong" class="btn" style="background:#dc2626; color:white; width:100%; border-radius:15px; display:none; font-size: 1rem;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
+        </div>
+
+        <h3 style="text-align: left; color: var(--danger); border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Xem lại câu sai 👇</h3>
+        <div id="review-container" class="review-box">
+            <p style="color: var(--text-sub); font-style: italic;">Bạn làm đúng hết rồi! Giỏi quá! 👏</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- HIỆU ỨNG NỔ NHẸ KHI CHỌN ĐÁP ÁN ĐÚNG ---
+function triggerMiniConfetti(btn) {
+    const rect = btn.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const colors = ['#f44336', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0'];
+    
+    for (let i = 0; i < 25; i++) {
+        const particle = document.createElement('div');
+        particle.style.position = 'fixed';
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+        particle.style.width = '7px';
+        particle.style.height = '7px';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '9999';
+        document.body.appendChild(particle);
+
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 50 + 20; 
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity - 20; 
+
+        particle.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+        ], {
+            duration: 600 + Math.random() * 300,
+            easing: 'cubic-bezier(0, .9, .57, 1)'
+        }).onfinish = () => particle.remove();
+    }
+}
+
+// --- DRAGGABLE MENU LOGIC ---
+const popup = document.getElementById('control-popup');
+const handle = document.getElementById('drag-handle');
+let isDragging = false, offsetX, offsetY;
+
+handle.addEventListener('mousedown', startDrag);
+handle.addEventListener('touchstart', startDrag, {passive: false});
+
+function startDrag(e) {
+    e.preventDefault();
+    isDragging = true;
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+    const rect = popup.getBoundingClientRect();
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, {passive: false});
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+}
+
+function onDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+
+    let newLeft = clientX - offsetX;
+    let newTop = clientY - offsetY;
+
+    const maxX = window.innerWidth - popup.offsetWidth;
+    const maxY = window.innerHeight - popup.offsetHeight;
+
+    newLeft = Math.max(0, Math.min(newLeft, maxX));
+    newTop = Math.max(0, Math.min(newTop, maxY));
+
+    popup.style.left = newLeft + 'px';
+    popup.style.top = newTop + 'px';
+    popup.style.right = 'auto'; 
+    popup.style.bottom = 'auto'; 
+}
+
+function stopDrag() {
+    isDragging = false;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+}
+
+// --- DARK MODE ---
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+
+// --- DATA CÂU HỎI TRÍCH XUẤT TỪ PDF (110 Câu) ---
+const originalQuiz = [
+  {q: "Câu 1. “Hệ thống các giá trị vật chất và tinh thần do con người sáng tạo và tích lũy qua quá trình hoạt động thực tiễn, trong sự tương tác giữa con người với môi trường tự nhiên và xã hội của mình” là định nghĩa về:", a: ["Văn hóa", "Văn vật", "Văn hiến", "Văn minh"], c: 0},
+  {q: "Câu 2. Sự khác nhau giữa văn hóa và văn minh ở tính giá trị là:", a: ["Văn hóa thiên về giá trị vật chất, văn minh thiên về giá trị tinh thần", "Văn hóa thiên về giá trị tinh thần, văn minh thiên về giá trị vật chất", "Văn hóa chứa đựng cả giá trị vật chất và tinh thần, văn minh chỉ thiên về giá trị tinh thần", "Văn hóa bao gồm cả giá trị vật chất và tinh thần, văn minh thì thiên về các giá trị vật chất."], c: 3},
+  {q: "Câu 3. Về mặt phạm vi, sự khác biệt giữa văn hóa và văn minh thể hiện ở:", a: ["Văn hóa mang tính nhân loại, văn minh mang tính dân tộc", "Văn hóa mang tính dân tộc, văn minh mang tính quốc tế", "Văn hóa mang tính quốc tế, văn minh mang tính nhân loại", "Văn hóa mang tính vùng miền, văn minh mang tính địa phương"], c: 1},
+  {q: "Câu 4. Các đặc trưng cơ bản của văn hóa gồm:", a: ["Tính hệ thống, tính giá trị, tính nhân sinh, tính lịch sử", "Tính cấu trúc, tính giá trị, tính nhân sinh, tính quốc tế", "Tính hệ thống, tính lịch sử, tính thẩm mĩ, tính giáo dục", "Tính cấu trúc, tính hình tượng, tính phổ biến, tính sáng tạo"], c: 0},
+  {q: "Câu 5. Tính hệ thống giúp văn hóa thực hiện được chức năng nào sau đây:", a: ["Chức năng tổ chức xã hội", "Chức năng điều chỉnh xã hội", "Chức năng giao tiếp", "Chức năng giáo dục"], c: 0},
+  {q: "Câu 6. Tính giá trị giúp văn hóa thực hiện được chức năng nào sau đây:", a: ["Chức năng tổ chức xã hội", "Chức năng điều chỉnh xã hội", "Chức năng giao tiếp", "Chức năng giáo dục"], c: 3},
+  {q: "Câu 7. Chức năng điều chỉnh của văn hóa thể hiện ở việc:", a: ["Hình thành trong một quá trình và tích lũy qua nhiều thế hệ", "Giúp cho xã hội được trạng thái cân bằng động, không ngừng tự hoàn thiện, động lực cho sự phát triển của xã hội", "Bảo đảm tính kế tục lịch sử của văn hóa", "Làm tăng độ ổn định, là nền tảng của xã hội"], c: 1},
+  {q: "Câu 8. Chức năng tổ chức của văn hóa thể hiện ở:", a: ["Hình thành trong một quá trình và tích lũy qua nhiều thế hệ", "Giúp cho xã hội được trạng thái cân bằng động, không ngừng tự hoàn thiện...", "Bảo đảm tính kế tục lịch sử của văn hóa", "Làm tăng độ ổn định, là nền tảng của xã hội"], c: 3},
+  {q: "Câu 9. Theo GS. Trần Ngọc Thêm, tiến trình văn hóa Việt Nam có thể chia thành:", a: ["3 lớp – 6 giai đoạn văn hóa", "3 lớp – 3 giai đoạn văn hóa", "4 lớp – 6 giai đoạn văn hóa", "6 lớp – 3 giai đoạn văn hóa"], c: 0},
+  {q: "Câu 10. Các giai đoạn trong tiến trình lịch sử văn hóa Việt Nam là:", a: ["Tiền sử – Văn Lang - Âu Lạc – Đại Việt – Đại Nam – hiện đại", "Bản địa – Văn Lang – chống Bắc thuộc – Đại Việt – Đại Nam", "Tiền sử – Văn Lang, Âu Lạc – Bắc thuộc – Đại Việt – Đại Nam – hiện đại", "Bản địa – Văn Lang, Âu Lạc – Bắc thuộc – Đại Việt – Đại Nam – hiện đại"], c: 2},
+  {q: "Câu 11. Các lớp lịch sử văn hóa Việt Nam bao gồm:", a: ["Lớp văn hóa tiền sử, lớp văn hóa giao lưu với Trung Hoa, giao lưu phương Tây", "Lớp văn hóa bản địa, lớp văn hóa giao lưu với Trung Hoa, lớp văn hóa giao lưu với phương Tây", "Tiền sử – Chống Bắc thuộc – giao lưu với Pháp", "Bản địa – Trung Hoa – Nhật Bản"], c: 1},
+  {q: "Câu 12. Lớp văn hóa bản địa là thành tựu của giai đoạn văn hóa nào?", a: ["Giai đoạn văn hoá tiền sử và giai đoạn văn hóa Văn Lang - Âu Lạc", "Giai đoạn văn hóa Văn Lang- Âu Lạc và thời kỳ Bắc thuộc", "Giai đoạn văn hóa thời kỳ Bắc thuộc và văn hóa Đại Việt", "Giai đoạn văn hóa Đại Việt và Đại Nam"], c: 0},
+  {q: "Câu 13. Thành tựu nổi bật của giai đoạn văn hóa Văn Lang - Âu Lạc là:", a: ["Nghề thủ công mỹ nghệ", "Kỹ thuật đúc đồng thau", "Nghề trồng dâu nuôi tằm", "Kỹ thuật chế tạo đồ sắt"], c: 1},
+  {q: "Câu 14. Đỉnh cao văn hóa Lý – Trần và Hậu Lê thuộc giai đoạn văn hóa nào?", a: ["Văn hóa chống Bắc thuộc", "Văn hóa Đại Việt", "Văn hóa Đại Nam", "Văn hóa hiện đại"], c: 1},
+  {q: "Câu 15. Cấu trúc của hệ thống văn hoá gồm:", a: ["Văn hóa nhận thức về vũ trụ, tổ chức đời sống tập thể, ứng xử với tự nhiên", "Văn hóa nhận thức về con người, tổ chức cá nhân, ứng xử với xã hội", "Văn hóa nhận thức, Văn hóa tổ chức, Văn hóa ứng xử với môi trường", "Văn hóa nhận thức, tổ chức cộng đồng, đối phó môi trường tự nhiên, đối phó môi trường xã hội"], c: 3},
+  {q: "Câu 16. Điểm khác nhau giữa hai loại hình văn hóa nông nghiệp lúa nước và văn hóa gốc du mục là:", a: ["Văn hóa nông nghiệp coi trọng cá nhân, văn hóa du mục coi trọng cộng đồng", "Văn hóa nông nghiệp coi trọng cộng đồng, văn hóa du mục coi trọng cá nhân", "Văn hóa nông nghiệp coi trọng sức mạnh, văn hóa du mục coi trọng tình nghĩa", "Văn hóa nông nghiệp độc đoán, văn hóa du mục hiền hòa"], c: 1},
+  {q: "Câu 17. Ranh giới phương Tây và phương Đông trên phương diện văn hóa chủ yếu được xác định dựa trên:", a: ["Sự phân cách do điều kiện địa lý tự nhiên và lịch sử phát triển nhân loại", "Sự khác nhau về chủng tộc, màu da", "Sự lan truyền theo khu vực của tôn giáo", "Sự khác nhau về trình độ phát triển khoa học kỹ thuật"], c: 0},
+  {q: "Câu 18. Cách tư duy của người Việt truyền thống thiên về:", a: ["Phân tích và trọng yếu tố; chủ quan, cảm tính, kinh nghiệm", "Tổng hợp và trọng quan hệ; chủ quan, cảm tính, kinh nghiệm", "Tổng hợp và trọng yếu tố; chủ quan, lý tính, kinh nghiệm", "Tổng hợp và trọng quan hệ; khách quan, cảm tính, kinh nghiệm"], c: 1},
+  {q: "Câu 19. Đặc điểm nào sau đây không phải là đặc trưng của loại hình văn hóa gốc nông nghiệp?", a: ["Con người luôn có tham vọng chinh phục tự nhiên.", "Con người ưa sống theo nguyên tắc trọng tình.", "Lối sống linh hoạt, luôn biến báo cho thích hợp với hoàn cảnh", "Con người có ý thức tôn trọng và ước vọng sống hòa hợp với tự nhiên"], c: 0},
+  {q: "Câu 20. Người Việt coi trọng thiên nhiên vì thiên nhiên có tác động trực tiếp đến:", a: ["Sức khỏe, thức ăn", "Nghề nghiệp, sức khỏe, nơi ở của họ", "Địa lý", "Tính cách của họ"], c: 1},
+  {q: "Câu 21. Cung cách sống của cư dân trồng lúa nước hình thành kiểu quan hệ xã hội:", a: ["Coi trọng cá nhân và người cao tuổi", "Coi trọng tập thể và người cao tuổi", "Coi trọng cá nhân và người trẻ tuổi", "Coi trọng tập thể và người trẻ tuổi"], c: 1},
+  {q: "Câu 22. Sự đa dạng của môi trường tự nhiên và sự đa dạng của các tộc người trong thành phần dân tộc đã tạo nên đặc điểm gì của văn hóa Việt Nam?", a: ["Nét đặc trưng của văn hóa Việt Nam", "Tính thống nhất trong sự đa dạng", "Sự tương đồng giữa các vùng văn hóa", "Sự giao thoa giữa các vùng văn hóa"], c: 1},
+  {q: "Câu 23. Vùng nông nghiệp Đông Nam Á được nhiều học giả phương Tây gọi là:", a: ["Xứ sở mẫu hệ", "Xứ sở phụ hệ", "Cả hai ý trên đều đúng", "Cả hai ý trên đều sai"], c: 0},
+  {q: "Câu 24. Trong sự giao lưu rộng rãi với các nền văn hóa Đông Tây, văn hóa Việt Nam chịu ảnh hưởng sâu đậm của nền văn hóa nào?", a: ["Trung Hoa", "Ấn Độ", "Pháp", "Mỹ"], c: 0},
+  {q: "Câu 25. Trong cơ cấu tổ chức xã hội Việt Nam truyền thống, tổ chức nào đóng vai trò quan trọng, chi phối cả diện mạo xã hội lẫn tính cách con người?", a: ["Tổ chức gia tộc", "Tổ chức nông thôn", "Tổ chức đô thị", "Tổ chức quốc gia"], c: 1},
+  {q: "Câu 26. Đặc điểm nào sao đây không phải là đặc trưng văn hóa làng Việt Bắc Bộ?", a: ["Tính cộng đồng", "Tính tự trị", "Tính dung hợp", "Tính thực nghiệm"], c: 2},
+  {q: "Câu 27. Vì sao người dân trong làng Việt cần phải đoàn kết, hợp tác với nhau?", a: ["Để khai phá đất đai", "Đắp đê chống lũ", "Chống giặc ngoại xâm", "Tất cả các ý trên đều đúng"], c: 3},
+  {q: "Câu 28. Làng xã Việt Nam được tổ chức theo nguyên lý nào?", a: ["Dựa trên huyết thống", "Dựa trên địa bàn cư trú", "Cả 2 ý trên đều đúng", "Cả 2 ý trên đều sai"], c: 2},
+  {q: "Câu 29. Khu vực lưu giữ, bảo tồn được những giá trị văn hóa cổ truyền, mang đậm bản sắc văn hóa Việt chính là:", a: ["Tổ chức gia tộc", "Tổ chức nông thôn", "Tổ chức đô thị", "Tổ chức quốc gia"], c: 1},
+  {q: "Câu 30. Hình thức tổ chức nông thôn theo truyền thống nam giới (chỉ có đàn ông tham gia) tạo nên đơn vị gọi là:", a: ["Phường", "Giáp", "Hội", "Gia tộc"], c: 1},
+  {q: "Câu 31. Việc phân biệt dân chính cư và dân ngụ cư trong tổ chức nông thôn Việt Nam cổ truyền nhằm mục đích:", a: ["Buộc người dân đời đời kiếp kiếp gắn bó với quê cha đất tổ", "Hạn chế không cho người dân bỏ làng đi ra ngoài", "Hạn chế không cho người ngoài vào sống ở làng", "Duy trì sự ổn định của làng xã"], c: 3},
+  {q: "Câu 32. Hình ảnh nào là biểu tượng truyền thống của tính tự trị trong làng xã Việt Nam?", a: ["Lũy tre", "Sân đình", "Bến nước", "Cây đa"], c: 0},
+  {q: "Câu 33. Hình ảnh nào là biểu tượng của tính cộng đồng trong làng xã Việt Nam?", a: ["Sân đình", "Bến nước", "Cây đa", "Tất cả các ý trên đều đúng"], c: 3},
+  {q: "Câu 34. Hình ảnh nào không phải là biểu tượng của văn hóa Việt Nam?", a: ["Áo dài", "Hoa mẫu đơn", "Cây tre", "Hoa sen"], c: 1},
+  {q: "Câu 35. Ý nghĩa của tang lễ là:", a: ["Thể hiện sự tôn quý đối với sinh mạng con người", "Phản ánh đời sống tâm linh của người Việt: tin vào thế giới bên kia", "Thể hiện tình cảm của cộng đồng gia tộc và xóm làng với người đã khuất", "Tất cả các ý trên đều đúng"], c: 3},
+  {q: "Câu 36. Trong tục thờ Tứ bất tử, Chử Đồng Tử là biểu tượng cho ước mơ gì của người Việt?", a: ["Sức mạnh đoàn kết ứng phó với môi trường tự nhiên", "Sức mạnh đoàn kết chống giặc ngoại xâm", "Xây dựng cuộc sống phồn vinh về vật chất", "Xây dựng cuộc sống hạnh phúc về tinh thần"], c: 2},
+  {q: "Câu 37. Hình thức tín ngưỡng phổ biến và tiêu biểu nhất của người Việt (gần như trở thành một thứ tôn giáo) là:", a: ["Tín ngưỡng phồn thực", "Tín ngưỡng thờ Mẫu", "Tín ngưỡng thờ cúng tổ tiên", "Tục thờ Tứ bất tử"], c: 2},
+  {q: "Câu 38. Chế độ mẫu hệ đã làm “nguyên lý Mẹ” ăn sâu trong tâm lí và tính cách của người Việt, thể hiện độc đáo trong đời sống tâm linh qua:", a: ["Tín ngưỡng phồn thực", "Tín ngưỡng thờ Mẫu", "Tín ngưỡng thờ cúng tổ tiên", "Tục thờ Tứ bất tử"], c: 1},
+  {q: "Câu 39. Dân gian có câu: “Trống làng nào làng ấy đánh, Thánh làng nào làng ấy thờ”. Vị thánh trong câu ca dao trên là vị nào?", a: ["Thành Hoàng", "Thổ Công", "Thổ Địa", "Thần Tài"], c: 0},
+  {q: "Câu 40. Những thói quen, những nếp sống có ý nghĩa tốt đẹp của một cộng đồng dân tộc đã ăn sâu vào đời sống xã hội, được đa số mọi người thừa nhận và làm theo gọi là:", a: ["Tín ngưỡng", "Tôn giáo", "Phong tục", "Tập quán"], c: 2},
+  {q: "Câu 41. Tính pháp lý của hôn nhân cổ truyền được chính quyền làng xã công nhận bằng tập tục:", a: ["Thách cưới", "Nộp tiền cheo", "Ông mai bà mối", "Bái yết gia tiên"], c: 1},
+  {q: "Câu 42. Khi chôn cất người chết, người ta thường đặt trên mộ bát cơm, quả trứng và đôi đũa. Những lễ vật này có ý nghĩa:", a: ["Cầu chúc cho người chết sớm đầu thai trở lại", "Thể hiện lòng tiếc thương của người sống với người chết", "Mong người chết được no đủ ở thế giới bên kia", "Cúng cho các vong hồn khác khỏi quấy phá người chết"], c: 2},
+  {q: "Câu 43. Trong các nghi thức của đám tang, lễ phạn hàm là lễ:", a: ["Tắm rửa cho người chết", "Bỏ tiền và nhúm gạo nếp vào miệng người chết", "Đặt tên thụy cho người chết", "Khâm liệm cho người chết"], c: 1},
+  {q: "Câu 44. “Chọn mặt gửi vàng\" thể hiện đặc điểm nào trong giao tiếp của người Việt?", a: ["Ưa tìm hiểu, quan sát, đánh giá đối tượng giao tiếp", "Tế nhị, ý tứ", "Lấy tình cảm làm nguyên tắc ứng xử", "Tính hiếu khách"], c: 0},
+  {q: "Câu 45. Câu đối là một sản phẩm văn chương đặc biệt phản ánh đặc điểm nào của nghệ thuật ngôn từ Việt Nam?", a: ["Xu hướng ước lệ", "Xu hướng trọng sự cân đối, hài hòa", "Giàu chất biểu cảm", "Khuynh hướng thiên về thơ ca"], c: 1},
+  {q: "Câu 46. Nhận định nào không đúng về hệ thống xưng hô của người Việt?", a: ["Có tính thân mật hóa cao (trọng tình cảm)", "Có tính chất cộng đồng hóa", "Có ít đại từ nhân xưng", "Thế hiện tính tôn ti kĩ lưỡng"], c: 2},
+  {q: "Câu 47. Cơ cấu bữa ăn truyền thống của người Việt có đặc điểm:", a: ["Cơm, rau, thịt", "Cơm, rau, cá, thịt", "Cơm, rau, thịt, cá", "Rau, thủy sản"], c: 1},
+  {q: "Câu 48. Tính kết hợp trong nghệ thuật ẩm thực của người Việt thể hiện ở:", a: ["Cách chế biến đồ ăn và cách ăn", "Cách ăn và cách dùng đôi đũa", "Cách dùng bát nước chấm trong bữa ăn", "Tất cả đáp án trên"], c: 3},
+  {q: "Câu 49. Nồi cơm và bát nước mắm trong bữa cơm thể hiện đặc tính nào trong văn hóa ăn uống của người Việt:", a: ["Tính kết hợp", "Tính cộng đồng và mực thước", "Tính linh hoạt và biện chứng", "Tất cả đáp án trên đều sai"], c: 1},
+  {q: "Câu 50. Đặc điểm về chất liệu may mặc của người Việt:", a: ["Có nguồn gốc từ thực vật", "Có nguồn gốc từ động vật", "Chất liệu mỏng, nhẹ thoáng, phù hợp với môi trường.", "Cả A và C đều đúng"], c: 3},
+  {q: "Câu 51. Loại vải xuất hiện sớm nhất ở Việt Nam là loại vải:", a: ["Tơ tằm", "Tơ chuối", "Vải bông", "Tơ đay"], c: 3},
+  {q: "Câu 52. Phong tục nhuộm răng đen có tác dụng gì:", a: ["Bảo vệ răng", "Trang điểm", "Đuổi tà ma", "Cả A và B đều đúng"], c: 3},
+  {q: "Câu 53. Trong văn hóa truyền thống, người Việt ở nhà sàn để:", a: ["Tránh thú dữ", "Tránh ngập lụt", "Thoáng mát, chống ẩm", "Cả A, B, C đều đúng"], c: 3},
+  {q: "Câu 54. Thành ngữ \"nhà cao cửa rộng\" trong kiến trúc nhà ở của người Việt phản ánh kiểu nhà:", a: ["Nền cao, cửa nhà cao, nóc nhà cao", "Nền cao, cửa thấp và rộng, nóc nhà cao", "Nền cao, cửa nhà thấp, nóc nhà thấp", "Nền cao, cửa nhà thấp và rộng, nóc nhà thấp"], c: 1},
+  {q: "Câu 55. Hai yếu tố quan trọng nhất để tạo thành vi khí hậu cho một ngôi nhà là:", a: ["Phong - Thủy", "Phong - Địa", "Thủy - Thổ", "Thủy - Mộc"], c: 0},
+  {q: "Câu 56. Loại hình giao thông phổ biến nhất ở Việt Nam thời xưa là:", a: ["Đường bộ", "Đường thủy", "Đường sắt", "Đường hàng không"], c: 1},
+  {q: "Câu 57. Phương tiện giao thông của Việt Nam thời xưa là:", a: ["Thuyền bè", "Xe ngựa", "Phà", "Cả A, B C đều đúng"], c: 0},
+  {q: "Câu 58. Trong các loại hình nghệ thuật sân khấu truyền thống của Việt Nam, loại hình nào chịu ảnh hưởng của văn hóa phương Tây sớm nhất?", a: ["Chèo", "Tuồng", "Múa rối", "Cải lương"], c: 3},
+  {q: "Câu 59. Loại hình sân khấu dân gian gắn liền với thiên nhiên, phản ánh quá trình thích ứng với tự nhiên của người Việt trong đời sống nông nghiệp là:", a: ["Chèo", "Tuồng", "Múa rối nước", "Cải lương"], c: 2},
+  {q: "Câu 60. Loại hình nghệ thuật truyền thống đầu tiên ở Việt Nam được UNESCO công nhận là Kiệt tác di sản văn hóa phi vật thể và truyền khẩu của nhân loại là:", a: ["Dân ca quan họ", "Nhã nhạc cung đình Huế", "Ca trù", "Đờn ca tài tử Nam Bộ"], c: 1},
+  {q: "Câu 61. Việc không phân biệt các loại hình ca, múa, nhạc trong sân khấu truyền thống nói lên đặc trưng nào của nghệ thuật truyền thống Việt Nam?", a: ["Tính biểu trưng", "Tính kết hợp", "Tính biểu cảm", "Cả 3 đáp án trên"], c: 1},
+  {q: "Câu 62. Việt Nam là giao điểm của các nền văn hóa:", a: ["Trung Hoa, Nhật Bản, Ấn Độ", "Trung Hoa, Phương Tây", "Trung Hoa, Phương Tây và Ấn Độ", "Trung Hoa, Mỹ, Pháp"], c: 2},
+  {q: "Câu 63. Mương - phai - lái - lín và cọn nước “Pặt nặm” là hai hệ thống thủy nông nổi tiếng của đồng bào dân tộc vùng văn hóa nào?", a: ["Người Thái - Vùng văn hóa Tây Bắc", "Người Tày - Vùng văn hóa Việt Bắc", "Người Kinh - Vùng văn hóa Đồng bằng sông Hồng", "Người Chăm - Vùng văn hóa Bắc Trung Bộ"], c: 0},
+  {q: "Câu 64. Dân tộc Thái - vùng văn hoá Tây Bắc nổi tiếng với trang phục truyền thống nào?", a: ["Cạp váy thêu tay với 37 mô típ hoa văn khác nhau", "Khăn Piêu, túi thổ cẩm", "Khăn đội đầu “gòng phá”", "Áo năm thân kèm thắt lưng"], c: 1},
+  {q: "Câu 65. Vùng văn hóa Tây Bắc có di sản văn hóa nào được UNESCO công nhận là di sản văn hóa Vật thể hoặc Phi vật thể?", a: ["Nghệ thuật thêu cạp váy", "Nghệ thuật dệt khăn Piêu", "Nghệ thuật múa Xòe Thái", "Tất cả các đáp án trên"], c: 2},
+  {q: "Câu 66. Thái là dân tộc có dân số đông, có trình độ phát triển mọi mặt cao hơn và có ảnh hưởng đồng hóa văn hóa đối với các tộc khác trong vùng:", a: ["Văn hóa Trung Bộ", "Văn Hóa Tây Nguyên", "Văn hóa Tây Bắc", "Văn hóa Việt Bắc"], c: 2},
+  {q: "Câu 67. Từ khi lập quốc, vùng văn hóa này đã nằm trong cương vực của quốc gia Văn Lang - Âu Lạc và suốt quá trình lịch sử, nó là “phên dậu” của quốc gia Đại Việt chống lại mưu đồ thôn tính và đồng hóa của phong kiến phương Bắc. Đây là vùng văn hóa nào?", a: ["Vùng Bắc Bộ", "Vùng Tây Bắc", "Vùng Việt Bắc", "Vùng Tây nguyên"], c: 2},
+  {q: "Câu 68. “Người xứ Lạng chú ý nhiều tới kĩ thuật nấu nướng do tiếp thu được qua người Hoa, người Việt cũng như truyền thống và khẩu vị lâu đời của dân tộc mình”. Nói tới “xứ Lạng là nói tới vùng văn hóa nào?", a: ["Vùng văn hóa Bắc Bộ", "Vùng văn hóa Tây Bắc", "Vùng văn hóa Bắc Trung Bộ", "Vùng văn hóa Việt Bắc"], c: 3},
+  {q: "Câu 69. Thực hành Then Tày, Nùng, Thái là Di sản văn hóa Phi vật thể của vùng nào?", a: ["Vùng văn hóa Bắc Trung Bộ", "Vùng văn hóa Việt Bắc", "Vùng văn hóa Bắc Bộ", "Vùng văn hóa Tây Bắc"], c: 1},
+  {q: "Câu 70. Động Tam Thanh, Giếng Tiên, Nàng Tô Thị, thung lũng Thất Khê, ... là nói tới thắng cảnh của vùng văn hóa nào?", a: ["Xứ Thanh thuộc vùng văn hóa Bắc Trung Bộ", "Xứ Nghệ thuộc vùng văn hóa Bắc Trung Bộ", "Xứ Lạng thuộc vùng văn hóa Việt Bắc", "Xứ Quảng thuộc vùng văn hóa Duyên Hải Nam Trung Bộ"], c: 2},
+  {q: "Câu 71. Lễ hội Lồng tồng - xuống đồng của cư dân Việt Bắc có nghi thức nổi bật nào?", a: ["Hát Then", "Dựng cây Póng còn (cây nêu)", "Trò chơi ném còn", "Cúng tổ tiên"], c: 2},
+  {q: "Câu 72. Vùng văn hóa nào có truyền thống lâu đời và là cái nôi hình thành văn hóa, văn minh của dân tộc Việt?", a: ["Vùng văn hóa Tây Bắc", "Vùng văn hóa Bắc Bộ", "Vùng văn hóa Tây Nguyên", "Vùng văn hóa Nam Bộ"], c: 1},
+  {q: "Câu 73. Đặc điểm của vùng văn hóa Bắc Bộ là:", a: ["Văn học dân gian và văn học bác học giữ vai trò quan trọng trong nền văn hóa Việt Nam", "Văn hóa Việt với những giai đoạn Đông Sơn, Đại Việt, Việt Nam nối tiếp phát triển", "Loại hình nghệ thuật ca hát dân gian rất đa dạng", "Tất cả các đáp án trên"], c: 3},
+  {q: "Câu 74. Từ khi hình thành quốc gia Âu Lạc và sau đó là Đại Việt cho tới trước khi Quang Trung thống nhất bờ cõi, đâu được coi là vùng “đệm”, vùng “trung gian giữa hai nền văn minh Đại Việt và Chămpa?", a: ["Vùng Bắc Bộ", "Vùng Bắc Trung Bộ", "Vùng Nam Trung Bộ", "Vùng Đông Nam Bộ"], c: 1},
+  {q: "Câu 75. Hát giặm, hát ví là hai thể loại dân ca độc đáo nhất của vùng nào?", a: ["Xứ Thanh thuộc vùng văn hóa Bắc Trung Bộ", "Xứ Nghệ thuộc vùng văn hóa Bắc Trung Bộ", "Xứ Lạng thuộc vùng văn hóa Việt Bắc", "Xứ Quảng thuộc vùng văn hóa Duyên Hải Nam Trung Bộ"], c: 1},
+  {q: "Câu 76. Vùng văn hoá Xứ Nghệ thuộc vùng văn hoá Bắc Trung bộ nổi tiếng với nghệ thuật dân ca truyền thống nào?", a: ["Dân ca bài chòi", "Hát giặm, hát ví", "Đờn ca tài tử", "Tất cả các đáp án trên"], c: 1},
+  {q: "Câu 77. Trang phục váy mảnh, tấm choàng khố, áo chui đầu (ponsô), trang sức cà răng, căng tai, ... là trang phục đặc trưng của cư dân vùng văn hóa nào?", a: ["Vùng văn hóa Tây Nguyên", "Vùng văn hóa duyên hải Nam Trung Bộ", "Vùng văn hóa Đông Nam Bộ", "Vùng văn hóa Tây Nam Bộ"], c: 0},
+  {q: "Câu 78. Đâu là những nét văn hóa đặc trưng của cư dân vùng văn hóa Tây Nguyên?", a: ["Sinh hoạt cộng đồng trong nhà rông", "Kiến trúc và trang trí nhà mồ, lễ hội bỏ mả", "Âm nhạc cồng chiêng với sắc thái riêng về âm điệu và phong cách", "Tất cả các đáp án trên"], c: 3},
+  {q: "Câu 79. Nói tới vùng văn hóa Tây Nam Bộ, người ta nhắc tới nét sinh hoạt văn hóa đặc trưng nào?", a: ["Chợ nổi", "Chợ phiên", "Chợ tình", "Chợ cóc"], c: 0},
+  {q: "Câu 80. Đâu là nét đặc trưng của đời sống nghệ thuật dân gian Nam Bộ?", a: ["Sân khấu cải lương", "Hát bội", "Ca hát tài tử", "Tất cả các đáp án trên"], c: 3},
+  {q: "Câu 81. Một nhân tố, một mảng màu quan trọng nhất tạo nên sắc thái văn hóa riêng của vùng duyên hải Nam Trung Bộ là:", a: ["Văn hóa của người Pa cô", "Văn hóa của người Hoa", "Văn hóa của người Chăm", "Văn hóa của người Raglai"], c: 2},
+  {q: "Câu 82. Kiến trúc cơ bản của người Chăm thuộc vùng văn hóa duyên hải Nam Trung Bộ là:", a: ["Kiến trúc cung điện", "Kiến trúc nhà thờ", "Kiến trúc đền tháp", "Tất cả các đáp án trên"], c: 2},
+  {q: "Câu 83. Đặc trưng nào cho phép phân biệt văn hóa như một hiện tượng xã hội với các giá trị tự nhiên:", a: ["Tính hệ thống", "Tính giá trị", "Tính nhân sinh", "Tính lịch sử"], c: 2},
+  {q: "Câu 84. Tính lịch sử của văn hóa được duy trì bằng:", a: ["Sự tiếp xúc và giao lưu văn hóa", "Truyền thống văn hóa", "Sự phát triển của khoa học kỹ thuật", "Sự nội địa hóa các yếu tố ngoại lai"], c: 1},
+  {q: "Câu 85. Đặc điểm nổi bật của văn hóa Việt Nam giai đoạn chống Bắc thuộc là:", a: ["Tiếp thu mạnh mẽ văn hóa Trung Hoa để làm giàu cho nền văn hóa dân tộc", "Xu hướng chống Hán hóa về mặt văn hóa và Việt Nam hóa các ảnh hưởng của văn hóa Trung Hoa", "Kết hợp văn hóa bản địa và văn hóa Phật giáo", "Đề cao văn hóa Nho giáo"], c: 1},
+  {q: "Câu 86. Đặc điểm nào không thể hiện tính dung hợp của người Việt trong cách ứng xử với môi trường xã hội?", a: ["Sự dung hợp trong tiếp nhận tôn giáo", "Tư tưởng cố hữu, gia trưởng, độc đoán", "Mềm dẻo, hiếu hòa trong đối phó với giặc ngoại xâm", "Linh hoạt, uyển chuyển, phù hợp với mọi hoàn cảnh"], c: 1},
+  {q: "Câu 87. Đặc điểm nào không phải nét đặc trưng của nông thôn Nam Bộ?", a: ["Làng có tính mở, thôn ấp trải dài theo kênh rạch", "Thành phần dân cư hay biến động", "Người dân Nam Bộ sống khép kín, không giao lưu với nhau.", "Giao thương buôn bán phát triển"], c: 2},
+  {q: "Câu 88. Thành ngữ nào không thể hiện tinh thần “coi trọng phụ nữ của người Việt?", a: ["Lệnh ông không bằng cồng bà", "Phúc đức tại mẫu", "Nhất nam viết hữu, thập nữ viết vô", "Nhất vợ nhì trời"], c: 2},
+  {q: "Câu 89. Theo anh/chị đâu là quan niệm đúng về văn hóa Việt Nam?", a: ["Văn hóa Việt Nam là văn hóa của người Kinh", "Văn hóa Việt Nam là văn hóa của từng tộc người", "Văn hóa Việt Nam là cộng đồng văn hóa dân tộc/quốc gia, là nền văn hóa dân tộc thống nhất trên cơ sở đa dạng sắc thái văn hóa tộc người.", "Tất cả các ý trên đều sai"], c: 2},
+  {q: "Câu 90. Yếu tố nào không phải nét đặc trưng văn hóa của người Việt?", a: ["Coi trọng sức mạnh, thiên về tư duy phân tích", "Tôn kính tổ tiên", "Tôn trọng các giá trị cộng đồng và gia đình", "Lao động cần cù và hiếu học"], c: 0},
+  {q: "Câu 91. Mối quan hệ dân chủ đặc biệt giữa nhà nước phong kiến với làng xã Việt Nam được thể hiện qua tình trạng:", a: ["Phép vua thua lệ làng", "Đóng cửa bảo nhau khi có sai phạm", "Thánh làng nào làng nấy thờ", "Cha chung không ai khóc"], c: 0},
+  {q: "Câu 92. Tín ngưỡng, phong tục là những yếu tố thuộc thành tố văn hóa nào?", a: ["Văn hóa tổ chức cộng đồng", "Văn hóa tổ chức", "Văn hóa ứng xử với môi trường tự nhiên", "Văn hóa ứng xử với môi trường xã hội"], c: 0},
+  {q: "Câu 93. Hệ thống chùa Tứ Pháp vốn là những đền miếu dân gian thờ các vị thần cai quản các hiện tượng tự nhiên gồm:", a: ["Thần Mây – Thần Mưa – Thần Gió – Thần Sấm", "Thần Mây – Thần Mưa – Thần Sấm – Thần Chớp", "Bà Trời – Bà Đất - Bà Nước - Bà Chúa Xứ", "Thần Mây – Thần Mưa – Thần Sấm – Thần Sét"], c: 1},
+  {q: "Câu 94. Tục thờ Tứ bất tử là một giá trị văn hóa tinh thần rất đẹp của người Việt, thờ bốn vị:", a: ["Vua Hùng, Thành Hoàng, Thổ Công, Thổ Địa", "Pháp Vân, Pháp Vũ, Pháp Lôi, Pháp Điện", "Tản Viên, Thánh Gióng, Chử Đồng Tử, Liễu Hạnh", "Mẫu Thượng Thiên, Mẫu Thượng Ngàn, Mẫu Thoải, Mẫu Địa"], c: 2},
+  {q: "Câu 95. Phong tục lễ tết và lễ hội thể hiện:", a: ["Sự hòa quyện giữa tín ngưỡng và tôn giáo", "Sự hòa quyện giữa tín ngưỡng và triết lý âm dương", "Sự hòa quyện giữa tôn giáo và triết lý âm dương", "Sự hòa quyện giữa tôn giáo, tín ngưỡng và triết lý âm dương"], c: 1},
+  {q: "Câu 96. Các câu tục ngữ “Đói cho sạch, rách cho thơm”, “Trâu chết để da, người ta chết để tiếng” thể hiện đặc điểm nào trong văn hóa giao tiếp của người Việt?", a: ["Ưa tìm hiểu, quan sát, đánh giá", "Ưa tế nhị, ý tứ và trọng sự hòa thuận", "Bệnh sĩ diện", "Trọng danh dự"], c: 3},
+  {q: "Câu 97. Trong thơ ca truyền thống, các lớp từ xanh lơ, xanh ngắt, đỏ rực, đỏ au, vàng chóe, vàng mơ... góp phần phản ánh đặc điểm gì của nghệ thuật ngôn từ tiếng Việt:", a: ["Vì hệ thống ngữ pháp của tiếng Việt luôn luôn tổ chức theo cấu trúc chủ động", "Vì hệ thống ngữ pháp của tiếng Việt luôn luôn tổ chức theo cấu trúc bị động", "Vì người Việt có thiên hướng nói những nội dung tĩnh bằng hình thức động", "Vì người Việt có thiên hướng nói những nội dung động bằng hình thức tĩnh"], c: 2},
+  {q: "Câu 98. Đặc trưng văn hóa ẩm thực của người Việt:", a: ["Tính kết hợp", "Tính cộng đồng và mực thước", "Tính linh hoạt và biện chứng", "Tất cả đáp án trên"], c: 3},
+  {q: "Câu 99. Ý nghĩa của tục ăn trầu trong văn hóa Việt Nam:", a: ["Là một món ăn để giải trí", "Ăn trầu để nhuộm răng", "Chứa đựng triết lý âm dương, tam tài", "Ăn trầu để chữa bệnh sâu răng, chống hôi miệng"], c: 2},
+  {q: "Câu 100. Vì sao váy là trang phục phổ biến ở phụ nữ:", a: ["Ứng phó với khí hậu nóng bức", "Ứng phó với khí hậu nóng bức và phù hợp với công việc đồng áng", "Ứng phó với khí hậu nóng bức, rẻ và dễ may", "Cả A, B, C đều đúng"], c: 1},
+  {q: "Câu 101. Trong kiến trúc nhà ở truyền thống của người Việt Nam, mái nhà cong thể hiện:", a: ["Sự mô phỏng động tác chèo thuyền", "Sự mô phỏng động tác giã gạo", "Sự mô phỏng của hình mũi thuyền", "Sự mô phỏng của cách bế con"], c: 2},
+  {q: "Câu 102. Cách chọn nhà ở theo kiểu “Nhất cận thị, nhì cận giang” là chú ý đến yếu tố nào?", a: ["Hàng xóm", "Giao thông", "Hướng xây nhà", "Kiến trúc của ngôi nhà"], c: 1},
+  {q: "Câu 103. Nói về nghệ thuật chèo truyền thống của Việt Nam, nhận định nào sau đây không đúng?", a: ["Chèo là loại hình sân khấu tổng hợp có tính cách chuyên nghiệp", "Chèo ra đời khá sớm và phát triển mạnh ở Bắc Bộ", "Kịch bản của chèo thường lấy từ thần thoại, cổ tích và truyện Nôm", "Diễn xuất chèo có tính linh hoạt, không tuân thủ nghiêm ngặt theo kịch bản"], c: 0},
+  {q: "Câu 104. Trong sự giao lưu và tiếp biến với văn hóa Trung Hoa và Phương Tây, khuynh hướng nào là chủ yếu của văn hóa Việt Nam trong quá trình tiếp nhận:", a: ["Việt hóa", "Hán hóa và Phương Tây hóa", "Cả A và B đều đúng", "Cả A và B đều sai"], c: 0},
+  {q: "Câu 105. Cạp váy thêu tay với 37 mô típ hoa văn khác nhau, nghệ thuật tạo hình có nhiều nét tương đồng với nghệ thuật điêu khắc trên trống đồng Đông Sơn là trang phục truyền thống của người dân tộc nào?", a: ["Người Mường - vùng văn hóa Tây Bắc", "Người Thái - vùng văn hóa Tây Bắc", "Người Dao - vùng văn hóa Việt Bắc", "Người Tày - vùng văn hóa Việt Bắc"], c: 0},
+  {q: "Câu 106. Tộc người đại diện cho dạng sinh thái tộc người rẻo cao ở vùng Tây Bắc?", a: ["Dân tộc Dao", "Dân tộc Hà Nhì", "Dân tộc Mông", "Dân tộc Mường"], c: 2},
+  {q: "Câu 107. Đâu là đặc trưng nổi bật nhất của kiểu nhà sàn trình tường của cư dân biên giới Việt Bắc?", a: ["Là một kiểu nhà sàn kiên cố", "Là kiểu nhà đắp đất có hệ thống khung cột", "Có tường bằng đất dày 60 - 80 cm nên giữ ấm vào mùa đông rất tốt", "Là ngôi nhà không có cửa sổ"], c: 2},
+  {q: "Câu 108. Một loại hình nghệ thuật dân gian thuộc vùng Bắc Bộ còn gọi là hát ả đào, hát cửa đình, hát cửa quyền... Loại hình nghệ thuật này đã được UNESCO công nhận là Di sản văn hóa Phi vật thể. Đó là loại hình nghệ thuật nào?", a: ["Dân ca quan họ Bắc Ninh", "Ca trù", "Hát Chèo", "Hát Xẩm"], c: 1},
+  {q: "Câu 109. Một Di sản thế giới với hơn 70 công trình kiến trúc đền tháp của nền văn minh Chămpa, được đánh giá ngang hàng với các di tích nổi tiếng như Angko Wat... Đó là Di sản nào?", a: ["Quần thể di tích Cố đô Huế", "Phố cổ Hội An", "Thánh địa Mỹ Sơn", "Thành Nhà Hồ"], c: 2},
+  {q: "Câu 110. Việc lựa chọn trang phục của người Việt có ý nghĩa gì?", a: ["Tận dụng môi trường tự nhiên", "Ứng phó với môi trường tự nhiên", "Khắc phục nhược điểm của cơ thể và làm đẹp", "Cả B và C"], c: 3}
+];
+
+let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
+let timerInterval;
+let timeLeft = 0;
+let autoNextTimer;
+let sessionTotal = 0;
+
+const elInterface = document.getElementById("quiz-interface");
+const elResult = document.getElementById("result-interface");
+const elQuestion = document.getElementById("question");
+const elAnswers = document.getElementById("answers");
+const elCounter = document.getElementById("question-counter");
+const elCombo = document.getElementById("combo-display");
+const elProgressBar = document.getElementById("progress-bar");
+const elBtnNext = document.getElementById("btn-next");
+const elBtnSkip = document.getElementById("btn-skip");
+const elBtnPrev = document.getElementById("btn-prev");
+const elTimer = document.getElementById("timer-display");
+const elResultTime = document.getElementById("result-time");
+const elControlPopup = document.getElementById("control-popup");
+const elReviewContainer = document.getElementById("review-container");
+const elBtnRetryWrong = document.getElementById("btn-retry-wrong");
+
+function initGame(retryWrongOnly = false) {
+    score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
+    activeQueue = []; skippedQueue = []; isPhaseSkipped = false;
+    if (!retryWrongOnly) userAnswers = {};
+
+    if (retryWrongOnly) {
+        let wrongIndices = [];
+        originalQuiz.forEach((item, idx) => {
+            if (userAnswers.hasOwnProperty(idx)) {
+                if (userAnswers[idx] !== item.c) wrongIndices.push(idx);
+            }
+        });
+        
+        if (wrongIndices.length === 0) {
+            alert("Bạn không có câu sai nào để làm lại!");
+            return;
+        }
+
+        userAnswers = {}; 
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+             let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+             return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+        
+        activeQueue = wrongIndices;
+    } else {
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+            let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+            return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+
+        let indices = sessionQuiz.map((_, i) => i);
+        activeQueue = indices;
+    }
+    
+    sessionTotal = activeQueue.length;
+
+    elInterface.style.display = "flex";
+    elResult.style.display = "none";
+    elControlPopup.style.display = "flex";
+
+    timeLeft = 0;
+    startCountUp();
+
+    updateStats();
+    loadQuestion();
+}
+
+function startCountUp() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft++;
+        updateTimerDisplay(timeLeft);
+    }, 1000);
+}
+
+function updateTimerDisplay(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    elTimer.innerText = `${m}:${s}`;
+}
+
+function loadQuestion() {
+    clearTimeout(autoNextTimer);
+
+    const qIndex = activeQueue[currentIndex];
+    const data = sessionQuiz[qIndex];
+    const hasAnswered = userAnswers.hasOwnProperty(qIndex);
+
+    elQuestion.innerText = data.q;
+    elAnswers.innerHTML = "";
+
+    if (isPhaseSkipped) {
+        document.getElementById("phase-display").style.display = "inline-block";
+        elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
+    } else {
+        document.getElementById("phase-display").style.display = "none";
+        elCounter.innerText = `Câu ${currentIndex + 1}/${activeQueue.length}`;
+    }
+
+    const labels = ["A", "B", "C", "D"];
+    data.a.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<b>${labels[idx]}.</b> ${ans}`;
+        
+        if (hasAnswered) {
+            btn.disabled = true;
+            const userPick = userAnswers[qIndex];
+            if (idx === data.c) btn.classList.add("correct");
+            if (idx === userPick && userPick !== data.c) btn.classList.add("wrong");
+            if (idx === userPick) btn.classList.add("user-selected");
+        } else {
+            btn.onclick = () => checkAnswer(qIndex, idx, btn);
+        }
+        elAnswers.appendChild(btn);
+    });
+
+    elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
+    
+    if (hasAnswered) {
+        elBtnSkip.style.display = "none";
+        elBtnNext.style.display = "block";
+    } else {
+        elBtnSkip.style.display = "block";
+        elBtnNext.style.display = "none";
+    }
+
+    updateStats();
+}
+
+function checkAnswer(qIndex, selectedIdx, btnElement) {
+    const data = sessionQuiz[qIndex];
+    const isCorrect = selectedIdx === data.c;
+    userAnswers[qIndex] = selectedIdx;
+
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        
+        if (idx === data.c) {
+            btn.classList.add("correct");
+            if (!isCorrect) {
+                btn.classList.add("flash-correct");
+            }
+        }
+        
+        if (idx === selectedIdx && !isCorrect) {
+            btn.classList.add("wrong");
+        }
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+        triggerMiniConfetti(btnElement);
+    } else {
+        combo = 0; wrongStreak++;
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+
+    autoNextTimer = setTimeout(() => {
+        nextQuestion();
+    }, 1200);
+}
+
+function nextQuestion() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    clearTimeout(autoNextTimer);
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        if(confirm(`Bạn đã bỏ qua ${skippedQueue.length} câu. Bạn có muốn làm lại ngay bây giờ không?`)) {
+             isPhaseSkipped = true;
+            activeQueue = [...skippedQueue];
+            skippedQueue = [];
+            currentIndex = 0;
+            loadQuestion();
+        } else {
+            finishGame();
+        }
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const pct = ((currentIndex + 1) / activeQueue.length) * 100;
+    elProgressBar.style.width = `${pct}%`;
+    elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
+}
+
+function finishGame() {
+    clearInterval(timerInterval);
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+    elControlPopup.style.display = "none"; 
+    
+    elResultTime.innerText = `Thời gian làm bài: ${elTimer.innerText}`;
+
+    const total = sessionTotal; 
+    const correctCount = score;
+    const wrongCount = total - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, var(--border-color) 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+
+    elReviewContainer.innerHTML = "";
+    let hasWrong = false;
+
+    sessionQuiz.forEach((item, qIndex) => {
+        const uAns = userAnswers[qIndex];
+        const correctAns = item.c;
+        if (uAns !== undefined && uAns !== correctAns) {
+            hasWrong = true;
+            const labels = ["A", "B", "C", "D"];
+            
+            const div = document.createElement("div");
+            div.className = "review-item";
+            div.innerHTML = `
+                <div class="review-question">Câu ${qIndex + 1}: ${item.q}</div>
+                <div class="review-detail">
+                    <div style="color: var(--danger)">❌ Bạn chọn: ${labels[uAns]}. ${item.a[uAns]}</div>
+                    <div style="color: var(--success)">✅ Đáp án đúng: ${labels[correctAns]}. ${item.a[correctAns]}</div>
+                </div>
+            `;
+            div.onclick = function() {
+                this.classList.toggle("active");
+            }
+            elReviewContainer.appendChild(div);
+        }
+    });
+
+    if (!hasWrong) {
+        elReviewContainer.innerHTML = `<p style="color: var(--success); font-weight: bold;">Xuất sắc! Bạn không sai câu nào! 🎉</p>`;
+        elBtnRetryWrong.style.display = "none";
+    } else {
+        elBtnRetryWrong.style.display = "block";
+    }
+}
+
+function retryWrongAnswers() {
+    initGame(true);
+}
+
+initGame(false);
+</script>
+</body>
+</html>
