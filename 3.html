@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tin học 2: Trí tuệ nhân tạo - Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    /* --- CSS BIẾN ĐỔI GIAO DIỆN --- */
+    :root {
+        --primary: #d32f2f;
+        --secondary: #64748b;
+        --success: #16a34a;
+        --danger: #dc2626;
+        
+        --bg-color: #fef2f2;
+        --card-bg: #ffffff;
+        --text-main: #0f172a;
+        --text-sub: #475569;
+        --border-color: #e2e8f0;
+        --btn-bg: #f1f5f9;
+        --shadow: rgba(0,0,0,0.1);
+    }
+
+    body.dark-mode {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-main: #e2e8f0;
+        --text-sub: #94a3b8;
+        --border-color: #333333;
+        --btn-bg: #2d2d2d;
+        --shadow: rgba(0,0,0,0.5);
+        --danger: #ef5350; 
+        --success: #66bb6a; 
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+    /* HEADER */
+    .header {
+        padding: 10px 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px var(--shadow); z-index: 10; flex-shrink: 0; font-size: 0.95rem;
+    }
+    .header-item { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+    #timer-display { background: rgba(0,0,0,0.25); padding: 4px 12px; border-radius: 12px; font-family: monospace; font-size: 1.1rem; letter-spacing: 0.5px; }
+    #timer-display.danger { background: #ef4444; animation: pulse 1s infinite; }
+    .combo-badge { background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; }
+    
+    .progress-container { width: 100%; height: 4px; background: var(--border-color); flex-shrink: 0; }
+    .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+    /* CONTAINER */
+    .container { width: 100%; max-width: 100%; background: var(--card-bg); display: flex; flex-direction: column; flex-grow: 1; position: relative; overflow: hidden; transition: background 0.3s; }
+
+    /* VÙNG NỘI DUNG */
+    .quiz-body { padding: 20px 15px; overflow-y: auto; flex-grow: 1; padding-bottom: 120px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+
+    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px; font-weight: bold; width: fit-content; }
+    .question-text { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; line-height: 1.5; color: var(--text-main); word-wrap: break-word; }
+    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+
+    .option-btn { 
+        width: 100%; text-align: left; padding: 15px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 14px; font-size: 1rem; font-weight: 600; color: var(--text-sub); cursor: pointer; position: relative; line-height: 1.4; word-wrap: break-word; transition: all 0.2s; 
+    }
+    .option-btn:active { background: var(--btn-bg); transform: scale(0.98); }
+    
+    .option-btn.correct { border-color: var(--success); background: rgba(22, 163, 74, 0.1); color: var(--success); }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    
+    .option-btn.wrong { border-color: var(--danger); background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    .option-btn.user-selected { border-width: 2px; }
+
+    /* HIỆU ỨNG NHÁY XANH ĐÁP ÁN ĐÚNG KHI CHỌN SAI */
+    @keyframes flashGreen {
+        0%, 100% { background: rgba(22, 163, 74, 0.1); border-color: var(--success); transform: scale(1); }
+        50% { background: rgba(22, 163, 74, 0.35); border-color: #15803d; transform: scale(1.02); }
+    }
+    .flash-correct { animation: flashGreen 1s ease; }
+
+    /* POPUP MENU */
+    .control-popup {
+        position: fixed; bottom: 50px; right: 15px; background: var(--card-bg); backdrop-filter: blur(10px); padding: 8px; border-radius: 30px; box-shadow: 0 5px 25px var(--shadow); display: flex; flex-direction: row; gap: 10px; z-index: 100; border: 1px solid var(--border-color); touch-action: none; 
+    }
+    
+    .btn { width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: transform 0.1s; flex-shrink: 0; background: var(--btn-bg); color: var(--text-sub); }
+    .btn:active { transform: scale(0.9); }
+    .btn-skip { background: #fff7ed; color: #d97706; }
+    body.dark-mode .btn-skip { background: #451a03; color: #fbbf24; }
+    .btn-next { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3); }
+    
+    .btn-move { width: 32px; height: 32px; font-size: 1.1rem; position: absolute; top: -15px; right: 5px; border: 2px solid var(--card-bg); background: var(--secondary); color: white; z-index: 101; cursor: grab; }
+    .btn-move:active { cursor: grabbing; }
+    .btn-theme { width: 32px; height: 32px; font-size: 1rem; position: absolute; top: -15px; left: 5px; border: 2px solid var(--card-bg); background: #333; color: #ffd700; z-index: 101; }
+
+    /* RESULT SCREEN */
+    .result-screen { text-align: center; padding: 30px 20px; display: none; overflow-y: auto; height: 100%; background: var(--card-bg); z-index: 50; }
+    .score-circle { width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(var(--success) 0%, var(--border-color) 0%); margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--text-main); position: relative; }
+    .score-circle::before { content: ''; position: absolute; width: 120px; height: 120px; background: var(--card-bg); border-radius: 50%; transition: background 0.3s; }
+    .score-text { position: relative; z-index: 2; }
+
+    .review-box { text-align: left; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+    .review-item { background: rgba(220, 38, 38, 0.05); border: 1px solid var(--danger); border-radius: 12px; padding: 15px; margin-bottom: 12px; cursor: pointer; }
+    .review-question { font-weight: bold; font-size: 1rem; margin-bottom: 8px; color: var(--text-main); }
+    .review-detail { display: none; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 0.95rem; }
+    .review-item.active .review-detail { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-item" id="timer-display">00:00</div>
+    <div class="header-item" id="question-counter">1/169</div>
+    <div class="combo-badge" id="combo-display">🔥 0</div>
+</div>
+<div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<div class="container">
+    <div id="quiz-interface" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="quiz-body">
+            <div id="phase-display" class="phase-badge">LÀM LẠI CÂU BỎ QUA</div>
+            <h2 class="question-text" id="question">Đang tải...</h2>
+            <div class="options-grid" id="answers"></div>
+        </div>
+
+        <div class="control-popup" id="control-popup">
+            <button class="btn btn-theme" onclick="toggleTheme()">🌗</button>
+            <button class="btn btn-move" id="drag-handle">⇄</button>
+            
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">⬅</button>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">⤵</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">➜</button>
+        </div>
+    </div>
+
+    <div id="result-interface" class="result-screen">
+        <h2>🎉 Hoàn thành!</h2>
+        <div style="font-size: 1rem; color: var(--text-sub); margin-bottom: 20px;" id="result-time">Thời gian: 00:00</div>
+        
+        <div class="score-circle" id="score-circle">
+            <span class="score-text" id="final-score">0%</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.3rem; color:var(--success)">0</span></div>
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.3rem; color:var(--danger)">0</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction: column; gap:10px; margin-bottom: 30px;">
+             <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
+                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="location.reload()">🔄 Làm lại tất cả</button>
+             </div>
+             <button id="btn-retry-wrong" class="btn" style="background:#dc2626; color:white; width:100%; border-radius:15px; display:none; font-size: 1rem;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
+        </div>
+
+        <h3 style="text-align: left; color: var(--danger); border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Xem lại câu sai 👇</h3>
+        <div id="review-container" class="review-box">
+            <p style="color: var(--text-sub); font-style: italic;">Bạn làm đúng hết rồi! Giỏi quá! 👏</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- HIỆU ỨNG NỔ NHẸ KHI CHỌN ĐÁP ÁN ĐÚNG ---
+function triggerMiniConfetti(btn) {
+    const rect = btn.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const colors = ['#f44336', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0'];
+    
+    for (let i = 0; i < 25; i++) {
+        const particle = document.createElement('div');
+        particle.style.position = 'fixed';
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+        particle.style.width = '7px';
+        particle.style.height = '7px';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '9999';
+        document.body.appendChild(particle);
+
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 50 + 20; 
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity - 20; 
+
+        particle.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+        ], {
+            duration: 600 + Math.random() * 300,
+            easing: 'cubic-bezier(0, .9, .57, 1)'
+        }).onfinish = () => particle.remove();
+    }
+}
+
+// --- DRAGGABLE MENU LOGIC ---
+const popup = document.getElementById('control-popup');
+const handle = document.getElementById('drag-handle');
+let isDragging = false, offsetX, offsetY;
+
+handle.addEventListener('mousedown', startDrag);
+handle.addEventListener('touchstart', startDrag, {passive: false});
+
+function startDrag(e) {
+    e.preventDefault();
+    isDragging = true;
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+    const rect = popup.getBoundingClientRect();
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, {passive: false});
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+}
+
+function onDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+
+    let newLeft = clientX - offsetX;
+    let newTop = clientY - offsetY;
+
+    const maxX = window.innerWidth - popup.offsetWidth;
+    const maxY = window.innerHeight - popup.offsetHeight;
+
+    newLeft = Math.max(0, Math.min(newLeft, maxX));
+    newTop = Math.max(0, Math.min(newTop, maxY));
+
+    popup.style.left = newLeft + 'px';
+    popup.style.top = newTop + 'px';
+    popup.style.right = 'auto'; 
+    popup.style.bottom = 'auto'; 
+}
+
+function stopDrag() {
+    isDragging = false;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+}
+
+// --- DARK MODE ---
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+
+// --- DATA CÂU HỎI TRÍCH XUẤT TỪ PDF (169 CÂU) ---
+const originalQuiz = [
+  {q: "Câu 1. Học máy là gì?", a: ["Là một tập con của trí tuệ nhân tạo, sử dụng neural networks để giải quyết các vấn đề phức tạp.", "Là một lĩnh khoa học rộng lớn giúp máy móc bắt chước hành vi của con người.", "Là một tập con của trí tuệ nhân tạo, liên quan đến lĩnh vực nghiên cứu nhằm giúp máy tính có khả năng tự động học bằng cách cung cấp dữ liệu cho nó mà không cần lập trình cụ thể.", "Là một tập con của trí tuệ nhân tạo, liên quan đến lĩnh vực nghiên cứu nhằm giúp máy tính bắt chước hành vi của con người."], c: 2},
+  {q: "Câu 2. Học tăng cường là gì?", a: ["Học từ dữ liệu đã gán nhãn.", "Học thông qua tương tác với môi trường để tối đa hóa phần thưởng.", "Học mà không cần bất kỳ phản hồi nào.", "Học từ các tập dữ liệu lớn không nhãn."], c: 1},
+  {q: "Câu 3. Mạng nơ-ron nhân tạo (ANN) mô phỏng theo cấu trúc nào của con người?", a: ["Bộ xương.", "Hệ thần kinh.", "Hệ tuần hoàn.", "Hệ tiêu hóa."], c: 1},
+  {q: "Câu 4. Học máy bán giám sát là gì?", a: ["Học từ dữ liệu hoàn toàn có nhãn.", "Học từ dữ liệu hoàn toàn không có nhãn.", "Học từ cả dữ liệu có nhãn và không nhãn.", "Học bằng cách thử và sai."], c: 2},
+  {q: "Câu 5. Điều gì khiến học máy bán giám sát khác học máy có giám sát?", a: ["Không cần dữ liệu.", "Sử dụng ít dữ liệu có nhãn và nhiều dữ liệu không nhãn.", "Chỉ dùng dữ liệu không nhãn.", "Không có thuật toán cụ thể."], c: 1},
+  {q: "Câu 6. Lợi ích chính của học bán giám sát là gì?", a: ["Không cần tính toán nhiều.", "Không cần dữ liệu.", "Tận dụng dữ liệu không nhãn để tăng hiệu suất mà không tốn nhiều chi phí gán nhãn.", "Dễ thực hiện hơn học không giám sát."], c: 2},
+  {q: "Câu 7. Dữ liệu không được gán nhãn trong học bán giám sát có vai trò gì?", a: ["Vô dụng, chỉ để lưu trữ.", "Làm tăng sai số.", "Để thay thế dữ liệu có nhân.", "Giúp cải thiện mô hình bằng cách học cấu trúc phân bố."], c: 3},
+  {q: "Câu 8. Học bán giám sát thường được sử dụng trong lĩnh vực nào?", a: ["Nhận dạng hình ảnh, nhận dạng giọng nói.", "Giải phương trình.", "Tính diện tích hình học.", "Xử lý số học trong bảng tính."], c: 0},
+  {q: "Câu 9. Kỹ thuật nào sau đây phổ biến trong học bán giám sát?", a: ["Self-training.", "Gradient boosting.", "Backpropagation.", "Stochastic descent."], c: 0},
+  {q: "Câu 10. Trong học bán giám sát, mô hình ban đầu được huấn luyện trên dữ liệu nào?", a: ["Dữ liệu không nhãn.", "Cả 2 loại cùng lúc.", "Dữ liệu có nhãn.", "Dữ liệu kiểm tra."], c: 2},
+  {q: "Câu 11. Khái niệm 'Trí tuệ nhân tạo' (Artificial Intelligence) lần đầu tiên được đề xuất tại hội nghị nào?", a: ["Hội nghị Dartmouth năm 1956.", "Hội nghị Turing năm 1950.", "Hội nghị Loebner năm 1990.", "Hội nghị Asilomar năm 1974."], c: 0},
+  {q: "Câu 12. Ai được coi là người đặt nền móng cho lĩnh vực Trí tuệ nhân tạo và đưa ra thuật ngữ 'Trí tuệ nhân tạo'?", a: ["Alan Turing.", "John McCarthy.", "Marvin Minsky.", "Allen Newell."], c: 1},
+  {q: "Câu 13. Mục tiêu chính của AI là gì?", a: ["Tạo ra các hệ thống máy tính có khả năng làm mọi thứ nhanh hơn con người.", "Tạo ra các hệ thống máy tính có khả năng thực hiện các công việc trí tuệ của con người.", "Tạo ra các hệ thống máy tính có thể thay thế hoàn toàn con người.", "Tạo ra các hệ thống máy tính có thể chơi các trò chơi điện tử giỏi hơn con người."], c: 1},
+  {q: "Câu 14. Lĩnh vực nào sau đây không phải là một nhánh của AI?", a: ["Học máy (Machine Learning).", "Thị giác máy tính (Computer Vision).", "Xử lý ngôn ngữ tự nhiên (Natural Language Processing).", "Lập trình web (Web Development)."], c: 3},
+  {q: "Câu 15. Điều nào sau đây có thể cải thiện hiệu suất của một tác nhân AI?", a: ["Nhận thức.", "Học tập.", "Quan sát.", "Tất cả các phương án trên."], c: 1},
+  {q: "Câu 16. Mùa đông AI (AI winter) là thuật ngữ chỉ giai đoạn nào trong lịch sử AI?", a: ["Giai đoạn phát triển mạnh mẽ và đạt được nhiều thành tựu đáng kể.", "Giai đoạn suy giảm sự quan tâm và tài trợ cho nghiên cứu AI do những kỳ vọng không thực tế.", "Giai đoạn bùng nổ các ứng dụng AI trong đời sống.", "Giai đoạn tập trung nghiên cứu các thuật toán học máy."], c: 1},
+  {q: "Câu 17. Các thành phần cốt lõi của một hệ thống AI là gì?", a: ["Dữ liệu, con người, phần cứng, phần mềm.", "Dữ liệu, con người, phần cứng.", "Dữ liệu, con người, phần mềm.", "Dữ liệu, con người, phần cứng, phần mềm, quy trình."], c: 3},
+  {q: "Câu 18. Lý thuyết được áp dụng trong Trí tuệ nhân tạo nhiều nhất là gì?", a: ["Lý thuyết giải bài toán và suy diễn thông minh.", "Lý thuyết biểu diễn tri thức và hệ chuyên gia.", "Lý thuyết nhận dạng và xử lý tiếng nói.", "Lý thuyết tìm kiếm may rủi."], c: 0},
+  {q: "Câu 19. Học máy có giám sát là gì?", a: ["Là thuật toán dự đoán một dữ liệu mới chưa được gán nhãn dựa trên tập dữ liệu huấn luyện.", "Là học thuộc các mẫu dữ liệu, sử dụng một phép đo độ tương đồng để so sánh với dữ liệu đã học.", "Là thuật toán dự đoán nhãn của một dữ liệu mới dựa trên tập dữ liệu huấn luyện chưa được gán nhãn.", "Là thuật toán dự đoán một dữ liệu mới đã được gán nhãn dựa trên tập dữ liệu huấn luyện."], c: 3},
+  {q: "Câu 20. Học máy không giám sát là gì?", a: ["Là học thuộc các mẫu dữ liệu, sử dụng một phép đo độ tương đồng để so sánh với dữ liệu đã học.", "Là thuật toán dự đoán nhãn của một dữ liệu mới dựa trên tập dữ liệu huấn luyện chưa được gán nhãn.", "Là thuật toán dự đoán nhãn của một dữ liệu mới dựa trên tập dữ liệu huấn luyện đã được gán nhãn.", "Là thuật toán dự đoán một dữ liệu mới đã được gán nhãn dựa trên tập dữ liệu huấn luyện."], c: 1},
+  {q: "Câu 21. Dữ liệu (data) là gì trong bối cảnh học máy?", a: ["Một loại phần mềm dùng cho AI.", "Thông tin mà máy có thể ghi nhận, lưu trữ và xử lý.", "Một mô hình học sâu.", "Một ngôn ngữ lập trình cho AI."], c: 1},
+  {q: "Câu 22. Ví dụ nào sau đây là dạng dữ liệu văn bản?", a: ["Ảnh chân dung.", "Email, bài viết, bình luận Facebook.", "Âm thanh cuộc gọi.", "Dữ liệu cảm biến tốc độ xe."], c: 1},
+  {q: "Câu 23. Dữ liệu dạng số (số liệu) có thể là gì?", a: ["Ảnh món ăn.", "Điểm thi, số lượt xem video, nhiệt độ.", "Bài hát.", "Video TikTok."], c: 1},
+  {q: "Câu 24. Trong ví dụ phân loại trái cây (táo vs chuối), dữ liệu nào là 'dữ liệu huấn luyện'?", a: ["Ảnh chưa gắn nhãn để kiểm tra.", "Ảnh táo và chuối đã gắn nhãn đúng.", "Các đặc trưng do máy tự sinh.", "Kết quả dự đoán của mô hình."], c: 1},
+  {q: "Câu 25. Tại sao dữ liệu 'không chất lượng' có thể làm máy học sai?", a: ["Vì mô hình cần ít dữ liệu hơn.", "Vì dữ liệu sai hoặc nhãn sai sẽ dạy mô hình theo hướng sai.", "Vì dữ liệu thừa lúc nào cũng tốt.", "Vì dữ liệu đa dạng làm mô hình dễ học hơn."], c: 1},
+  {q: "Câu 26. Một ví dụ ứng dụng AI cần dữ liệu âm thanh là gì?", a: ["Nhận diện khuôn mặt.", "Dự đoán điểm thi.", "Nhận diện giọng nói.", "Gợi ý video YouTube."], c: 2},
+  {q: "Câu 27. Bước đầu tiên trong quy trình máy học thường là gì?", a: ["Triển khai mô hình lên production.", "Thu thập dữ liệu.", "Đánh giá mô hình.", "Tối ưu hyperparameter."], c: 1},
+  {q: "Câu 28. Tiền xử lý dữ liệu không nhằm mục đích nào dưới đây?", a: ["Làm sạch dữ liệu.", "Chuẩn hóa dữ liệu.", "Làm cho dữ liệu thô hoàn toàn không thể đọc được.", "Mã hóa dữ liệu phân loại."], c: 2},
+  {q: "Câu 29. Mã hóa dữ liệu phân loại thường là gì?", a: ["Đổi chữ thành số (ví dụ: Nam -> 1, Nữ -> 0).", "Lưu ảnh dưới dạng JPEG.", "Tách tập huấn luyện và kiểm tra.", "Cân bằng ánh sáng."], c: 0},
+  {q: "Câu 30. Bước nào sau đây là bước trong tiền xử lý ảnh khuôn mặt?", a: ["Cắt khuôn mặt (face detection & cropping).", "Gán nhãn tự động không kiểm soát.", "Tăng kích thước ảnh lên vô hạn.", "Xóa hoàn toàn thông tin về mắt."], c: 0},
+  {q: "Câu 31. Trong tiền xử lý, chuẩn hóa pixel thường làm gì?", a: ["Chuyển giá trị pixel về khoảng nhỏ hơn, ví dụ chia cho 255.", "Chuyển ảnh sang PDF.", "Xóa mọi pixel có màu trắng.", "Tăng kích thước file để mô hình chậm hơn."], c: 0},
+  {q: "Câu 32. Rút gọn chiều dữ liệu (dimensionality reduction) nhằm mục tiêu gì?", a: ["Tăng số đặc trưng vô hạn.", "Giảm số đặc trưng không cần thiết.", "Chuyển dữ liệu số thành văn bản.", "Chỉ dùng cho dữ liệu âm thanh."], c: 1},
+  {q: "Câu 33. Tách tập dữ liệu thường để gì?", a: ["Chỉ dùng tập huấn luyện, không kiểm tra.", "Tách ra tập huấn luyện, kiểm tra, kiểm định.", "Xóa tập kiểm tra.", "Gắn nhãn dữ liệu tự động."], c: 1},
+  {q: "Câu 34. Big Data thường có đặc điểm nào sau đây?", a: ["Lượng dữ liệu rất lớn, đa nguồn, đa định dạng.", "Luôn ở dạng văn bản thuần.", "Luôn nhỏ gọn và tĩnh.", "Không thể dùng cho học máy."], c: 0},
+  {q: "Câu 35. Mối quan hệ giữa Big Data và Học Máy được ví như thế nào?", a: ["Big Data là động cơ, Học Máy là nhiên liệu.", "Big Data là nguyên liệu, Học Máy là công cụ xử lý.", "Hai thứ hoàn toàn tách rời.", "Học Máy sản xuất Big Data."], c: 1},
+  {q: "Câu 36. Ứng dụng nào sau đây cần Big Data để đạt hiệu quả cao?", a: ["Nhận diện khuôn mặt trên quy mô lớn.", "Viết một email cá nhân.", "Vẽ tay một bức tranh nhỏ.", "Tạo một tài liệu Word."], c: 0},
+  {q: "Câu 37. Ví dụ nhận diện chữ viết tay cần dữ liệu như thế nào?", a: ["Một vài ảnh chữ viết tay là đủ.", "Hàng ngàn ảnh chữ viết tay của nhiều người, có nhãn đúng.", "Chỉ dữ liệu âm thanh.", "Không cần nhãn."], c: 1},
+  {q: "Câu 38. Face alignment (căn chỉnh khuôn mặt) nhằm mục tiêu gì?", a: ["Xoay khuôn mặt để mắt, miệng thẳng hàng.", "Loại bỏ mũi khỏi ảnh.", "Tăng nhiễu trong ảnh.", "Chuyển ảnh sang video."], c: 0},
+  {q: "Câu 39. Chuyển ảnh về mức xám (grayscale) có thể giúp xử lý việc gì?", a: ["Giảm độ phức tạp nếu màu không cần thiết.", "Làm mất thông tin kích thước.", "Tăng số kênh màu.", "Biến ảnh thành âm thanh."], c: 0},
+  {q: "Câu 40. Ví dụ nào sau đây không phải là dữ liệu cảm biến?", a: ["Tốc độ xe.", "Độ rung.", "Nhịp tim.", "Bài viết Facebook."], c: 3},
+  {q: "Câu 41. AI tạo sinh (Generative AI) là phương án nào sau đây?", a: ["AI có khả năng tạo ra nội dung mới như văn bản, hình ảnh, âm thanh.", "AI có khả năng nhận dạng và phân loại dữ liệu.", "AI có khả năng tự động hóa các tác vụ.", "AI có khả năng học hỏi và thích nghi với môi trường mới."], c: 0},
+  {q: "Câu 42. AI hẹp (Narrow AI) có đặc điểm nổi bật nào sau đây?", a: ["Tự nhận thức như con người.", "Chỉ thực hiện tốt một nhiệm vụ cụ thể.", "Sáng tạo nội dung mới liên tục.", "Phân tích cảm xúc con người."], c: 1},
+  {q: "Câu 43. Hệ thống xe tự lái là ứng dụng của loại AI nào sau đây?", a: ["AI bộ nhớ giới hạn (Limited Memory).", "AI phản ứng (Reactive Machines).", "AI tự nhận thức (Self-aware AI).", "AI tổng quát (General AI)."], c: 0},
+  {q: "Câu 44. Chương trình máy tính Deep Blue của IBM đánh bại kỳ thủ cờ vua nổi tiếng Garry Kasparov là ứng dụng tiêu biểu của loại AI nào sau đây?", a: ["AI chuyên biệt (Narrow AI).", "AI tự nhận thức (Self-aware AI).", "AI phản ứng (Reactive Machines).", "AI bộ nhớ hạn chế (Limited Memory)."], c: 2},
+  {q: "Câu 45. Chương trình máy tính AlphaGo của Google DeepMind đánh bại nhà vô địch cờ vây số 1 thế giới Lee Sedol là ứng dụng tiêu biểu của loại AI nào sau đây?", a: ["AI chuyên biệt (Narrow AI).", "AI tự nhận thức (Self-aware AI).", "AI phản ứng (Reactive Machines).", "AI bộ nhớ hạn chế (Limited Memory)."], c: 3},
+  {q: "Câu 46. Quyền riêng tư trong AI liên quan đến vấn đề nào sau đây?", a: ["AI thu thập, lưu trữ và xử lý thông tin cá nhân của người dùng.", "Lương của kỹ sư AI.", "AI có thể học ngôn ngữ tự nhiên.", "Chi phí sử dụng AI."], c: 0},
+  {q: "Câu 47. Đạo đức AI đề cập đến nội dung nào sau đây?", a: ["Phát triển AI có trách nhiệm, công bằng và minh bạch.", "Đảm bảo AI không bao giờ sai.", "Thiết kế AI biết phân biệt thiện ác.", "Lập trình AI giống cảm xúc con người."], c: 0},
+  {q: "Câu 48. Trách nhiệm đạo đức trong quyết định của AI thuộc về ai?", a: ["Người thiết kế, huấn luyện và triển khai AI.", "Chính AI.", "Người dùng AI cuối cùng.", "Không ai cả."], c: 0},
+  {q: "Câu 49. Một trong những rủi ro của AI là gì?", a: ["Tạo ra quyết định sai lệch gây ảnh hưởng đến con người.", "Làm tăng tốc độ mạng internet.", "Tự sửa lỗi phần mềm.", "Giảm tiêu thụ điện."], c: 0},
+  {q: "Câu 50. AI có thể gây nguy cơ gì với quyền riêng tư?", a: ["Theo dõi và phân tích hành vi người dùng mà không xin phép.", "Không lưu lại thông tin nào.", "Giúp người dùng ẩn danh tốt hơn.", "Ngăn chặn xâm nhập dữ liệu."], c: 0},
+  {q: "Câu 51. Khi AI thay thế công việc, điều nào sau đây là đúng?", a: ["Một số nghề mất đi, một số nghề mới xuất hiện.", "Tất cả công việc sẽ biến mất.", "Chỉ có lao động chân tay bị ảnh hưởng.", "Tất cả mọi người sẽ thất nghiệp."], c: 0},
+  {q: "Câu 52. Một trong những nghề nghiệp mới do AI tạo ra là gì?", a: ["Chuyên gia đạo đức AI.", "Kỹ thuật viên điện lạnh.", "Nông dân canh tác truyền thống.", "Thợ rèn."], c: 0},
+  {q: "Câu 53. Kỹ năng liên quan đến dữ liệu nào được ưu tiên trong tương lai?", a: ["Phân tích dữ liệu lớn (big data).", "Tìm kiếm Google.", "Nhập liệu Excel.", "In ấn báo cáo."], c: 0},
+  {q: "Câu 54. AI có thể thay thế hiệu quả công việc nào dưới đây?", a: ["Nhân viên tổng hợp báo cáo.", "Nhà văn sáng tạo.", "Luật sư tòa án.", "Cố vấn tâm lý."], c: 0},
+  {q: "Câu 55. AI phân tích dữ liệu để làm gì?", a: ["Ra quyết định tốt hơn.", "Đoán mò xu hướng.", "Tránh tiếp xúc AI.", "Viết văn sáng tạo hơn."], c: 0},
+  {q: "Câu 56. Thành phần cơ bản nhất của mạng nơ-ron là gì?", a: ["Tập dữ liệu.", "Hàm mất mát.", "Nơ-ron nhân tạo (perceptron).", "Mạng hồi tiếp."], c: 2},
+  {q: "Câu 57. Khi sử dụng ChatGPT để tạo ảnh, người dùng cần cung cấp nội dung nào dưới đây để đạt được kết quả tốt nhất?", a: ["Ảnh.", "Dữ liệu.", "Một mô tả chi tiết.", "Tất cả đều sai."], c: 2},
+  {q: "Câu 58. Một trong những yếu tố quan trọng trong việc tạo ảnh là gì?", a: ["Dữ liệu của người dùng.", "Người dùng đưa ảnh mẫu vào.", "Một mô tả chi tiết của người dùng.", "Sự sáng tạo của người dùng."], c: 2},
+  {q: "Câu 59. Tại sao việc cung cấp mô tả chi tiết lại quan trọng khi tạo ảnh bằng ChatGPT?", a: ["Để giao tiếp hiệu quả hơn.", "Để tăng tốc độ tạo ảnh.", "Để hình ảnh tạo ra phù hợp với mong muốn.", "Không quan trọng."], c: 2},
+  {q: "Câu 60. Cấu trúc mô tả hình ảnh bao gồm những thành phần nào?", a: ["Hành động hoặc trạng thái, phong cách thể hiện, bối cảnh, chi tiết bổ sung, chất lượng ảnh.", "Chủ thể chính, hành động hoặc trạng thái, chi tiết bổ sung, chất lượng ảnh.", "Chủ thể chính, hành động hoặc trạng thái, phong cách thể hiện, bối cảnh, chi tiết bổ sung, chất lượng ảnh.", "Chủ thể chính, hành động hoặc trạng thái, phong cách thể hiện, đối tượng, chi tiết bổ sung, chất lượng ảnh."], c: 2},
+  {q: "Câu 61. Câu lệnh nào đúng để yêu cầu ChatGPT tạo kịch bản video với một chủ đề cụ thể?", a: ["Xin hãy viết cho tôi một phim.", "Hãy tạo cho tôi một câu chuyện hay với chủ đề: ...", "Tạo một video theo ý tôi.", "Viết một kịch bản video bất kỳ."], c: 1},
+  {q: "Câu 62. Các thành phần nào cần xuất hiện trong mỗi đoạn nội dung của kịch bản video được tạo bởi ChatGPT?", a: ["Gợi ý hình ảnh và tiêu đề.", "Gợi ý lời thoại và gợi ý nội dung hình ảnh.", "Mô tả câu chuyện và nhân vật.", "Chỉ cần một lời thoại."], c: 1},
+  {q: "Câu 63. Điền vào dấu ... để được một kịch bản tạo video hoàn chỉnh: Hãy tạo cho tôi một câu chuyện hay với ... mỗi đoạn nội dung cần kèm theo gợi ý lời thoại, gợi ý nội dung hình ảnh.", a: ["Tình huống.", "Chủ đề.", "Nội dung.", "Khán giả."], c: 1},
+  {q: "Câu 64. Trong sáng tạo nội dung, thị trường mục tiêu được định nghĩa là gì?", a: ["Tất cả mọi người.", "Nhóm người cụ thể có nhu cầu và sở thích chung.", "Những người yêu thích nghệ thuật.", "Khán giả số một."], c: 1},
+  {q: "Câu 65. Một trong những lợi ích của việc sử dụng nội dung đa dạng là gì?", a: ["Chỉ tốn nhiều thời gian.", "Giúp bảo đảm không ai quan tâm đến doanh nghiệp.", "Tăng cường khả năng tiếp cận và tạo sự thu hút.", "Tăng chi phí sản xuất nội dung."], c: 2},
+  {q: "Câu 66. Để bắt đầu quá trình sáng tạo nội dung, điều gì là cần thiết nhất?", a: ["Công cụ thu âm.", "Nguồn cảm hứng / Ý tưởng.", "Kỹ năng viết.", "Phần mềm chỉnh sửa."], c: 1},
+  {q: "Câu 67. Để sáng tác nhạc bằng AI ta sử dụng AI nào sau đây?", a: ["ChatGPT và Gamma.", "Gamma và Suno.", "ChatGPT và Suno.", "Không có đáp án đúng."], c: 2},
+  {q: "Câu 68. Hãy nêu cấu trúc câu lệnh chi tiết để yêu cầu ChatGPT sáng tác nhạc?", a: ["Yêu cầu, nhiệm vụ, chủ đề, đối tượng người nghe, cảm xúc muốn truyền tải, ngôn ngữ.", "Nhiệm vụ, chủ đề, đối tượng người nghe, cảm xúc muốn truyền tải, ngôn ngữ, yêu cầu khác.", "Đóng vai, chủ đề, đối tượng người nghe, cảm xúc muốn truyền tải, ngôn ngữ, yêu cầu khác.", "Đóng vai, nhiệm vụ, chủ đề, đối tượng người nghe, cảm xúc muốn truyền tải, ngôn ngữ, yêu cầu khác."], c: 3},
+  {q: "Câu 69. Nội dung hình ảnh trong kịch bản video nên có chức năng gì?", a: ["Chỉ để trang trí.", "Làm cho video dài hơn.", "Hỗ trợ trực quan cho nội dung câu chuyện.", "Làm cho người xem thấy nhàm chán."], c: 2},
+  {q: "Câu 70. Lời thoại trong kịch bản video có vai trò gì?", a: ["Ghi lại âm thanh.", "Diễn tả cảm xúc nhân vật / nội dung.", "Chỉ định thời gian.", "Tạo nhạc nền."], c: 1},
+  {q: "Câu 71. Thành phần nào sau đây KHÔNG phải là một phần của hệ thống học tăng cường?", a: ["Agent.", "Environment.", "Classifier.", "Reward."], c: 2},
+  {q: "Câu 72. Trong học tăng cường, 'chính sách' (policy) là gì?", a: ["Quy tắc chọn hành động tại mỗi trạng thái.", "Cách tính phần thưởng.", "Cách đo lường độ chính xác của mô hình.", "Tập dữ liệu huấn luyện."], c: 0},
+  {q: "Câu 73. Thuật ngữ 'hàm giá trị' (value function) thể hiện điều gì?", a: ["Tổng giá trị của tất cả hành động.", "Giá trị kỳ vọng của phần thưởng nếu theo một chính sách.", "Giá trị tối đa của trạng thái ban đầu.", "Mức độ chính xác của mô hình."], c: 1},
+  {q: "Câu 74. Q-learning là một thuật toán học tăng cường dựa trên nội dung nào sau đây?", a: ["Dựa trên mô hình.", "Không dựa trên mô hình (model-free).", "Dựa trên phân cụm.", "Có giám sát."], c: 1},
+  {q: "Câu 75. Chọn phát biểu đúng về học tăng cường sâu (Deep RL):", a: ["Sử dụng mạng nơ-ron để học chính sách hoặc giá trị.", "Không sử dụng bất kỳ mô hình học máy nào.", "Không áp dụng được vào trò chơi hoặc robot.", "Chỉ dùng trong thị giác máy tính."], c: 0},
+  {q: "Câu 76. Lớp nào sau đây không thay đổi kích thước dữ liệu đầu ra?", a: ["Lớp ẩn (hidden layer).", "Lớp đầu vào (input layer).", "Lớp đầu ra (output layer).", "Cả ba đều có thể thay đổi kích thước."], c: 1},
+  {q: "Câu 77. Hàm kích hoạt (activation function) có tác dụng gì trong ANN?", a: ["Tăng tốc độ tính toán.", "Tạo ra tính phi tuyến.", "Giảm số lượng nơ-ron.", "Giảm độ phức tạp mô hình."], c: 1},
+  {q: "Câu 78. Hàm kích hoạt phổ biến nào sau đây thường dùng trong mạng sâu?", a: ["Linear.", "Sigmoid.", "ReLU.", "Logarithmic."], c: 2},
+  {q: "Câu 79. Quá trình 'lan truyền ngược' (backpropagation) dùng để làm gì?", a: ["Cập nhật trọng số của mạng nơ-ron.", "Giảm số lượng lớp.", "Phân loại đầu ra.", "Tăng tốc độ học."], c: 0},
+  {q: "Câu 80. Thành phần nào điều chỉnh mức độ học của mô hình?", a: ["Epoch.", "Learning rate.", "Batch size.", "Activation function."], c: 1},
+  {q: "Câu 81. Overfitting xảy ra khi nào?", a: ["Mô hình học quá tốt dữ liệu huấn luyện nhưng kém dữ liệu mới.", "Mô hình không thể học.", "Mô hình học quá ít.", "Mô hình dự đoán hoàn hảo mọi trường hợp."], c: 0},
+  {q: "Câu 82. Tập dữ liệu validation dùng để làm gì?", a: ["Huấn luyện mô hình.", "Kiểm tra sau khi huấn luyện.", "Điều chỉnh siêu tham số và đánh giá mô hình trong quá trình huấn luyện.", "Không có tác dụng gì."], c: 2},
+  {q: "Câu 83. Nếu ANN có quá nhiều lớp và nơ-ron, có thể gặp vấn đề gì?", a: ["Underfitting.", "Mô hình sẽ bị lỗi ngay lập tức.", "Mô hình học nhanh hơn.", "Dễ bị overfitting và tốn tài nguyên."], c: 3},
+  {q: "Câu 84. Self-training là kỹ thuật như thế nào?", a: ["Sử dụng mô hình học từ dữ liệu không nhãn.", "Gán nhãn giả cho dữ liệu không nhãn bằng chính mô hình hiện tại.", "Không cần mô hình ban đầu.", "Học bằng cách lặp lại dữ liệu."], c: 1},
+  {q: "Câu 85. Co-training trong học bán giám sát hoạt động thế nào?", a: ["Hai mô hình học song song, mỗi mô hình học từ một phần đặc trưng khác nhau.", "Một mô hình học cả có nhãn và không nhân cùng lúc.", "Mô hình không sử dụng bất kỳ dữ liệu có nhãn nào.", "Mô hình chính học và truyền kiến thức cho mô hình phụ."], c: 0},
+  {q: "Câu 86. Điều kiện giúp học bán giám sát hoạt động hiệu quả nhất là gì?", a: ["Dữ liệu không nhãn giống hoàn toàn dữ liệu có nhãn.", "Dữ liệu không nhãn có cấu trúc tương tự và hỗ trợ phân tách tốt các lớp.", "Không cần quan tâm đến phân bố dữ liệu.", "Sử dụng càng nhiều mô hình càng tốt."], c: 1},
+  {q: "Câu 87. Hãy chỉ ra hạn chế của Machine Learning?", a: ["Không có khả năng sử dụng các thuật toán để phân tích những thông tin có liên quan.", "Không có khả năng xử lý dữ liệu với số chiều lớn.", "Không được huấn luyện.", "Không có khả năng đưa ra quyết định."], c: 0},
+  {q: "Câu 88. Hãy nêu các bước xây dựng mô hình học máy?", a: ["Thu thập dữ liệu, chuẩn bị dữ liệu, lựa chọn mô hình, huấn luyện mô hình, đánh giá mô hình, thay đổi tham số, áp dụng mô hình.", "Thu thập dữ liệu, chuẩn bị dữ liệu, đánh giá mô hình, thay đổi tham số, áp dụng mô hình.", "Thu thập dữ liệu, chuẩn bị dữ liệu, lựa chọn mô hình, huấn luyện mô hình, đánh giá mô hình.", "Lựa chọn mô hình, huấn luyện mô hình, đánh giá mô hình, thay đổi tham số, áp dụng mô hình."], c: 0},
+  {q: "Câu 89. Mục đích chính của học máy là gì?", a: ["Lập trình máy tính để thực hiện các nhiệm vụ cụ thể.", "Huấn luyện máy tính để tự học từ dữ liệu.", "Tạo ra máy tính có trí tuệ nhân tạo.", "Tối ưu hóa các thuật toán máy học."], c: 1},
+  {q: "Câu 90. Khi dữ liệu có nhiều giá trị thiếu (missing), bước tiền xử lý phù hợp là gì?", a: ["Bỏ hoàn toàn cột/thuộc tính nếu tỷ lệ missing cao.", "Thay thế bằng giá trị trung bình/median hoặc sử dụng imputation.", "Giữ nguyên giá trị missing và huấn luyện mô hình.", "Cả 1 và 2 tùy ngữ cảnh."], c: 3},
+  {q: "Câu 91. Tại sao cần chuẩn hóa dữ liệu (normalization) trước khi huấn luyện?", a: ["Để tất cả đặc trưng có cùng thang đo, giúp thuật toán hội tụ nhanh và công bằng.", "Để làm cho dữ liệu dài hơn.", "Để chuyển dữ liệu sang ảnh.", "Để gán nhãn dữ liệu."], c: 0},
+  {q: "Câu 92. One-hot encoding dùng cho loại biến nào?", a: ["Biến số liên tục.", "Biến phân loại dạng danh mục (categorical).", "Dữ liệu ảnh.", "Chuỗi thời gian."], c: 1},
+  {q: "Câu 93. Khi nào nên sử dụng giảm chiều dữ liệu (PCA)?", a: ["Khi muốn tăng số chiều để làm mô hình phức tạp hơn.", "Khi muốn giảm số đặc trưng, loại bỏ đa cộng tuyến và giảm nhiễu.", "Khi dữ liệu là văn bản thuần.", "Khi chỉ có một feature duy nhất."], c: 1},
+  {q: "Câu 94. Nêu ý nghĩa của việc chia tập dữ liệu thành các tập train/test/validation:", a: ["Đánh giá khả năng tổng quát hóa của mô hình.", "Chỉ để tăng kích thước bộ nhớ.", "Làm cho mô hình luôn overfit.", "Xóa dữ liệu thừa."], c: 0},
+  {q: "Câu 95. Trong tiền xử lý ảnh: vì sao cần resize ảnh về cùng kích thước như 112x112?", a: ["Để mô hình nhận đầu vào đồng đều và tiết kiệm bộ nhớ.", "Để ảnh mất toàn bộ chi tiết.", "Để tăng kích thước dữ liệu gốc.", "Để biến ảnh thành âm thanh."], c: 0},
+  {q: "Câu 96. Hãy nêu hệ quả nếu nhãn trong dữ liệu bị gán sai nhiều (label noise)?", a: ["Mô hình học chính xác hơn.", "Mô hình có thể học sai và hiệu năng giảm.", "Dữ liệu trở nên sạch hơn.", "Không ảnh hưởng."], c: 1},
+  {q: "Câu 97. Cân bằng ánh sáng và độ tương phản trong ảnh giúp gì cho nhận diện khuôn mặt?", a: ["Giúp khuôn mặt rõ ràng hơn, giảm sai số do điều kiện ánh sáng.", "Làm méo mó toàn bộ biểu cảm.", "Thay đổi nhãn của dữ liệu.", "Không có ích."], c: 0},
+  {q: "Câu 98. Nêu tác dụng của việc đa dạng dữ liệu (nhiều người, nhiều kiểu viết) trong bài toán nhận diện chữ viết tay?", a: ["Giảm khả năng tổng quát hóa.", "Làm mô hình dễ overfit.", "Cải thiện khả năng mô hình nhận diện cho nhiều kiểu chữ khác nhau.", "Làm chậm việc huấn luyện vô ích."], c: 2},
+  {q: "Câu 99. Vì sao trong nhận diện khuôn mặt: quá trình 'Face detection & cropping' cần làm kỹ?", a: ["Nếu cắt sai vị trí, mô hình nhận diện sẽ gặp nhiễu và sai.", "Cắt sai làm tăng dung lượng file.", "Cắt khuôn mặt không quan trọng.", "Chỉ để làm đẹp hình ảnh."], c: 0},
+  {q: "Câu 100. Nêu thách thức khi dữ liệu quá lớn (Big Data)?", a: ["Chỉ việc lưu trữ là đủ, không cần xử lý.", "Lưu trữ, xử lý phân tán, đảm bảo chất lượng và bảo mật.", "Luôn dễ dàng xử lý bằng máy tính cá nhân.", "Luôn có nhãn sẵn."], c: 1},
+  {q: "Câu 101. Trong pipeline preprocessing, 'loại bỏ trùng lặp' nhằm mục tiêu gì?", a: ["Giảm bias do bản ghi lặp.", "Tăng số lượng bản ghi.", "Thay đổi nhãn của dữ liệu.", "Phân tách tập huấn luyện."], c: 0},
+  {q: "Câu 102. Ta có thể làm gì để giảm ảnh hưởng của outlier?", a: ["Dùng scaling robust (ví dụ median, IQR) hoặc loại bỏ outlier.", "Luôn dùng mean cho scaling.", "Không làm gì cả.", "Thêm nhiễu cho dữ liệu."], c: 0},
+  {q: "Câu 103. Một hệ thống gợi ý (recommendation) cần dữ liệu nào để cá nhân hoá tốt?", a: ["Lịch sử xem, lượt thích, thời gian xem của nhiều người.", "Một hình ảnh duy nhất.", "Dữ liệu không có nhãn.", "Chỉ metadata của video."], c: 0},
+  {q: "Câu 104. Khi xử lý dữ liệu văn bản thô (text), bước tiền xử lý thường gặp là:", a: ["Tokenization, lowercasing, loại stopwords, stemming/lemmatization.", "Resize ảnh 224x224.", "Chuyển text thành audio.", "One-hot encode ảnh."], c: 0},
+  {q: "Câu 105. Nếu muốn giữ nhiều thông tin màu trong nhận diện, ta không nên làm gì?", a: ["Chuyển sang grayscale nếu màu quan trọng.", "Giữ 3 kênh màu RGB.", "Chuẩn hóa pixel trên từng kênh.", "Áp augmentation màu (color jitter) có kiểm soát."], c: 0},
+  {q: "Câu 106. Trong thực tế, dữ liệu huấn luyện lớn nhưng nhãn kém chất lượng – chiến lược tốt là làm gì?", a: ["Tiền xử lý nhãn (clean labels), dùng kỹ thuật robust learning, hoặc kết hợp dữ liệu có nhãn chất lượng hơn.", "Bỏ hết dữ liệu.", "Giữ nguyên và hy vọng mô hình tự sửa.", "Chỉ dùng tập test."], c: 0},
+  {q: "Câu 107. Độ phân giải ảnh vào ảnh hưởng gì đến mô hình?", a: ["Quyết định lượng thông tin chi tiết mà mô hình có thể học; quá thấp mất thông tin, quá cao tốn tài nguyên.", "Không ảnh hưởng.", "Chỉ ảnh hưởng tới màu sắc.", "Làm thay đổi nhãn."], c: 0},
+  {q: "Câu 108. Cross-validation dùng để làm gì?", a: ["Đánh giá ổn định và khả năng tổng quát hóa mô hình bằng cách huấn luyện/test trên nhiều folds.", "Tăng kích thước dataset.", "Chỉ dùng cho dữ liệu ảnh.", "Làm cho mô hình chạy chậm vô ích."], c: 0},
+  {q: "Câu 109. Khi xây dựng dataset cho nhận diện khuôn mặt, điều kiện thu thập dữ liệu tốt bao gồm:", a: ["Ảnh từ nhiều người, nhiều góc nhìn, nhiều điều kiện ánh sáng, có nhãn chính xác.", "Chỉ ảnh selfie từ một người.", "Chỉ ảnh đen trắng cũ.", "Ảnh không có nhãn."], c: 0},
+  {q: "Câu 110. Chatbot trong dịch vụ khách hàng có vai trò chính là gì?", a: ["Thay thế hoàn toàn con người trong công việc.", "Tự động trả lời nhanh các câu hỏi thường gặp.", "Quản lý kho bãi và chuỗi cung ứng.", "Dự báo biến đổi khí hậu."], c: 1},
+  {q: "Câu 111. AI hẹp (Narrow AI) có đặc điểm gì?", a: ["Có khả năng tự nhận thức.", "Thực hiện một nhiệm vụ cụ thể với hiệu suất cao.", "Thay thế toàn bộ hoạt động của con người.", "Có khả năng suy nghĩ như con người."], c: 1},
+  {q: "Câu 112. Một ví dụ phổ biến của AI hẹp trong đời sống là gì?", a: ["ChatGPT tạo văn bản.", "Robot tự nhận thức.", "Hệ thống nhận diện khuôn mặt trên điện thoại.", "AI siêu trí tuệ."], c: 2},
+  {q: "Câu 113. AI trong phân tích dữ liệu khách hàng giúp doanh nghiệp điều gì?", a: ["Chỉ tập trung bán hàng truyền thống.", "Dự đoán xu hướng tiêu dùng, hành vi khách hàng.", "Thay thế toàn bộ nhân viên marketing.", "Xây dựng mô hình khí hậu toàn cầu."], c: 1},
+  {q: "Câu 114. Nguy cơ lớn nhất khi AI học từ dữ liệu thiên lệch là gì?", a: ["AI đưa ra kết quả công bằng hơn.", "AI vẫn hoạt động chính xác.", "AI đưa ra kết quả sai lệch và thiếu công bằng.", "AI trở nên có ý thức."], c: 2},
+  {q: "Câu 115. AI tổng quát (AGI) khác với AI hẹp ở điểm nào?", a: ["Chỉ làm được một nhiệm vụ cụ thể.", "Có khả năng tự nhận thức.", "Có thể học hỏi, thích nghi và áp dụng kiến thức vào nhiều tình huống khác nhau.", "Đã được ứng dụng rộng rãi trên thị trường."], c: 2},
+  {q: "Câu 116. Trong quy trình tự động hóa dịch vụ khách hàng, khi gặp câu hỏi phức tạp thì chatbot sẽ làm gì?", a: ["Tự động từ chối trả lời.", "Chuyển cho nhân viên con người xử lý.", "Xóa dữ liệu khách hàng.", "Đưa ra câu trả lời sai."], c: 1},
+  {q: "Câu 117. Tại sao AI siêu trí tuệ (Superintelligent AI) gây lo ngại cho nhân loại?", a: ["Vì nó không thực hiện được các tác vụ phức tạp.", "Vì nó chưa bao giờ được nghiên cứu.", "Vì nó có khả năng vượt xa trí tuệ con người, tiềm ẩn rủi ro kiểm soát.", "Vì nó chỉ hoạt động trong môi trường hẹp."], c: 2},
+  {q: "Câu 118. Phân tích dữ liệu khách hàng bằng AI mang lại lợi ích nào sau đây khó đạt được bằng phương pháp thủ công?", a: ["Tạo hóa đơn nhanh hơn.", "Dự đoán chính xác khách hàng sắp rời bỏ dịch vụ.", "Tổ chức hội nghị khách hàng.", "Giảm chi phí điện nước."], c: 1},
+  {q: "Câu 119. Trong phân loại theo chức năng, 'Lý thuyết về tâm trí' (Theory of Mind) của AI tập trung vào điều gì?", a: ["Phân tích cảm xúc, ý định và suy nghĩ của con người.", "Lưu trữ dữ liệu khách hàng.", "Tự động hóa quy trình sản xuất.", "Giải quyết vấn đề toán học cơ bản."], c: 0},
+  {q: "Câu 120. Sinh viên muốn dùng ChatGPT để lập trình tạo ra một ứng dụng ghi chú đơn giản. Tiêu chí nào quan trọng nhất để đánh giá chất lượng hỗ trợ từ ChatGPT?", a: ["Đoạn mã càng dài càng tốt.", "Giao diện phải dùng React hoặc Vue.", "Tính đơn giản, hoạt động đúng, dễ hiểu và dễ sửa đổi.", "Mã có sử dụng thư viện phức tạp."], c: 2},
+  {q: "Câu 121. Khi sử dụng ChatGPT để học lập trình, đâu là dấu hiệu cho thấy sinh viên đang học thụ động, không hiệu quả?", a: ["Thường xuyên yêu cầu ChatGPT giải thích mã.", "Tự chỉnh sửa mã sau khi được ChatGPT gợi ý.", "Copy toàn bộ mã mà không đọc và hiểu.", "Hỏi nhiều lần để rõ hơn từng chức năng."], c: 2},
+  {q: "Câu 122. Giả sử ChatGPT đưa ra hai đoạn mã khác nhau giải cùng một bài toán. Cách tốt nhất để đánh giá đoạn mã nào tối ưu hơn là gì?", a: ["Đo độ dài của đoạn mã.", "Chọn đoạn nào dễ nhớ hơn.", "So sánh về hiệu suất, tính dễ hiểu, khả năng mở rộng và độ an toàn.", "Chọn đoạn mã sử dụng nhiều thư viện nhất."], c: 2},
+  {q: "Câu 123. Một sinh viên muốn tạo công cụ nhập điểm sinh viên từ Excel và phân loại theo học lực. Cách sử dụng ChatGPT nào là kém hiệu quả nhất?", a: ["Mô tả chi tiết yêu cầu và định dạng file Excel.", "Cung cấp mẫu dữ liệu và hỏi cách xử lý.", "Chỉ nói 'giúp tôi làm phần mềm tính điểm' mà không mô tả gì thêm.", "Yêu cầu tạo hàm phân loại học lực và giải thích cách dùng."], c: 2},
+  {q: "Câu 124. Sinh viên có thể đánh giá hiệu quả của ChatGPT khi hỗ trợ học lập trình dựa trên tiêu chí nào sau đây?", a: ["Tốc độ trả lời.", "Độ dài của mã.", "Mức độ giúp sinh viên hiểu và tự chỉnh sửa đoạn mã đó.", "ChatGPT có dùng từ ngữ chuyên ngành hay không."], c: 2},
+  {q: "Câu 125. Cần làm gì để giảm thiên vị trong AI?", a: ["Sử dụng dữ liệu huấn luyện đa dạng và kiểm định kỹ thuật.", "Tắt AI khi không dùng.", "Thêm cảm xúc vào AI.", "Giảm tốc độ AI."], c: 0},
+  {q: "Câu 126. Để kiểm soát AI hiệu quả, cần yếu tố nào sau đây?", a: ["Khung pháp lý và giám sát chặt chẽ.", "Tăng tốc độ xử lý.", "Cho phép AI tự điều chỉnh.", "Giảm quyền truy cập."], c: 0},
+  {q: "Câu 127. Một hệ thống AI tài chính từ chối hồ sơ do sai dữ liệu. Ai chịu trách nhiệm?", a: ["Công ty và người phát triển AI.", "Chính AI.", "Người nộp hồ sơ.", "Không ai cả."], c: 0},
+  {q: "Câu 128. AI chẩn đoán bệnh sai và bệnh nhân làm theo. Trách nhiệm thuộc về ai?", a: ["Bác sĩ và tổ chức triển khai AI.", "Chính AI.", "Người bệnh.", "Không rõ."], c: 0},
+  {q: "Câu 129. Trong trường hợp AI và con người mâu thuẫn khi ra quyết định quan trọng (ví dụ: y tế, pháp lý), nên xử lý thế nào?", a: ["Con người vẫn là người chịu trách nhiệm cuối cùng.", "AI nên được quyền tự quyết vì không cảm xúc.", "AI có thể quyết định nếu dữ liệu đầy đủ.", "Không cần con người tham gia nữa."], c: 0},
+  {q: "Câu 130. Công ty sử dụng AI đánh giá hiệu suất nhân viên mà không thông báo trước. Điều này ảnh hưởng gì đến nhân viên?", a: ["Quyền riêng tư của nhân viên.", "Chi phí vận hành.", "Lỗi kỹ thuật.", "Tăng doanh thu."], c: 0},
+  {q: "Câu 131. AI tạo nội dung sáng tạo, ai là tác giả?", a: ["Người dùng có đóng góp sáng tạo.", "AI là tác giả.", "Không ai cả.", "Chia sẻ bản quyền."], c: 0},
+  {q: "Câu 132. Trường hợp AI dùng để giám sát sinh viên thi. Điều gì cần xem xét?", a: ["Tính minh bạch và quyền riêng tư.", "Tăng điểm kiểm tra.", "Giảm chi phí giám thị.", "Tự động hóa thi cử."], c: 0},
+  {q: "Câu 133. Sinh viên sử dụng AI hỗ trợ học tập. Việc nào là đúng?", a: ["Dùng AI hỗ trợ nhưng không sao chép nguyên văn.", "Chép toàn bộ từ AI.", "Giấu nguồn.", "Không chỉnh sửa."], c: 0},
+  {q: "Câu 134. Nghề nào sau đây là tổ hợp giữa công nghệ và đạo đức?", a: ["Chuyên gia đạo đức AI.", "Kỹ sư phần mềm.", "Nhân viên nhân sự.", "Nhà báo."], c: 0},
+  {q: "Câu 135. Nếu muốn ChatGPT thiết kế hệ thống quản lý bán hàng đơn giản, bạn nên yêu cầu thế nào?", a: ["Cho mình phần mềm bán hàng.", "Thiết kế giúp mình hệ thống quản lý bán hàng với các chức năng: thêm, sửa, xóa, tìm kiếm.", "Chỉ cần mình biết sơ qua thôi.", "Mình không cần code, chỉ cần thiết kế file Word."], c: 1},
+  {q: "Câu 136. Hãy nêu cấu trúc câu lệnh chi tiết để yêu cầu ChatGPT tạo nội dung bài thuyết trình?", a: ["Yêu cầu, chủ đề, đối tượng, số lượng slide, nội dung chính, mục tiêu, cách trình bày.", "Nhiệm vụ, chủ đề, đối tượng, số lượng slide, nội dung chính, mục tiêu, cách trình bày.", "Đóng vai, chủ đề, đối tượng, số lượng slide, nội dung chính, mục tiêu, cách trình bày.", "Đóng vai, nhiệm vụ, chủ đề, đối tượng, số lượng slide, nội dung chính, mục tiêu, cách trình bày."], c: 3},
+  {q: "Câu 137. Hãy nêu cấu trúc câu lệnh chi tiết để yêu cầu ChatGPT Sáng tạo tên thương hiệu, slogan?", a: ["Đóng vai, yêu cầu.", "Đóng vai, đối tượng.", "Đóng vai, nhiệm vụ, yêu cầu.", "Nhiệm vụ, yêu cầu."], c: 2},
+  {q: "Câu 138. Câu lệnh nào dùng để yêu cầu ChatGPT tạo một bài thuyết trình?", a: ["Hãy viết cho tôi một bài thuyết trình.", "Bạn hãy đóng vai là một chuyên gia sáng tạo bài slide thuyết trình chuyên nghiệp.", "Tạo một slide thuyết trình với nội dung không rõ ràng.", "Chỉ cần tạo một bài thuyết trình."], c: 1},
+  {q: "Câu 139. Một trong những nguyên tắc cần nhớ khi sử dụng AI trong công việc văn phòng là gì?", a: ["AI có thể thay thế hoàn toàn tư duy cá nhân.", "Luôn giữ bí mật thông tin nội bộ khi nhập vào AI.", "Không cần quan tâm đến bảo mật dữ liệu.", "Càng đặt câu hỏi chung chung, AI càng dễ hiểu."], c: 1},
+  {q: "Câu 140. Vì sao cần kiểm tra lại văn bản do ChatGPT tạo ra?", a: ["Để thêm phần hoa mỹ.", "Vì ChatGPT có thể sai thông tin hoặc chưa phù hợp ngữ cảnh.", "Vì văn bản AI luôn quá ngắn.", "Vì pháp luật cấm dùng AI."], c: 1},
+  {q: "Câu 141. Mục tiêu chính của việc tóm tắt văn bản bằng ChatGPT là gì?", a: ["Viết lại văn bản dài hơn.", "Xóa bớt các ý không liên quan.", "Rút gọn nội dung nhưng vẫn giữ ý chính.", "Thay đổi hoàn toàn nội dung gốc."], c: 2},
+  {q: "Câu 142. Lưu ý khi sử dụng ChatGPT để tóm tắt tài liệu hành chính là gì?", a: ["Giữ nguyên cấu trúc và ngôn ngữ trang trọng.", "Viết lại bằng ngôn ngữ đời thường.", "Tự ý thêm nội dung mới.", "Lược bỏ phần quyết định trong biên bản."], c: 0},
+  {q: "Câu 143. Sau khi nhận được bản tóm tắt từ ChatGPT, bạn cần làm gì?", a: ["In ra và nộp luôn.", "Đọc lại, chỉnh sửa theo ngữ cảnh thực tế.", "Gửi lại cho ChatGPT để xin xác nhận.", "Dùng bản gốc thay vì bản tóm tắt."], c: 1},
+  {q: "Câu 144. Ưu điểm của việc dùng AI để lập kế hoạch là gì?", a: ["Không cần kiểm tra lại.", "Có thể dùng thay thế hoàn toàn người viết.", "Có gợi ý nhanh, dễ chỉnh sửa theo thực tế.", "Đảm bảo tuyệt đối không sai sót."], c: 2},
+  {q: "Câu 145. Khi muốn tóm tắt nội dung từ video họp (.mp4, .mov...), bước đầu tiên bạn nên làm gì?", a: ["Chuyển video thành slide trình bày.", "Gửi video trực tiếp cho ChatGPT.", "Tách nhạc nền ra khỏi video.", "Dùng công cụ để chuyển video thành văn bản."], c: 3},
+  {q: "Câu 146. Sau khi chuyển video họp thành văn bản, bước tiếp theo là gì?", a: ["Chuyển sang PDF và lưu trữ.", "Dán nội dung vào ChatGPT để yêu cầu tóm tắt theo các mục cụ thể.", "Gửi file lên TikTok để chia sẻ.", "Sửa chính tả toàn bộ văn bản thủ công."], c: 1},
+  {q: "Câu 147. AI có thể giúp sinh viên tóm tắt sách giáo khoa bằng cách nào?", a: ["Phân tích số trang in.", "Tự động chọn chương có hình minh họa.", "Xác định các ý chính, từ khóa và nội dung quan trọng.", "Cắt bỏ toàn bộ phần ví dụ minh họa."], c: 2},
+  {q: "Câu 148. Một nguy cơ tiềm ẩn khi sử dụng AI để tóm tắt tài liệu là gì?", a: ["Văn bản trở nên quá dài.", "Không thể in ra được.", "Máy tính bị nhiễm virus.", "Bỏ sót những chi tiết quan trọng nếu không kiểm duyệt."], c: 3},
+  {q: "Câu 149. Câu nào sai khi nói về việc ứng dụng AI trong tóm tắt văn bản?", a: ["AI giúp học sinh hiểu sâu nội dung hơn mà không cần đọc bản gốc.", "AI có thể tóm tắt văn bản dài thành bản ngắn gọn, dễ hiểu.", "AI cần được huấn luyện bằng dữ liệu để thực hiện tóm tắt tốt.", "Kết quả tóm tắt cần được người dùng kiểm tra lại để đảm bảo chính xác."], c: 0},
+  {q: "Câu 150. AI có thể hỗ trợ người học tìm hiểu sự kiện lịch sử bằng cách nào?", a: ["Viết lại toàn bộ sách giáo khoa.", "Tạo ra lịch sử mới.", "Xóa bỏ các sự kiện không cần thiết.", "Trình bày sự kiện dưới dạng sơ đồ, timeline hoặc tóm tắt ngắn."], c: 3},
+  {q: "Câu 151. Hạn chế của AI khi trả lời câu hỏi về sự kiện là gì?", a: ["Luôn cập nhật quá nhanh.", "Có thể thiếu dữ liệu mới nếu không truy cập internet hoặc nguồn tin cập nhật.", "Trả lời bằng hình ảnh thay vì văn bản.", "Không thể hỗ trợ các sự kiện lịch sử."], c: 1},
+  {q: "Câu 152. Khi hỏi AI về một sự kiện xảy ra gần đây (ví dụ: tháng trước), người dùng nên làm gì?", a: ["Tắt Wi-Fi để AI xử lý nhanh hơn.", "Chọn chế độ chơi game.", "Sử dụng AI có khả năng truy cập web thời gian thực hoặc kiểm tra nguồn thông tin.", "Gửi yêu cầu in kết quả."], c: 2},
+  {q: "Câu 153. Một rủi ro tiềm ẩn khi phụ thuộc hoàn toàn vào AI trong học ngoại ngữ là gì?", a: ["Không cần học nữa.", "Máy tính hư ngôn ngữ.", "AI làm thay cả phần thi cuối kỳ.", "Dễ bị nói sai ngữ cảnh nếu không hiểu cách sử dụng từ."], c: 3},
+  {q: "Câu 154. Để dùng AI hiệu quả trong học ngoại ngữ, người học nên làm gì?", a: ["Chỉ dùng để dịch toàn bộ văn bản mà không cần hiểu.", "Không cần ghi chép gì.", "Học 1 ngôn ngữ và hỏi AI về ngôn ngữ khác.", "Dùng AI để luyện tập và kết hợp với phản hồi của giáo viên."], c: 3},
+  {q: "Câu 155. Khi sử dụng AI để hiểu nghĩa một từ mới, người học nên làm gì?", a: ["Đưa từ vào câu cụ thể để AI giải thích theo ngữ cảnh.", "Chỉ hỏi 'Từ này nghĩa là gì?'.", "Hỏi AI bằng tiếng mẹ đẻ.", "Bắt AI đưa đáp án trắc nghiệm."], c: 0},
+  {q: "Câu 156. Một hạn chế khi dùng AI để học từ vựng là gì?", a: ["AI luôn đúng tuyệt đối.", "AI dùng ngôn ngữ địa phương.", "AI có thể đưa ra nghĩa không phù hợp nếu ngữ cảnh mơ hồ hoặc không rõ ràng.", "AI chỉ dịch từng chữ cái."], c: 2},
+  {q: "Câu 157. Khi học từ mới với AI, điều nào sau đây là không nên làm?", a: ["Xin ví dụ câu dùng từ đó trong văn cảnh cụ thể.", "Ghi lại từ mới và luyện phát âm.", "Hỏi nghĩa và cách dùng của từ theo từng ngữ cảnh.", "Học từ bằng cách chỉ tra nghĩa tiếng mẹ đẻ rồi bỏ qua."], c: 3},
+  {q: "Câu 158. Điều gì quan trọng nhất khi yêu cầu AI giải thích một khái niệm khó?", a: ["Gõ câu hỏi càng dài càng tốt.", "Yêu cầu AI nói bằng tiếng nước ngoài.", "Cung cấp bối cảnh cụ thể và yêu cầu giải thích đơn giản, dễ hiểu.", "Bắt AI làm bài kiểm tra."], c: 2},
+  {q: "Câu 159. Một lợi ích nổi bật của việc dùng AI để giải thích khái niệm khó là gì?", a: ["Giúp người học tiếp cận kiến thức theo nhiều cách trực quan, sinh động.", "Tránh việc học nhóm.", "Làm người học khỏi cần đọc sách.", "Gây ảo tưởng là đã hiểu sâu."], c: 0},
+  {q: "Câu 160. Bạn có một dataset lớn nhưng chứa nhiều nhãn sai (label noise). Phương án nào dưới đây là chiến lược hiệu quả để giảm ảnh hưởng?", a: ["Sử dụng robust loss functions, lọc dữ liệu có nhãn khả nghi, kết hợp human-in-the-loop để sửa nhãn.", "Bỏ toàn bộ dataset lớn và thu dataset nhỏ hơn.", "Luôn huấn luyện với learning rate cực lớn.", "Không làm gì cả."], c: 0},
+  {q: "Câu 161. So sánh trade-off giữa tăng độ phân giải ảnh (higher resolution) và tốc độ huấn luyện trong bài toán nhận diện khuôn mặt?", a: ["Higher resolution luôn tốt hơn và không có nhược điểm.", "Higher resolution cho nhiều chi tiết hơn nhưng tăng chi phí tính toán và có thể dẫn tới overfitting nếu thiếu dữ liệu.", "Lower resolution luôn tốt hơn.", "Resolution không ảnh hưởng tới độ chính xác."], c: 1},
+  {q: "Câu 162. Khi làm face alignment, tại sao việc cân bằng mắt và miệng lại giúp tăng độ chính xác của mô hình?", a: ["Vì giúp chuẩn hóa góc và tỷ lệ khuôn mặt, giảm sự biến đổi không cần thiết và làm cho đặc trưng dễ học hơn.", "Vì làm thay đổi nhãn.", "Vì tăng nhiễu.", "Không có lý do kỹ thuật."], c: 0},
+  {q: "Câu 163. Xây dựng hệ thống gợi ý (recommendation) cho nền tảng video có hàng triệu người dùng. Vấn đề Big Data đặt ra và giải pháp là gì?", a: ["Vấn đề: quy mô và tốc độ xử lý; Giải pháp: hệ thống lưu trữ phân tán, batch + real-time processing, feature store, học phân tán.", "Vấn đề: chỉ cần dùng spreadsheet; Giải pháp: không cần thay đổi.", "Vấn đề: thiếu hình ảnh; Giải pháp: thu thập thêm ảnh.", "Vấn đề: tốc độ internet; Giải pháp: tăng băng thông."], c: 0},
+  {q: "Câu 164. Trong trường hợp dữ liệu bị phân phối không cân bằng (class imbalance), chiến lược giảm thiểu gồm:", a: ["Oversampling lớp thiểu số, undersampling lớp đa số, dùng loss điều chỉnh, tạo dữ liệu tổng hợp (SMOTE).", "Luôn xóa lớp thiểu số.", "Bỏ nhãn của lớp đa số.", "Không có cách nào."], c: 0},
+  {q: "Câu 165. Hệ quả cho mô hình nhận diện khuôn mặt nếu dataset thiếu tính đa dạng chủng tộc/góc độ là gì?", a: ["Mô hình có thể hoạt động kém với nhóm thiếu đại diện gây bias và fairness issue.", "Mô hình sẽ tốt hơn cho mọi nhóm.", "Không ảnh hưởng.", "Chỉ ảnh hưởng tới kích thước file."], c: 0},
+  {q: "Câu 166. Khi làm tiền xử lý ảnh cho học máy, việc sử dụng augmentation (rotate, flip, color jitter) có tác dụng gì?", a: ["Tăng tính đa dạng dữ liệu, giảm overfitting và cải thiện tổng quát hóa.", "Luôn làm giảm accuracy.", "Chỉ áp dụng cho text.", "Làm mất nhãn."], c: 0},
+  {q: "Câu 167. So sánh supervised learning và unsupervised learning về nhu cầu nhãn dữ liệu?", a: ["Supervised cần nhãn cho huấn luyện; unsupervised không cần nhãn, dùng để khám phá cấu trúc dữ liệu.", "Cả hai đều không cần nhãn.", "Unsupervised cần nhãn nhiều hơn.", "Supervised không dùng dữ liệu."], c: 0},
+  {q: "Câu 168. Khi dataset có 'drift' (phân phối thay đổi theo thời gian), cách xử lý hiệu quả là gì?", a: ["Giám sát hiệu năng, cập nhật mô hình định kỳ, thu thập dữ liệu mới và retrain hoặc dùng online learning.", "Không thay đổi gì.", "Xóa toàn bộ dữ liệu cũ.", "Luôn dùng cùng mô hình mà không cần giám sát."], c: 0},
+  {q: "Câu 169. Trong pipeline xử lý Big Data, 'feature store' có vai trò gì?", a: ["Lưu trữ và chia sẻ các feature đã xử lý cho huấn luyện và production, đảm bảo consistency.", "Chỉ lưu raw data.", "Thay thế model.", "Đóng vai trò như dataset test."], c: 0}
+];
+
+let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
+let timerInterval;
+let timeLeft = 0;
+let autoNextTimer;
+let sessionTotal = 0;
+
+const elInterface = document.getElementById("quiz-interface");
+const elResult = document.getElementById("result-interface");
+const elQuestion = document.getElementById("question");
+const elAnswers = document.getElementById("answers");
+const elCounter = document.getElementById("question-counter");
+const elCombo = document.getElementById("combo-display");
+const elProgressBar = document.getElementById("progress-bar");
+const elBtnNext = document.getElementById("btn-next");
+const elBtnSkip = document.getElementById("btn-skip");
+const elBtnPrev = document.getElementById("btn-prev");
+const elTimer = document.getElementById("timer-display");
+const elResultTime = document.getElementById("result-time");
+const elControlPopup = document.getElementById("control-popup");
+const elReviewContainer = document.getElementById("review-container");
+const elBtnRetryWrong = document.getElementById("btn-retry-wrong");
+
+function initGame(retryWrongOnly = false) {
+    score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
+    activeQueue = []; skippedQueue = []; isPhaseSkipped = false;
+    if (!retryWrongOnly) userAnswers = {};
+
+    if (retryWrongOnly) {
+        let wrongIndices = [];
+        originalQuiz.forEach((item, idx) => {
+            if (userAnswers.hasOwnProperty(idx)) {
+                if (userAnswers[idx] !== item.c) wrongIndices.push(idx);
+            }
+        });
+        
+        if (wrongIndices.length === 0) {
+            alert("Bạn không có câu sai nào để làm lại!");
+            return;
+        }
+
+        userAnswers = {}; 
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+             let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+             return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+        
+        activeQueue = wrongIndices;
+    } else {
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+            let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+            return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+
+        let indices = sessionQuiz.map((_, i) => i);
+        activeQueue = indices;
+    }
+    
+    sessionTotal = activeQueue.length;
+
+    elInterface.style.display = "flex";
+    elResult.style.display = "none";
+    elControlPopup.style.display = "flex";
+
+    timeLeft = 0;
+    startCountUp();
+
+    updateStats();
+    loadQuestion();
+}
+
+function startCountUp() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft++;
+        updateTimerDisplay(timeLeft);
+    }, 1000);
+}
+
+function updateTimerDisplay(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    elTimer.innerText = `${m}:${s}`;
+}
+
+function loadQuestion() {
+    clearTimeout(autoNextTimer);
+
+    const qIndex = activeQueue[currentIndex];
+    const data = sessionQuiz[qIndex];
+    const hasAnswered = userAnswers.hasOwnProperty(qIndex);
+
+    elQuestion.innerText = data.q;
+    elAnswers.innerHTML = "";
+
+    if (isPhaseSkipped) {
+        document.getElementById("phase-display").style.display = "inline-block";
+        elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
+    } else {
+        document.getElementById("phase-display").style.display = "none";
+        elCounter.innerText = `Câu ${currentIndex + 1}/${activeQueue.length}`;
+    }
+
+    const labels = ["A", "B", "C", "D"];
+    data.a.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<b>${labels[idx]}.</b> ${ans}`;
+        
+        if (hasAnswered) {
+            btn.disabled = true;
+            const userPick = userAnswers[qIndex];
+            if (idx === data.c) btn.classList.add("correct");
+            if (idx === userPick && userPick !== data.c) btn.classList.add("wrong");
+            if (idx === userPick) btn.classList.add("user-selected");
+        } else {
+            btn.onclick = () => checkAnswer(qIndex, idx, btn);
+        }
+        elAnswers.appendChild(btn);
+    });
+
+    elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
+    
+    if (hasAnswered) {
+        elBtnSkip.style.display = "none";
+        elBtnNext.style.display = "block";
+    } else {
+        elBtnSkip.style.display = "block";
+        elBtnNext.style.display = "none";
+    }
+
+    updateStats();
+}
+
+function checkAnswer(qIndex, selectedIdx, btnElement) {
+    const data = sessionQuiz[qIndex];
+    const isCorrect = selectedIdx === data.c;
+    userAnswers[qIndex] = selectedIdx;
+
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        
+        if (idx === data.c) {
+            btn.classList.add("correct");
+            if (!isCorrect) {
+                btn.classList.add("flash-correct");
+            }
+        }
+        
+        if (idx === selectedIdx && !isCorrect) {
+            btn.classList.add("wrong");
+        }
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+        triggerMiniConfetti(btnElement);
+    } else {
+        combo = 0; wrongStreak++;
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+
+    autoNextTimer = setTimeout(() => {
+        nextQuestion();
+    }, 1200);
+}
+
+function nextQuestion() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    clearTimeout(autoNextTimer);
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        if(confirm(`Bạn đã bỏ qua ${skippedQueue.length} câu. Bạn có muốn làm lại ngay bây giờ không?`)) {
+             isPhaseSkipped = true;
+            activeQueue = [...skippedQueue];
+            skippedQueue = [];
+            currentIndex = 0;
+            loadQuestion();
+        } else {
+            finishGame();
+        }
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const pct = ((currentIndex + 1) / activeQueue.length) * 100;
+    elProgressBar.style.width = `${pct}%`;
+    elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
+}
+
+function finishGame() {
+    clearInterval(timerInterval);
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+    elControlPopup.style.display = "none"; 
+    
+    elResultTime.innerText = `Thời gian làm bài: ${elTimer.innerText}`;
+
+    const total = sessionTotal; 
+    const correctCount = score;
+    const wrongCount = total - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, var(--border-color) 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+
+    elReviewContainer.innerHTML = "";
+    let hasWrong = false;
+
+    sessionQuiz.forEach((item, qIndex) => {
+        const uAns = userAnswers[qIndex];
+        const correctAns = item.c;
+        if (uAns !== undefined && uAns !== correctAns) {
+            hasWrong = true;
+            const labels = ["A", "B", "C", "D"];
+            
+            const div = document.createElement("div");
+            div.className = "review-item";
+            div.innerHTML = `
+                <div class="review-question">Câu ${qIndex + 1}: ${item.q}</div>
+                <div class="review-detail">
+                    <div style="color: var(--danger)">❌ Bạn chọn: ${labels[uAns]}. ${item.a[uAns]}</div>
+                    <div style="color: var(--success)">✅ Đáp án đúng: ${labels[correctAns]}. ${item.a[correctAns]}</div>
+                </div>
+            `;
+            div.onclick = function() {
+                this.classList.toggle("active");
+            }
+            elReviewContainer.appendChild(div);
+        }
+    });
+
+    if (!hasWrong) {
+        elReviewContainer.innerHTML = `<p style="color: var(--success); font-weight: bold;">Xuất sắc! Bạn không sai câu nào! 🎉</p>`;
+        elBtnRetryWrong.style.display = "none";
+    } else {
+        elBtnRetryWrong.style.display = "block";
+    }
+}
+
+function retryWrongAnswers() {
+    initGame(true);
+}
+
+initGame(false);
+</script>
+</body>
+</html>
