@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pháp luật đại cương - Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    /* --- CSS BIẾN ĐỔI GIAO DIỆN --- */
+    :root {
+        --primary: #d32f2f;
+        --secondary: #64748b;
+        --success: #16a34a;
+        --danger: #dc2626;
+        
+        --bg-color: #fef2f2;
+        --card-bg: #ffffff;
+        --text-main: #0f172a;
+        --text-sub: #475569;
+        --border-color: #e2e8f0;
+        --btn-bg: #f1f5f9;
+        --shadow: rgba(0,0,0,0.1);
+    }
+
+    body.dark-mode {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-main: #e2e8f0;
+        --text-sub: #94a3b8;
+        --border-color: #333333;
+        --btn-bg: #2d2d2d;
+        --shadow: rgba(0,0,0,0.5);
+        --danger: #ef5350; 
+        --success: #66bb6a; 
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+    /* HEADER */
+    .header {
+        padding: 10px 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px var(--shadow); z-index: 10; flex-shrink: 0; font-size: 0.95rem;
+    }
+    .header-item { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+    #timer-display { background: rgba(0,0,0,0.25); padding: 4px 12px; border-radius: 12px; font-family: monospace; font-size: 1.1rem; letter-spacing: 0.5px; }
+    #timer-display.danger { background: #ef4444; animation: pulse 1s infinite; }
+    .combo-badge { background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; }
+    
+    .progress-container { width: 100%; height: 4px; background: var(--border-color); flex-shrink: 0; }
+    .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+    /* CONTAINER */
+    .container { width: 100%; max-width: 100%; background: var(--card-bg); display: flex; flex-direction: column; flex-grow: 1; position: relative; overflow: hidden; transition: background 0.3s; }
+
+    /* VÙNG NỘI DUNG */
+    .quiz-body { padding: 20px 15px; overflow-y: auto; flex-grow: 1; padding-bottom: 120px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+
+    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px; font-weight: bold; width: fit-content; }
+    .question-text { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; line-height: 1.5; color: var(--text-main); word-wrap: break-word; }
+    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+
+    .option-btn { 
+        width: 100%; text-align: left; padding: 15px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 14px; font-size: 1rem; font-weight: 600; color: var(--text-sub); cursor: pointer; position: relative; line-height: 1.4; word-wrap: break-word; transition: all 0.2s; 
+    }
+    .option-btn:active { background: var(--btn-bg); transform: scale(0.98); }
+    
+    .option-btn.correct { border-color: var(--success); background: rgba(22, 163, 74, 0.1); color: var(--success); }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    
+    .option-btn.wrong { border-color: var(--danger); background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    .option-btn.user-selected { border-width: 2px; }
+
+    /* HIỆU ỨNG NHÁY XANH ĐÁP ÁN ĐÚNG KHI CHỌN SAI */
+    @keyframes flashGreen {
+        0%, 100% { background: rgba(22, 163, 74, 0.1); border-color: var(--success); transform: scale(1); }
+        50% { background: rgba(22, 163, 74, 0.35); border-color: #15803d; transform: scale(1.02); }
+    }
+    .flash-correct { animation: flashGreen 1s ease; }
+
+    /* POPUP MENU */
+    .control-popup {
+        position: fixed; bottom: 50px; right: 15px; background: var(--card-bg); backdrop-filter: blur(10px); padding: 8px; border-radius: 30px; box-shadow: 0 5px 25px var(--shadow); display: flex; flex-direction: row; gap: 10px; z-index: 100; border: 1px solid var(--border-color); touch-action: none; 
+    }
+    
+    .btn { width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: transform 0.1s; flex-shrink: 0; background: var(--btn-bg); color: var(--text-sub); }
+    .btn:active { transform: scale(0.9); }
+    .btn-skip { background: #fff7ed; color: #d97706; }
+    body.dark-mode .btn-skip { background: #451a03; color: #fbbf24; }
+    .btn-next { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3); }
+    
+    .btn-move { width: 32px; height: 32px; font-size: 1.1rem; position: absolute; top: -15px; right: 5px; border: 2px solid var(--card-bg); background: var(--secondary); color: white; z-index: 101; cursor: grab; }
+    .btn-move:active { cursor: grabbing; }
+    .btn-theme { width: 32px; height: 32px; font-size: 1rem; position: absolute; top: -15px; left: 5px; border: 2px solid var(--card-bg); background: #333; color: #ffd700; z-index: 101; }
+
+    /* RESULT SCREEN */
+    .result-screen { text-align: center; padding: 30px 20px; display: none; overflow-y: auto; height: 100%; background: var(--card-bg); z-index: 50; }
+    .score-circle { width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(var(--success) 0%, var(--border-color) 0%); margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--text-main); position: relative; }
+    .score-circle::before { content: ''; position: absolute; width: 120px; height: 120px; background: var(--card-bg); border-radius: 50%; transition: background 0.3s; }
+    .score-text { position: relative; z-index: 2; }
+
+    .review-box { text-align: left; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+    .review-item { background: rgba(220, 38, 38, 0.05); border: 1px solid var(--danger); border-radius: 12px; padding: 15px; margin-bottom: 12px; cursor: pointer; }
+    .review-question { font-weight: bold; font-size: 1rem; margin-bottom: 8px; color: var(--text-main); }
+    .review-detail { display: none; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 0.95rem; }
+    .review-item.active .review-detail { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-item" id="timer-display">00:00</div>
+    <div class="header-item" id="question-counter">1/100</div>
+    <div class="combo-badge" id="combo-display">🔥 0</div>
+</div>
+<div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<div class="container">
+    <div id="quiz-interface" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="quiz-body">
+            <div id="phase-display" class="phase-badge">LÀM LẠI CÂU BỎ QUA</div>
+            <h2 class="question-text" id="question">Đang tải...</h2>
+            <div class="options-grid" id="answers"></div>
+        </div>
+
+        <div class="control-popup" id="control-popup">
+            <button class="btn btn-theme" onclick="toggleTheme()">🌗</button>
+            <button class="btn btn-move" id="drag-handle">⇄</button>
+            
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">⬅</button>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">⤵</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">➜</button>
+        </div>
+    </div>
+
+    <div id="result-interface" class="result-screen">
+        <h2>🎉 Hoàn thành!</h2>
+        <div style="font-size: 1rem; color: var(--text-sub); margin-bottom: 20px;" id="result-time">Thời gian: 00:00</div>
+        
+        <div class="score-circle" id="score-circle">
+            <span class="score-text" id="final-score">0%</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.3rem; color:var(--success)">0</span></div>
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.3rem; color:var(--danger)">0</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction: column; gap:10px; margin-bottom: 30px;">
+             <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
+                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="location.reload()">🔄 Làm lại tất cả</button>
+             </div>
+             <button id="btn-retry-wrong" class="btn" style="background:#dc2626; color:white; width:100%; border-radius:15px; display:none; font-size: 1rem;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
+        </div>
+
+        <h3 style="text-align: left; color: var(--danger); border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Xem lại câu sai 👇</h3>
+        <div id="review-container" class="review-box">
+            <p style="color: var(--text-sub); font-style: italic;">Bạn làm đúng hết rồi! Giỏi quá! 👏</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- HIỆU ỨNG NỔ NHẸ KHI CHỌN ĐÁP ÁN ĐÚNG ---
+function triggerMiniConfetti(btn) {
+    const rect = btn.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const colors = ['#f44336', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0'];
+    
+    for (let i = 0; i < 25; i++) {
+        const particle = document.createElement('div');
+        particle.style.position = 'fixed';
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+        particle.style.width = '7px';
+        particle.style.height = '7px';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '9999';
+        document.body.appendChild(particle);
+
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 50 + 20; 
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity - 20; 
+
+        particle.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+        ], {
+            duration: 600 + Math.random() * 300,
+            easing: 'cubic-bezier(0, .9, .57, 1)'
+        }).onfinish = () => particle.remove();
+    }
+}
+
+// --- DRAGGABLE MENU LOGIC ---
+const popup = document.getElementById('control-popup');
+const handle = document.getElementById('drag-handle');
+let isDragging = false, offsetX, offsetY;
+
+handle.addEventListener('mousedown', startDrag);
+handle.addEventListener('touchstart', startDrag, {passive: false});
+
+function startDrag(e) {
+    e.preventDefault();
+    isDragging = true;
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+    const rect = popup.getBoundingClientRect();
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, {passive: false});
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+}
+
+function onDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+
+    let newLeft = clientX - offsetX;
+    let newTop = clientY - offsetY;
+
+    const maxX = window.innerWidth - popup.offsetWidth;
+    const maxY = window.innerHeight - popup.offsetHeight;
+
+    newLeft = Math.max(0, Math.min(newLeft, maxX));
+    newTop = Math.max(0, Math.min(newTop, maxY));
+
+    popup.style.left = newLeft + 'px';
+    popup.style.top = newTop + 'px';
+    popup.style.right = 'auto'; 
+    popup.style.bottom = 'auto'; 
+}
+
+function stopDrag() {
+    isDragging = false;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+}
+
+// --- DARK MODE ---
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+
+// --- DATA 100 CÂU HỎI TRÍCH XUẤT TỪ FILE PHÁP LUẬT ĐẠI CƯƠNG ---
+const originalQuiz = [
+  {q: "Câu 1: Theo Lý luận Mác-Lê Nin về Nhà nước và Pháp luật, Nhà nước và Pháp luật được hình thành từ những tiền đề nào?", a: ["Nhà nước hình thành từ kết quả của sự thỏa thuận giữa các cá nhân, con người với nhau.", "Nhà nước hình thành từ kết quả của các nhân tố chính trị-quân sự và phòng thủ cộng đồng.", "Nhà nước hình thành từ các tiền đề nhất định, đó là sự phát triển của kinh tế và xã hội.", "Nhà nước hình thành từ các tiền đề nhất định, đó là sự phát triển của gia đình."], c: 2},
+  {q: "Câu 2: Theo Lý luận Mác-Lê Nin về Nhà nước và Pháp luật, các tiền đề kinh tế dẫn đến sự hình thành Nhà nước và Pháp luật được hiểu như thế nào?", a: ["Đó là ba lần phân công lớn về lao động xã hội làm cho lao động xã hội ngày càng hợp lý hơn, công cụ lao động được cải tiến hơn.", "Đó là ba lần phân công lớn về lao động xã hội: Trồng trọt tách khỏi chăn nuôi; Thủ công nghiệp tách khỏi nông nghiệp; Buôn bán phát triển, thương nghiệp xuất hiện.", "Đó là sự cải tiến tốt hơn các công cụ lao động, sản phẩm xã hội ngày càng nhiều hơn, chế độ tư hữu đối với tài sản xuất hiện.", "Đó là sự phân công lao động ngày càng hợp lý hơn, công cụ lao động được cải tiến hơn, sản phẩm xã hội ngày càng nhiều hơn, chế độ tư hữu xuất hiện."], c: 3},
+  {q: "Câu 3: Theo Lý luận Mác-Lê Nin về Nhà nước và Pháp luật, các tiền đề xã hội dẫn đến sự hình thành Nhà nước và Pháp luật được hiểu như thế nào?", a: ["Đó là sự phân chia xã hội thành các giai cấp đối kháng, mâu thuẫn giai cấp ngày càng tăng đến mức không thể điều hòa được.", "Đó là quá trình nhiều thị tộc hợp thành bộ tộc, nhiều bộ tộc hợp thành bộ lạc, người giàu có, chiếm nhiều tư liệu sản xuất trở thành giai cấp thống trị.", "Đó là quá trình nhiều thị tộc hợp thành bộ tộc, nhiều bộ tộc hợp thành bộ lạc, quyền lực trong xã hội trở nên phức tạp, do những người giàu có chiếm giữ.", "Đó là sự phân chia xã hội thành các giai cấp đối kháng, xuất hiện nhiều tổ chức xã hội của các giai cấp khác nhau, xuất hiện đấu tranh giai cấp."], c: 0},
+  {q: "Câu 4: Theo Lý luận Mác-Lê Nin về Nhà nước và Pháp luật, để nhận diện Nhà nước thì phải dựa vào các dấu hiệu cơ bản nào?", a: ["Một lãnh thổ được xác định; một số dân cư thường trực; một chính phủ/Nhà nước; khả năng thực hiện quyền quan hệ với các quốc gia khác.", "Quyền lực công khai; Hệ thống thuế; Phân chia dân cư theo lãnh thổ; Độc quyền về áp dụng hợp pháp sức mạnh cưỡng chế.", "Dấu hiệu về lãnh thổ; Dấu hiệu về phân bố dân cư theo lãnh thổ; Dấu hiệu về bộ máy nhà nước và tiền thuế do dân cư đóng góp để nuôi bộ máy đó.", "Dấu hiệu về lãnh thổ; Dấu hiệu về phân bố dân cư theo lãnh thổ; Dấu hiệu về quyền lực công khai."], c: 1},
+  {q: "Câu 5: Theo Lý luận Mác-Lê Nin về Nhà nước và Pháp luật, những luận điểm lớn của học thuyết Mác-Lênin về bản chất của Nhà nước là gì?", a: ["Nhà nước là sản phẩm của sự phát triển kinh tế-xã hội của xã hội loài người khi chưa có giai cấp.", "Nhà nước là công cụ thống trị của giai cấp này đối với giai cấp khác; Nhà nước là bộ máy an sinh của giai cấp thống trị áp đặt lên các giai cấp bị trị.", "Nhà nước gắn liền với các hình thái kinh tế xã hội có giai cấp; Nhà nước tự tiêu vong khi xã hội có sự phân chia giai cấp.", "Nhà nước là sản phẩm của sự phát triển kinh tế-xã hội của xã hội loài người đã phân chia ra thành giai cấp."], c: 3},
+  {q: "Câu 6: Theo Lý luận Mác-Lê Nin về Nhà nước và Pháp luật, Hình thức Nhà nước được hiểu là gì?", a: ["Là phương thức tổ chức quyền lực chính trị tuỳ theo đặc điểm của mỗi quốc gia, dân tộc, bao gồm hình thức chính thể, hình thức cấu trúc và chế độ chính trị.", "Là cách tổ chức thực hiện quyền lực chính trị cụ thể của mỗi quốc gia, mỗi dân tộc, bao gồm hình thức chính thể, hình thức cấu trúc và chế độ chính trị.", "Là phương thức thực hiện quyền lực chính trị cụ thể tuỳ theo đặc điểm của mỗi quốc gia, bao gồm hình thức chính thể, hình thức cấu trúc và chế độ chính trị.", "Là cách thức tổ chức quyền lực chính trị trong lịch sử, tuỳ theo đặc điểm của mỗi dân tộc, bao gồm hình thức chính thể, hình thức cấu trúc và chế độ chính trị."], c: 0},
+  {q: "Câu 7: Theo Lý luận Mác-Lê Nin về Nhà nước và Pháp luật, Hình thức chính thể được hiểu là gì?", a: ["Là phương thức tổ chức thực hiện quyền lực nhà nước cao nhất, trình tự thành lập các cơ quan quyền lực cao nhất đó và mối quan hệ qua lại giữa chúng.", "Là phương thức tổ chức quyền lực nhà nước cao nhất, trình tự thành lập các cơ quan quyền lực đó và mối quan hệ qua lại giữa các cơ quan đó với dân cư.", "Là cách tổ chức thực hiện quyền lực nhà nước cao nhất, mối quan hệ qua lại giữa các cơ quan đó với nhau và quan hệ giữa các cơ quan đó với dân cư.", "Là phương thức thực hiện quyền lực nhà nước, trình tự thành lập các cơ quan nhà nước, quan hệ qua lại giữa các cơ quan nhà nước với nhau và với dân cư."], c: 1},
+  {q: "Câu 8: Theo Lý luận Nhà nước và Pháp luật, Hình thức cấu trúc Nhà nước được hiểu là gì?", a: ["Là phương thức tổ chức Nhà nước theo đơn vị hành chính-chính trị, lãnh thổ và xác lập quan hệ giữa cơ quan nhà nước ở Trung ương với nhau.", "Là cách thức tổ chức Nhà nước theo các đơn vị hành chính- lãnh thổ và cách xác lập quan hệ giữa Trung ương với cơ quan nhà nước ở các đơn vị ấy.", "Là phương thức tổ chức Nhà nước theo đơn vị hành chính-chính trị, lãnh thổ và cách thức xác lập quan hệ giữa các cơ quan nhà nước với nhau.", "Là cách thức tổ chức Nhà nước theo các đơn vị hành chính- lãnh thổ và xác lập quan hệ giữa các cơ quan nhà nước ở các đơn vị ấy với nhau."], c: 2},
+  {q: "Câu 9: Theo Lý luận Nhà nước và Pháp luật, Chế độ chính trị được hiểu là gì?", a: ["Là hệ thống phương thức, biện pháp, phương tiện dân chủ hoặc phản dân chủ được giai cấp thống trị sử dụng để thực hiện quyền lực chính trị.", "Là hệ thống phương tiện, biện pháp dân chủ hoặc phản dân chủ được các nước dùng trong những trường hợp nhất định để thực hiện quyền lực chính trị.", "Là hệ thống phương thức, biện pháp, phương tiện dân chủ hoặc phản dân chủ cần thiết được dùng để thực hiện quyền lực chính trị.", "Là hệ thống phương pháp, phương thức, biện pháp, phương tiện dân chủ hoặc phản dân chủ được dùng để thực hiện quyền lực chính trị."], c: 3},
+  {q: "Câu 10: Theo Hiến pháp nước ta năm 2013, Quốc hội có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan lập pháp, cơ quan quyền lực cao nhất, cơ quan giám sát tối cao đối với toàn bộ hoạt động của Nhà nước, cơ quan quyết định những chính sách cơ bản của Nhà nước.", "Là cơ quan đại biểu cao nhất, cơ quan quyền lực nhà nước cao nhất, thực hiện quyền lập hiến, lập pháp, quyết định các vấn đề quan trọng của đất nước, giám sát tối cao đối với hoạt động của Nhà nước.", "Là cơ quan quyền lực cao nhất của quốc gia, cơ quan duy nhất có quyền lập hiến, lập pháp, cơ quan quyết định những chính sách cơ bản về đối nội, đối ngoại, thực hiện giám sát tối cao đối với hoạt động của Nhà nước.", "Là cơ quan quyền lực nhà nước cao nhất của Việt Nam, thực hiện quyền lập hiến, lập pháp, quyết định các vấn đề của đất nước, giám sát tối cao đối với Nhà nước."], c: 1},
+  {q: "Câu 11: Theo Hiến pháp nước ta năm 2013, Chủ tịch nước có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là người đứng đầu Nhà nước, chịu trách nhiệm và báo cáo công tác trước Quốc hội và Ủy ban thường vụ Quốc hội.", "Là người đứng đầu Nhà nước, chịu trách nhiệm công bố Hiến pháp, luật, pháp lệnh, đề nghị Quốc hội bầu Thủ tướng Chính phủ.", "Là người đứng đầu Nhà nước, chịu trách nhiệm đề nghị Quốc hội bầu Chánh án Toà án tối cao, Viện trưởng Viện kiểm sát tối cao.", "Là người đứng đầu Nhà nước, thay mặt nước Cộng hoà xã hội chủ nghĩa Việt Nam về đối nội và đối ngoại."], c: 3},
+  {q: "Câu 12: Theo Hiến pháp nước ta năm 2013 và Luật tổ chức Chính phủ năm 2015, Chính phủ có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan hành chính cao nhất, cơ quan chỉ huy toàn thể bộ máy nhà nước nước Cộng hoà xã hội chủ nghĩa Việt Nam từ Trung ương đến địa phương.", "Là cơ quan chấp hành của Quốc hội, cơ quan điều hành toàn thể bộ máy nhà nước nước Cộng hoà xã hội chủ nghĩa Việt Nam.", "Là cơ quan hành chính nhà nước cao nhất của nước Cộng hoà xã hội chủ nghĩa Việt Nam, thực hiện quyền hành pháp, là cơ quan chấp hành của Quốc hội.", "Là cơ quan hành chính cao nhất của nước Cộng hoà xã hội chủ nghĩa Việt Nam, cơ quan chấp hành của Quốc hội, đứng đầu hệ thống hành chính nhà nước."], c: 2},
+  {q: "Câu 13: Theo Hiến pháp nước ta năm 2013 và Luật tổ chức Viện kiểm sát nhân dân năm 2014, Viện Kiểm sát nhân dân có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan kiểm sát các hoạt động tư pháp, cơ quan có quyền công tố.", "Là cơ quan có quyền công tố, cơ quan kiểm sát việc tuân theo pháp luật.", "Là cơ quan thực hiện việc kiểm sát toàn bộ hoạt động của xã hội.", "Là cơ quan thực hành quyền công tố, kiểm sát hoạt động tư pháp."], c: 3},
+  {q: "Câu 14: Theo Hiến pháp nước ta năm 2013 và Luật tổ chức Tòa án nhân dân năm 2014, Tòa án nhân dân có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan xét xử của nước Cộng hoà xã hội chủ nghĩa Việt Nam, thực hiện quyền tư pháp.", "Là cơ quan xét xử. bảo vệ công lý, bảo vệ quyền con người, bảo vệ chế độ xã hội chủ nghĩa, Là cơ quan bảo vệ lợi ích của Nhà nước, quyền và lợi ích hợp pháp của tổ chức, cá nhân.", "Là cơ quan thực hiện quyền tư pháp, bảo vệ công lý, bảo vệ quyền con người, quyền công dân.", "Tất cả các đáp án đều đúng."], c: 0},
+  {q: "Câu 15: Theo Hiến pháp nước ta năm 2013 và Luật Tổ chức Chính quyền địa phương năm 2015, Chính quyền địa phương có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan được tổ chức ở các đơn vị hành chính, quyết định các vấn đề của địa phương do luật định.", "Là cơ quan tổ chức, bảo đảm thi hành Hiến pháp, pháp luật tại địa phương; quyết định các vấn đề do Luật định cho địa phương.", "Là cơ quan được tổ chức ở các đơn vị hành chính, bảo đảm việc thi hành Hiến pháp và pháp luật tại địa phương.", "Là cơ quan được tổ chức ở địa phương để bảo đảm thi hành Hiến pháp, pháp luật, chịu sự kiểm tra, giám sát của cơ quan nhà nước cấp trên."], c: 1},
+  {q: "Câu 16: Theo Hiến pháp nước ta năm 2013 và Luật Tổ chức Chính quyền địa phương năm 2015, Hội đồng nhân dân có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan do Nhân dân địa phương bầu ra, quyết định các vấn đề của địa phương, giám sát việc tuân theo Hiến pháp, pháp luật ở địa phương.", "Là cơ quan quyền lực nhà nước ở địa phương, do Nhân dân địa phương bầu ra, chịu trách nhiệm trước Nhân dân địa phương và cơ quan nhà nước cấp trên.", "Là cơ quan quyền lực nhà nước ở địa phương, do Nhân dân địa phương bầu ra, quyết định các vấn đề của địa phương do Luật định, giám sát việc tuân theo Hiến pháp, pháp luật và việc thực hiện nghị quyết của Hội đồng nhân dân ở địa phương.", "Là cơ quan quyền lực nhà nước ở địa phương, đại diện cho quyền làm chủ của Nhân dân, bảo đảm thi hành Hiến pháp, pháp luật tại địa phương."], c: 2},
+  {q: "Câu 17: Theo Hiến pháp nước ta năm 2013 và Luật Tổ chức Chính quyền địa phương năm 2015, Uỷ ban nhân dân có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan chấp hành của Hội đồng nhân dân, cơ quan hành chính ở địa phương, hoạt động theo nghị quyết của Hội đồng nhân dân.", "Là cơ quan chấp hành của Hội đồng nhân dân, cơ quan hành chính ở địa phương, chịu trách nhiệm trước Hội đồng nhân dân và cơ quan nhà nước cấp trên.", "Là cơ quan chấp hành của Hội đồng nhân dân, cơ quan hành chính ở địa phương, hoạt động theo sự chỉ đạo của cơ quan hành chính nhà nước cấp trên.", "Là cơ quan chấp hành của Hội đồng nhân dân, cơ quan hành chính nhà nước ở địa phương, tổ chức thi hành Hiến pháp, pháp luật, văn bản pháp lý của cấp trên."], c: 3},
+  {q: "Câu 18: Theo Hiến pháp nước ta năm 2013 và Luật bầu cử đại biểu Quốc hội và đại biểu Hội đồng nhân dân năm 2015, Hội đồng bầu cử quốc gia có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan do Quốc hội thành lập, tổ chức bầu cử đại biểu Quốc hội; chỉ đạo và hướng dẫn công tác bầu cử đại biểu Hội đồng nhân dân các cấp.", "Là cơ quan do Quốc hội thành lập, chịu trách nhiệm chỉ đạo và hướng dẫn công tác bầu cử đại biểu Hội đồng nhân dân các cấp.", "Là cơ quan do Quốc hội thành lập, chịu trách nhiệm tổ chức bầu cử đại biểu Quốc hội theo quy định của pháp luật.", "Là cơ quan do Quốc hội thành lập, gồm Chủ tịch, các Phó Chủ tịch và các Ủy viên, chịu trách nhiệm tổ chức bầu cử đại biểu Quốc hội."], c: 0},
+  {q: "Câu 19: Theo Hiến pháp nước ta năm 2013 và Luật Kiểm toán nhà nước năm 2015, Kiểm toán nhà nước có vị trí, vai trò, chức năng gì trong bộ máy nhà nước Việt Nam?", a: ["Là cơ quan do Quốc hội thành lập, thực hiện kiểm toán việc quản lý, sử dụng tài sản của Nhà nước.", "Là cơ quan do Quốc hội thành lập, hoạt động độc lập, thực hiện kiểm toán việc quản lý, sử dụng tài chính, tài sản công.", "Là cơ quan do Quốc hội thành lập, hoạt động độc lập, thực hiện kiểm toán việc sử dụng tài chính, tài sản công.", "Là cơ quan do Quốc hội thành lập, hoạt động độc lập, thực hiện kiểm toán tài sản của Nhà nước."], c: 2},
+  {q: "Câu 20: Theo Lý luận Nhà nước và Pháp luật, những luận điểm lớn của học thuyết Mác-Lênin về Pháp luật là gì?", a: ["Pháp luật tồn tại gắn liền với các hình thái kinh tế xã hội có giai cấp; Pháp luật tự tiêu vong khi Nhà nước có sự phân chia giai cấp.", "Pháp luật tồn tại gắn liền với các hình thái kinh tế xã hội chưa có giai cấp; Pháp luật tự tiêu vong khi giai cấp, Nhà nước không còn nữa.", "Pháp luật tồn tại gắn liền với các hình thái kinh tế xã hội chưa có giai cấp; Pháp luật tự tiêu vong khi giai cấp thành lập ra Nhà nước.", "Pháp luật tồn tại gắn liền với các hình thái kinh tế xã hội có giai cấp; Pháp luật tự tiêu vong khi giai cấp, Nhà nước không còn nữa."], c: 3},
+  {q: "Câu 21: Theo Lý luận Mác-Lê Nin về Nhà nước và Pháp luật, để nhận diện Pháp luật thì phải dựa vào các dấu hiệu cơ bản nào?", a: ["Tính hình mẫu quy tắc xử sự cá biệt; xác định chặt chẽ về mặt hình thức; được bảo đảm thực hiện bằng sức mạnh cưỡng chế của Nhà nước; khách quan và ổn định; Tính thống nhất, có hệ thống.", "Tính hình mẫu quy tắc xử sự chung; xác định chặt chẽ về mặt hình thức; được bảo đảm thực hiện bằng sức mạnh cưỡng chế của nhân dân; khách quan và ổn định; Tính thống nhất, có hệ thống.", "Tính hình mẫu quy tắc xử sự chung; xác định chặt chẽ về mặt hình thức; được bảo đảm thực hiện bằng sức mạnh cưỡng chế của Nhà nước; chủ quan và ổn định; Tính thống nhất, có hệ thống.", "Tính hình mẫu quy tắc xử sự chung; xác định chặt chẽ về mặt hình thức; được bảo đảm thực hiện bằng sức mạnh cưỡng chế của Nhà nước; khách quan và ổn định; Tính thống nhất, có hệ thống."], c: 3},
+  {q: "Câu 22: Theo Lý luận Nhà nước và Pháp luật, Hệ thống pháp luật được hiểu là gì?", a: ["Là cấu trúc bên trong của pháp luật biểu hiện sự liên kết và thống nhất nội tại giữa các bộ phận cấu thành khác nhau của pháp luật.", "Là cấu trúc bên trong của pháp luật, bao gồm quy phạm pháp luật, phạm trù pháp luật, chế định pháp luật, tiểu ngành luật và các ngành luật.", "Là cấu trúc bên trong của pháp luật biểu hiện sự liên kết thống nhất nội tại giữa quy phạm pháp luật, phạm trù pháp luật, chế định pháp luật và ngành luật.", "Là cấu trúc bên trong của pháp luật biểu hiện sự thống nhất giữa các bộ phận như quy phạm pháp luật, phạm trù pháp luật, chế định pháp luật, ngành luật."], c: 0},
+  {q: "Câu 23: Theo Lý luận Nhà nước và Pháp luật, các tiêu chí cơ bản nào thường được dùng để xác định/đánh giá mức độ hoàn thiện của hệ thống pháp luật?", a: ["Tính toàn dân; Tính thống nhất và đồng bộ của hệ thống pháp luật; Tính khả thi và phù hợp thực tiễn; Tính hiệu quả của hệ thống pháp luật; Tính hoàn thiện về kỹ thuật lập pháp và ngôn ngữ pháp lý.", "Tính toàn diện; Tính thống nhất và đồng bộ của hệ thống pháp luật; Tính khả thi và phù hợp thực tiễn; Tính hiệu quả của hệ thống pháp luật; Tính hoàn thiện về kỹ thuật lập pháp và ngôn ngữ pháp lý.", "Tính toàn diện; Tính thống nhất và đồng bộ của hệ thống pháp luật; Tính khả thi và phù hợp lý luận; Tính hiệu quả của hệ thống pháp luật; Tính hoàn thiện về kỹ thuật tư pháp và ngôn ngữ pháp lý.", "Tính toàn diện; Tính thống nhất và cục bộ của hệ thống pháp luật; Tính khả thi và phù hợp thực tiễn; Tính hiệu quả của hệ thống pháp luật; Tính hoàn thiện về kỹ thuật lập pháp và ngôn ngữ pháp lý."], c: 1},
+  {q: "Câu 24: Theo Lý luận Nhà nước và Pháp luật, Thi hành pháp luật được hiểu là gì?", a: ["Là hình thức cơ bản hiện thực hóa pháp luật liên quan đến việc chủ thể pháp luật thực hiện các hành vi tích cực được luật định nhằm thực thi nghĩa vụ pháp lý.", "Là hình thức hiện thực hóa pháp luật, theo đó chủ thể pháp luật tích cực thực thi nghĩa vụ pháp lý và giữ vững kỷ cương Nhà nước.", "Là việc chủ thể pháp luật thực hiện các hành vi tích cực được luật định nhằm hiện thực hóa nghĩa vụ pháp lý và giữ vững kỷ cương Nhà nước.", "Là việc chủ thể pháp luật thực hiện các hành vi tích cực được luật định nhằm thực thi nghĩa vụ pháp lý và giữ vững kỷ cương Nhà nước."], c: 3},
+  {q: "Câu 25: Theo Lý luận Nhà nước và Pháp luật, Áp dụng pháp luật được hiểu là gì?", a: ["Là hoạt động công quyền của cơ quan, cá nhân có thẩm quyền nhằm chuẩn bị, thông qua quyết định cá biệt về vụ việc pháp lý trên cơ sở sự kiện pháp lý và quy phạm pháp luật cụ thể.", "Là hoạt động công quyền của cơ quan có thẩm quyền nhằm thông qua quyết định cá biệt về vụ việc pháp lý trên cơ sở các quy phạm pháp luật cụ thể.", "Là hoạt động công quyền của cá nhân có thẩm quyền nhằm thông qua quyết định cá biệt về vụ việc pháp lý trên cơ sở các sự kiện pháp lý.", "Là hoạt động của cơ quan, cá nhân có thẩm quyền nhằm chuẩn bị và thông qua một quyết định cá biệt về một vụ việc pháp lý cụ thể."], c: 0},
+  {q: "Câu 26: Theo Lý luận Nhà nước và Pháp luật, Quan hệ pháp luật được hiểu là gì?", a: ["Là quan hệ xã hội được pháp luật điều chỉnh và các bên tham gia quan hệ đó có khả năng có những quyền và nghĩa vụ pháp lý theo quy định.", "Là quan hệ xã hội được pháp luật điều chỉnh và bên tham gia quan hệ đó có khả năng thực hiện hành vi của mình để có quyền và nghĩa vụ phù hợp.", "Là quan hệ xã hội được quy phạm pháp luật điều chỉnh và các bên tham gia quan hệ đó có các quyền chủ thể và nghĩa vụ pháp lý phù hợp.", "Là quan hệ xã hội được quy phạm pháp luật điều chỉnh và các bên có quyền chủ thể và nghĩa vụ pháp lý phù hợp được pháp luật bảo vệ."], c: 2},
+  {q: "Câu 27: Theo Lý luận Nhà nước và Pháp luật, Sự kiện pháp lý được hiểu là gì?", a: ["Là sự kiện thực tế khi chúng xuất hiện thì làm phát sinh, thay đổi hoặc chấm dứt một quan hệ pháp luật cụ thể hoặc các quyền và nghĩa vụ pháp lý cụ thể.", "Là các tình huống cụ thể trong thực tế cuộc sống mà pháp luật gắn kết chúng với sự phát sinh hoặc khởi đầu của các hệ quả pháp lý nhất định.", "Là sự kiện thực tế khi chúng xuất hiện làm phát sinh, thay đổi hoặc chấm dứt các quyền và nghĩa vụ pháp lý cụ thể.", "Là các tình huống cụ thể trong cuộc sống mà pháp luật gắn kết chúng với sự phát sinh/ khởi đầu của các hệ quả/hệ lụy pháp lý nhất định."], c: 3},
+  {q: "Câu 28: Theo Lý luận Nhà nước và Pháp luật, Pháp chế được hiểu là gì?", a: ["Là việc các chủ thể pháp luật tuân thủ pháp luật và sự đòi hỏi phải thực hiện pháp luật thống, bảo đảm cho hoạt động của toàn xã hội đồng bộ, văn minh.", "Là sự hiện diện của một hệ thống pháp luật hoàn thiện và sự đòi hỏi phải tôn trọng pháp luật hiện hành, bảo đảm cho hoạt động của toàn xã hội thống nhất.", "Là sự hiện diện của một hệ thống pháp luật hoàn thiện và sự đòi hỏi phải tôn trọng, thực hiện pháp luật hiện hành một cách chính xác, thường xuyên, thống nhất.", "Là việc các chủ thể pháp luật tuân thủ pháp luật nhằm xây dựng một xã hội có trật tự, kỷ cương, bảo đảm cho hoạt động của toàn xã hội thống nhất, đồng bộ."], c: 2},
+  {q: "Câu 29: Theo Lý luận Nhà nước và Pháp luật, Pháp chế cần đáp ứng các yêu cầu cơ bản nào?", a: ["Hệ thống pháp luật hoàn thiện, bảo đảm tính tối cao của Hiến pháp và luật; Pháp chế phải thống nhất; Một số vi phạm pháp luật nghiêm trọng cần được phát hiện và xử lý kịp thời.", "Việc thực hiện và áp dụng pháp luật phải chính xác, triệt để; Các quyền tự do, dân chủ của công dân, tập thể, tổ chức trong xã hội có thể được đáp ứng và bảo vệ.", "Một số khiếu nại, tố cáo của công dân phải được xem xét, giải quyết nhanh chóng, thỏa đáng; Thường xuyên kiểm tra và giám sát việc thực hiện pháp luật.", "Mọi khiếu nại, tố cáo của công dân phải được xem xét, giải quyết nhanh chóng, thỏa đáng; Thường xuyên kiểm tra và giám sát việc thực hiện pháp luật."], c: 3},
+  {q: "Câu 30: Theo Lý luận Nhà nước và Pháp luật, Vi phạm pháp luật được hiểu là gì?", a: ["Là hành vi nguy hiểm cho xã hội của chủ thể có năng lực trách nhiệm pháp lý, có thể gây thiệt hại cho lợi ích của nhà nước, xã hội, cá nhân.", "Là hành vi có thể gây ra nguy hiểm cho xã hội, trái pháp luật của chủ thể có năng lực trách nhiệm pháp lý, có thể gây hại cho lợi ích của xã hội và cá nhân.", "Là hành vi có thể gây ra nguy hiểm cho xã hội, có lỗi của chủ thể có năng lực trách nhiệm pháp lý, có thể gây hại cho lợi ích của nhà nước, xã hội.", "Là hành vi nguy hiểm cho xã hội, trái pháp luật, có lỗi của chủ thể có năng lực trách nhiệm pháp lý, gây hại cho lợi ích của nhà nước, xã hội, cá nhân."], c: 3},
+  {q: "Câu 31: Theo pháp luật dân sự hiện hành của nước ta, Luật Dân sự được hiểu là gì?", a: ["Là các văn bản quy phạm pháp luật, là ngành luật Việt Nam điều chỉnh các quan hệ tài sản, quan hệ nhân thân trong lĩnh vực đời sống dân sự tại Việt Nam.", "Là văn bản quy phạm pháp luật, là ngành luật Việt Nam điều chỉnh các quan hệ tài sản, quan hệ nhân thân trong đời sống kinh tế - xã hội Việt Nam.", "Là văn bản quy phạm pháp luật, là ngành luật Việt Nam điều chỉnh các quan hệ tài sản, quan hệ nhân thân trong lĩnh vực kinh tế tại Việt Nam.", "Là văn bản quy phạm pháp luật, là ngành luật Việt Nam điều chỉnh các quan hệ tài sản, quan hệ nhân thân trong đời sống xã hội Việt Nam."], c: 0},
+  {q: "Câu 32: Theo pháp luật dân sự hiện hành của nước ta, các cá nhân, tổ chức nào được thừa nhận là Chủ thể cơ bản của Luật Dân sự?", a: ["Gồm tất cả các cá nhân từ 18 tuổi trở lên và tất cả các tổ chức được thành lập hợp pháp như doanh nghiệp, trường học, bệnh viện.", "Gồm tất cả các cá nhân từ khi mới sinh ra đến khi chết và các tổ chức là pháp nhân được thành lập, hoạt động theo quy định của pháp luật.", "Gồm tất cả các cá nhân từ 06 tuổi trở lên có năng lực pháp luật dân sự và năng lực hành vi dân sự, pháp nhân, tổ hợp tác và hộ gia đình.", "Gồm tất cả các cá nhân có năng lực hành vi dân sự đầy đủ và các pháp nhân, tổ hợp tác, hộ gia đình thực hiện các giao dịch dân sự nhằm sinh lợi."], c: 1},
+  {q: "Câu 33: Theo pháp luật dân sự hiện hành của nước ta, giao dịch dân sự được hiểu là gì?", a: ["Là hợp đồng hoặc hành vi dân sự đơn phương làm phát sinh các nghĩa vụ được Nhà nước thừa nhận là nghĩa vụ dân sự.", "Là hợp đồng hoặc hành vi đơn phương làm thay đổi hoặc chấm dứt quyền mà pháp luật quy định là quyền dân sự.", "Là hợp đồng hoặc hành vi pháp lý đơn phương làm phát sinh, thay đổi hoặc chấm dứt các quyền và nghĩa vụ dân sự.", "Là hợp đồng hoặc hành vi pháp lý đơn phương làm chấm dứt quyền, nghĩa vụ mà pháp luật quy định là quyền, nghĩa vụ dân sự."], c: 2},
+  {q: "Câu 34: Theo pháp luật dân sự hiện hành của nước ta, giao dịch dân sự có hiệu lực trong những điều kiện nào?", a: ["Có hiệu lực khi có đủ các điều kiện sau: Chủ thể có năng lực pháp luật, năng lực hành vi phù hợp với giao dịch dân sự được xác lập;", "Có hiệu lực khi có đủ các điều kiện sau: Chủ thể hoàn toàn tự nguyện tham gia; hình thức giao dịch dân sự phù hợp với quy định của pháp luật.", "Có hiệu lực khi có đủ các điều kiện sau: Mục đích, nội dung của giao dịch dân sự không vi phạm điều cấm của luật, không trái đạo đức xã hội.", "Có hiệu lực khi có đủ các điều kiện được nêu tại phương án A, B và C nêu trên."], c: 3},
+  {q: "Câu 35: Theo pháp luật dân sự hiện hành của nước ta, hợp đồng được hiểu là gì?", a: ["Là sự thoả thuận giữa các bên về việc xác lập, thay đổi hoặc chấm dứt quyền, nghĩa vụ đối với nhau.", "Là sự thoả thuận giữa các bên về việc xác lập các quyền và nghĩa vụ dân sự đối với nhau theo quy định của pháp luật.", "Là sự thoả thuận giữa các bên về việc thay đổi hoặc chấm dứt các quyền và nghĩa vụ đối với nhau.", "Là sự thoả thuận giữa các bên về việc chấm dứt các quyền và nghĩa vụ đối với nhau theo quy định của pháp luật."], c: 0},
+  {q: "Câu 36: Theo pháp luật dân sự hiện hành của nước ta, tài sản được hiểu là gì ?", a: ["Tài sản có thể là vật hiện hữu, vật hình thành trong tương lai, tiền, giấy tờ có giá, quyền tài sản theo quy định của pháp luật.", "Tài sản có thể là vật, tiền, giấy tờ có giá, quyền tài sản đối với các đối tượng sở hữu trí tuệ và các quyền tài sản khác.", "Tài sản có thể là vật, tiền, giấy tờ có giá, quyền tài sản đối với các đối tượng sở hữu trí tuệ theo quy định của pháp luật.", "Tài sản có thể là vật hiện hữu, vật hình thành trong tương lai, tiền, giấy tờ có giá và quyền tài sản đối với các đối tượng sở hữu trí tuệ."], c: 1},
+  {q: "Câu 37: Theo pháp luật dân sự hiện hành của nước ta, quyền sở hữu được hiểu là gì ?", a: ["Là tổng thể các quyền sử dụng và quyền định đoạt tài sản của các chủ sở hữu theo quy định của pháp luật dân sự.", "Là tổng thể các quyền chiếm hữu và quyền định đoạt tài sản của chủ sở hữu theo quy định của pháp luật.", "Là tổng thể các quyền chiếm hữu, quyền sử dụng và quyền định đoạt tài sản của chủ sở hữu theo quy định của pháp luật.", "Là tổng thể các quyền chiếm hữu và quyền sử dụng tài sản của chủ sở hữu theo quy định của pháp luật dân sự và các luật liên quan."], c: 2},
+  {q: "Câu 38: Theo pháp luật dân sự hiện hành của nước ta, quyền sở hữu được xác lập đối với tài sản trong các trường hợp nào?", a: ["Do lao động, sản xuất, kinh doanh bất hợp pháp; Được chuyển quyền sở hữu theo quy định của pháp luật; Các trường hợp khác do pháp luật quy định.", "Thu hoa lợi, lợi tức; Từ chối thừa kế tài sản; Tạo thành vật mới do sáp nhập, trộn lẫn, chế biến; Chiếm hữu trong các điều kiện do pháp luật quy định.", "Chiếm hữu tài sản không có căn cứ pháp luật không ngay tình, liên tục, công khai phù hợp với quy định của pháp luật.", "Thu hoa lợi, lợi tức; Được thừa kế tài sản; Tạo thành vật mới do sáp nhập, trộn lẫn, chế biến; Chiếm hữu trong các điều kiện do pháp luật quy định."], c: 3},
+  {q: "Câu 39: Theo pháp luật dân sự hiện hành của nước ta, quyền chiếm hữu được hiểu là gì?", a: ["Là quyền của chủ sở hữu hoặc của người không phải là chủ sở hữu nắm giữ, chi phối tài sản một cách trực tiếp hoặc gián tiếp theo quy định của pháp luật.", "Là quyền của chủ sở hữu tài sản được nắm giữ, chi phối tài sản một cách trực tiếp hoặc gián tiếp theo quy định của pháp luật.", "Là quyền của người không phải là chủ sở hữu tài sản nắm được giữ, chi phối tài sản đó một cách trực tiếp hoặc gián tiếp theo quy định của pháp luật.", "Là quyền của chủ sở hữu hoặc của người không phải là chủ sở hữu được nắm giữ tài sản một cách trực tiếp hoặc gián tiếp theo quy định của pháp luật."], c: 0},
+  {q: "Câu 40: Theo pháp luật dân sự hiện hành của nước ta, quyền sử dụng được hiểu là gì?", a: ["Là quyền của chủ sở hữu tài sản hoặc của người không phải là chủ sở hữu được khai thác công dụng, hưởng hoa lợi từ tài sản đó theo quy định của pháp luật.", "Là quyền của chủ sở hữu tài sản hoặc của người không phải là chủ sở hữu khai thác công dụng, hưởng hoa lợi, lợi tức từ tài sản đó theo quy định của pháp luật.", "Là quyền của chủ sở hữu tài sản hoặc của người không phải là chủ sở hữu được khai thác công dụng của tài sản đó theo quy định của pháp luật.", "Là quyền của người không phải là chủ sở hữu tài sản được khai thác công dụng, hưởng hoa lợi, lợi tức từ tài sản đó theo quy định của pháp luật."], c: 1},
+  {q: "Câu 41: Theo pháp luật dân sự hiện hành của nước ta, quyền định đoạt được hiểu là gì?", a: ["Là quyền của chủ sở hữu tài sản được chuyển giao quyền sở hữu tài sản đó cho các cá nhân, tổ chức khác theo quy định của pháp luật.", "Là quyền của chủ sở hữu tài sản hoặc của người không phải là chủ sở hữu được từ bỏ quyền đối với tài sản đó theo quy định của pháp luật.", "Là quyền của chủ sở hữu tài sản được chuyển giao quyền sở hữu tài sản hoặc từ bỏ quyền sở hữu tài sản đó theo quy định của pháp luật.", "Là quyền của chủ sở hữu tài sản hoặc của người không phải là chủ sở hữu được chuyển giao tài sản cho người khác theo quy định của pháp luật."], c: 2},
+  {q: "Câu 42: Theo pháp luật dân sự hiện hành của nước ta, quyền sở hữu chấm dứt trong các trường hợp nào?", a: ["Chủ sở hữu chuyển quyền sở hữu của mình cho người khác nhằm trốn tránh nghĩa vụ với người thứ ba; Chủ sở hữu từ bỏ quyền sở hữu của mình.", "Tài sản bị trưng mua, bị tịch thu; Tài sản bị tiêu huỷ; Tài sản mà người khác đã được xác lập quyền sở hữu trái pháp luật; Các trường hợp khác do luật định.", "Vật bị đánh rơi, bị bỏ quên, gia súc, gia cầm bị thất lạc, vật nuôi dưới nước di chuyển tự nhiên mà người khác chưa được xác lập quyền sở hữu theo pháp luật;", "Chủ sở hữu chuyển quyền sở hữu của mình cho người khác; Chủ sở hữu từ bỏ quyền sở hữu của mình; Tài sản bị xử lý để thực hiện nghĩa vụ của chủ sở hữu."], c: 3},
+  {q: "Câu 43: Theo pháp luật dân sự hiện hành của nước ta, nghĩa vụ được hiểu là gì?", a: ["Là việc mà theo đó, một hoặc nhiều chủ thể phải chuyển giao tài sản, quyền hoặc thực hiện một việc nhất định vì lợi ích của một chủ thể khác.", "Là việc mà theo đó, bên có nghĩa vụ phải chuyển giao vật, trả tiền hoặc không được thực hiện một việc nhất định vì lợi ích của bên có quyền.", "Là việc mà theo đó, nhiều bên có nghĩa vụ phải trả tiền, giấy tờ có giá hoặc không được thực hiện một việc nhất định vì lợi ích của một bên có quyền.", "Là việc mà theo đó, bên có nghĩa vụ phải chuyển giao tài sản, quyền, thực hiện hoặc không được thực hiện một việc nhất định vì lợi ích của bên có quyền."], c: 3},
+  {q: "Câu 44: Theo pháp luật dân sự hiện hành của nước ta, nghĩa vụ phát sinh từ các căn cứ nào?", a: ["Hợp đồng; Hành vi pháp lý đơn phương; Gây thiệt hại do sự kiện bất ngờ.", "Hợp đồng; Hành vi pháp lý đơn phương; Gây thiệt hại do tình thế cấp thiết.", "Hợp đồng; Hành vi pháp lý đơn phương; Gây thiệt hại do phòng vệ chính đáng.", "Hợp đồng; Hành vi pháp lý đơn phương; Gây thiệt hại do hành vi trái pháp luật."], c: 3},
+  {q: "Câu 45: Theo pháp luật dân sự hiện hành của nước ta, các biện pháp nào được pháp luật thừa nhận là biện pháp bảo đảm thực hiện nghĩa vụ?", a: ["Cầm cố tài sản; Thế chấp tài sản; Cầm giữ tài sản; Bảo lưu quyền sở hữu; Đặt cọc; Ký cược; Ký quỹ; Bảo lãnh.", "Cầm cố tài sản; Thế chấp tài sản; Cầm giữ tài sản; Bảo lưu quyền sở hữu; Kê biên tài sản; Cá cược; Tín chấp; Ký quỹ tài sản.", "Cầm cố tài sản; Thế chấp tài sản; Cầm giữ tài sản; Bảo lưu quyền sở hữu; Đặt cọc; Tín chấp; Phong tỏa tài sản; Ký nợ.", "Cầm cố tài sản; Thế chấp tài sản; Cầm giữ tài sản; Bảo lưu quyền sở hữu; Cá cược; Ký nợ; Tín chấp; Phong tỏa tài sản."], c: 0},
+  {q: "Câu 46: Theo pháp luật dân sự hiện hành của nước ta, nguồn nguy hiểm cao độ được hiểu là gì?", a: ["Là phương tiện giao thông vận tải, hệ thống tải điện, nhà máy, vũ khí, chất nổ, chất cháy, chất độc, chất phóng xạ, thú dữ và các nguồn khác do pháp luật quy định.", "Là phương tiện giao thông cơ giới, hệ thống tải điện, nhà máy, vũ khí, chất nổ, chất cháy, chất độc, chất phóng xạ và các nguồn khác do pháp luật quy định.", "Là phương tiện giao thông vận tải cơ giới, hệ thống tải điện, nhà máy, vũ khí, chất nổ, chất cháy, chất độc, chất phóng xạ, thú dữ và các nguồn khác do luật định.", "Là phương tiện giao thông, hệ thống tải điện, nhà máy, vũ khí, chất nổ, chất cháy, chất độc, chất phóng xạ và các nguồn khác do pháp luật quy định."], c: 2},
+  {q: "Câu 47: Theo pháp luật dân sự hiện hành của nước ta, chủ sở hữu, người chiếm hữu, sử dụng nguồn nguy hiểm cao độ phải bồi thường thiệt hại như thế nào?", a: ["Phải bồi thường thiệt hại do nguồn nguy hiểm cao độ gây ra cả khi không có lỗi, trừ trường hợp thiệt hại xảy ra hoàn toàn do lỗi cố ý của người bị thiệt hại.", "Phải bồi thường thiệt hại do nguồn nguy hiểm cao độ gây ra cả khi không có lỗi, trừ trường hợp pháp luật có quy định khác.", "Phải bồi thường thiệt hại do nguồn nguy hiểm cao độ gây ra cả khi không có lỗi, trừ trường hợp thiệt hại xảy ra trong trường hợp bất khả kháng.", "Phải bồi thường thiệt hại do nguồn nguy hiểm cao độ gây ra cả khi không có lỗi, trừ trường hợp thiệt hại xảy ra trong trường hợp tình thế cấp thiết."], c: 1},
+  {q: "Câu 48: Theo pháp luật dân sự hiện hành của nước ta, cá nhân có các quyền gì trong lĩnh vực thừa kế?", a: ["Có quyền lập di chúc để định đoạt tài sản của mình; để lại tài sản của mình cho người thừa kế theo pháp luật; hưởng di sản theo quy định của pháp luật.", "Có quyền để lại tài sản của mình cho người thừa kế theo pháp luật; hưởng di sản theo di chúc hợp pháp hoặc theo quy định của pháp luật về thừa kế.", "Có quyền chuyển toàn bộ tài sản của mình sau khi chết cho các tổ chức từ thiện hoặc cho Nhà nước; hưởng di sản theo quy định của pháp luật về thừa kế.", "Có quyền lập di chúc để định đoạt tài sản của mình; để lại tài sản của mình cho người thừa kế theo pháp luật; hưởng di sản theo di chúc hoặc theo pháp luật."], c: 3},
+  {q: "Câu 49: Theo Luật Phòng, chống tham nhũng năm 2018, Cơ quan kiểm soát tài sản, thu nhập xác minh tài sản, thu nhập dựa trên căn cứ nào?", a: ["Có biến động tăng về tài sản, thu nhập từ 300.000.000 đồng trở lên so với tài sản, thu nhập đã kê khai lần liền trước đó mà người có nghĩa vụ kê khai giải trình không hợp lý về nguồn gốc.", "Có biến động giảm về tài sản, thu nhập từ 200.000.000 đồng trở lên so với tài sản, thu nhập đã kê khai lần liền trước đó mà người có nghĩa vụ kê khai giải trình không hợp lý về nguồn gốc.", "Có biến động tăng về tài sản, thu nhập từ 200.000.000 đồng trở lên so với tài sản, thu nhập đã kê khai lần liền trước đó mà người có nghĩa vụ kê khai giải trình không hợp lý về nguồn gốc.", "Có biến động tăng về tài sản, thu nhập từ 300.000.000 đồng trở lên so với tài sản, thu nhập đã kê khai lần liền trước đó mà người có nghĩa vụ kê khai giải trình được sự hợp lý về nguồn gốc."], c: 0},
+  {q: "Câu 50: Theo Luật Phòng, chống tham nhũng hiện hành, tài sản tham nhũng được hiểu là gì?", a: ["Tài sản tham nhũng là tài sản có được từ tham nhũng, được tạo ra từ tài sản tham nhũng.", "Tài sản tham nhũng là tài sản có được từ tham nhũng, tài sản có nguồn gốc từ tham nhũng.", "Tài sản tham nhũng là những lợi ích vật chất hoặc lợi ích phi vật chất không chính đáng.", "Tài sản tham nhũng là tài sản có được từ tham nhũng, tài sản hình thành từ môi giới hối lộ."], c: 1},
+  {q: "Câu 51: Nội dung nào sau đây là nghĩa vụ của công dân trong phòng, chống tham nhũng?", a: ["Có nghĩa vụ tiếp nhận, xử lý kịp thời những phản ánh, báo cáo, tố cáo, tố giác, tin báo về hành vi tham nhũng Có nghĩa vụ bảo vệ quyền và lợi ích của người phản ánh, tố cáo, cung cấp thông tin về hành vi tham nhũng.", "Có nghĩa vụ tuyên truyền về đạo đức, liêm chính, và nâng cao ý thức phòng, chống tham nhũng tại các tổ chức.", "Không có đáp án phù hợp.", "Có nghĩa vụ hợp tác, giúp đỡ cơ quan, tổ chức, cá nhân có thẩm quyền trong phòng, chống tham nhũng."], c: 3},
+  {q: "Câu 52: Theo quy định của Bộ luật Hình sự năm 2015 (sửa đổi, bổ sung năm 2017), tội nào sau đây là tội phạm tham nhũng?", a: ["Tội lợi dụng chức vụ, quyền hạn gây ảnh hưởng đối với người khác để trục lợi", "Tội truy cứu trách nhiệm hình sự người không có tội", "Tội lợi dụng ảnh hưởng đối với người có chức vụ, quyền hạn để trục lợi", "Tội cố ý làm lộ bí mật công tác; tội chiếm đoạt, mua bán hoặc tiêu hủy tài liệu bí mật công tác"], c: 0},
+  {q: "Câu 53: Theo Luật Phòng, chống tham nhũng hiện hành, việc xử lý quà tặng được quy định như thế nào?", a: ["Đối với quà tặng bằng tiền, giấy tờ có giá thì trong vòng 5 ngày Thủ trưởng cơ quan, tổ chức, đơn vị được tặng căn cứ vào tình hình thực tế để xử lý theo quy định của pháp luật.", "Đối với quà tặng bằng tiền, giấy tờ có giá thì Thủ trưởng cơ quan, tổ chức, đơn vị tổ chức tiếp nhận, bảo quản và làm thủ tục nộp vào quỹ cơ quan, đơn vị theo quy định của pháp luật.", "Đối với quà tặng bằng tiền, giấy tờ có giá thì Thủ trưởng cơ quan, tổ chức, đơn vị tổ chức tiếp nhận, bảo quản và làm thủ tục nộp cho cấp trên trực tiếp theo quy định của pháp luật.", "Đối với quà tặng bằng tiền, giấy tờ có giá thì Thủ trưởng cơ quan, tổ chức, đơn vị tổ chức tiếp nhận, bảo quản và làm thủ tục nộp vào ngân sách nhà nước theo quy định của pháp luật."], c: 3},
+  {q: "Câu 54: Trong giám sát công tác phòng chống tham nhũng, nhận định nào sau đây không chính xác?", a: ["Quốc hội, Ủy ban Thường vụ Quốc hội giám sát công tác phòng, chống tham nhũng trong phạm vi cả nước.", "Ủy ban Tư pháp của Quốc hội thực hiện giám sát công tác phòng, chống tham nhũng trong phạm vi cả nước.", "Đoàn đại biểu Quốc hội trong phạm vi nhiệm vụ, quyền hạn của mình, giám sát công tác phòng, chống tham nhũng.", "Hội đồng nhân dân trong phạm vi quyền hạn của mình, giám sát công tác phòng, chống tham nhũng tại địa phương."], c: 1},
+  {q: "Câu 55: Theo Luật Phòng, chống tham nhũng hiện hành, các hành vi nào sau đây bị nghiêm cấm?", a: ["Hành vi lợi dụng việc phản ánh, báo cáo, tố cáo, tố giác, cung cấp thông tin về hành vi phạm tội để vu khống cơ quan, tổ chức, cá nhân khác.", "Hành vi phản ánh không trung thực, xâm phạm đến lợi ích của Nhà nước, lợi ích công cộng, và lợi ích hợp pháp của doanh nghiệp, cơ quan khác.", "Hành vi đe dọa, trả thù, trù dập, tiết lộ thông tin về người phản ánh, báo cáo, tố cáo, tố giác, báo tin, cung cấp thông tin về hành vi tham nhũng.", "Hành vi bao che hành vi phạm tội; can thiệp trái pháp luật vào việc xử lý tội phạm và các hành vi khác vi phạm pháp luật về phòng, chống tham nhũng."], c: 2},
+  {q: "Câu 56: Theo Luật Phòng, chống tham nhũng hiện hành, trách nhiệm thực hiện việc công khai, minh bạch thuộc về:", a: ["Người đứng đầu cơ quan, tổ chức, đơn vị có trách nhiệm tổ chức thực hiện công khai, minh bạch về tổ chức và hoạt động của cơ quan, tổ chức, đơn vị mình.", "Thủ trưởng của các cơ quan, tổ chức, đơn vị có trách nhiệm tổ chức thực hiện công khai, minh bạch về tổ chức và hoạt động của cơ quan, tổ chức, đơn vị mình.", "Giám đốc của các cơ quan, tổ chức, đơn vị có trách nhiệm tổ chức thực hiện công khai, minh bạch về tổ chức và hoạt động của cơ quan, tổ chức, đơn vị mình.", "Lãnh đạo các cơ quan, tổ chức, đơn vị có trách nhiệm tổ chức thực hiện công khai, minh bạch về tổ chức và hoạt động của cơ quan, tổ chức, đơn vị mình."], c: 0},
+  {q: "Câu 57: Theo Luật Phòng, chống tham nhũng hiện hành, cơ quan nào không thực hiện báo cáo và không có trách nhiệm phối hợp xây dựng báo cáo hàng năm về phòng chống tham nhũng?", a: ["Quốc hội.", "Chính phủ.", "Ủy ban nhân dân.", "Tòa án nhân dân."], c: 0},
+  {q: "Câu 58: Theo Luật Phòng, chống tham nhũng hiện hành, xung đột lợi ích được hiểu như thế nào?", a: ["Xung đột lợi ích là tình huống mà trong đó lợi ích của người có chức vụ, quyền hạn hoặc người thân thích của họ tác động hoặc sẽ tác động không đúng đến việc thực hiện nhiệm vụ, công vụ.", "Xung đột lợi ích là tình huống mà trong đó người có chức vụ, quyền hạn đã lợi dụng chức vụ, quyền hạn của mình nhằm đạt được lợi ích vật chất hoặc lợi ích phi vật chất không chính đáng.", "Xung đột lợi ích là tình huống mà trong đó người có chức vụ có hành vi cửa quyền, hách dịch, đòi hỏi, gây khó khăn, phiền hà cho người khác trong quá trình thực hiện nhiệm vụ, công vụ.", "Xung đột lợi ích là tình huống mà trong đó người có chức vụ, quyền hạn hoặc người thân thích của họ đòi hỏi, gây khó khăn, phiền hà cho người khác trong khi thực hiện nhiệm vụ, công vụ."], c: 0},
+  {q: "Câu 59: Theo Luật Phòng, chống tham nhũng hiện hành, người có chức vụ, quyền hạn được xác định là không xung đột lợi ích trong trường hợp nào sau đây?", a: ["Sử dụng những thông tin có được nhờ chức vụ, quyền hạn của mình để vụ lợi hoặc để phục vụ lợi ích của tổ chức hoặc cá nhân khác.", "Có vợ hoặc chồng, bố, mẹ, con, anh, chị, em ruột tham dự các gói thầu của cơ quan, tổ chức, đơn vị khác trong các giao dịch, mua bán hàng hóa, dịch vụ, ký kết hợp đồng.", "Nhận tiền, tài sản hoặc lợi ích khác của cơ quan, tổ chức, đơn vị, cá nhân liên quan đến công việc do mình giải quyết hoặc thuộc phạm vi quản lý của mình.", "Tư vấn cho doanh nghiệp, tổ chức, cá nhân khác về công việc có liên quan đến bí mật nhà nước, bí mật công tác thuộc thẩm quyền giải quyết hoặc tham gia giải quyết."], c: 1},
+  {q: "Câu 60: Theo Luật Phòng, chống tham nhũng hiện hành, thời hạn phải định kỳ chuyển đổi vị trí công tác được qui định như thế nào?", a: ["Từ đủ 02 năm đến 05 năm theo đặc thù của từng ngành, lĩnh vực.", "Từ đủ 03 năm đến 05 năm theo đặc thù của từng ngành, lĩnh vực.", "Từ đủ 02 năm đến 03 năm theo đặc thù của từng ngành, lĩnh vực.", "từ đủ 02 năm đến 03 năm theo đặc thù của từng ngành, lĩnh vực."], c: 0},
+  {q: "Câu 61: Theo Luật Phòng, chống tham nhũng hiện hành, nguyên tắc chuyển đổi vị trí công tác được qui định như thế nào?", a: ["Việc chuyển đổi vị trí công tác phải được thực hiện theo kế hoạch và được công khai trong cơ quan, tổ chức, đơn vị.", "Mỗi người, mỗi vị trí công tác chỉ được chuyển đổi một lần. Việc chuyển đổi vị trí công tác phải bảo đảm khách quan, hợp lý, phù hợp với chuyên môn, nghiệp vụ và không làm ảnh hưởng đến hoạt động bình thường của cơ quan, tổ chức, đơn vị.", "Việc chuyển đổi vị trí công tác định kỳ không được lợi dụng để cất nhắc, nâng đỡ vợ hoặc chồng, bố, mẹ, con, anh, chị, em ruột hoặc những người thân thích khác của mình.", "Không thực hiện chuyển đổi vị trí công tác đối với người có thời gian công tác còn lại dưới 36 tháng cho đến khi nghỉ hưu và phụ nữ đang trong thời gian nuôi con nhỏ dưới 36 tháng tuổi."], c: 1},
+  {q: "Câu 62: Theo Luật Phòng, chống tham nhũng hiện hành, cơ quan, tổ chức, đơn vị phải thực hiện việc thanh toán không dùng tiền mặt đối với các khoản thu, chi nào sau đây?", a: ["Các khoản thu, chi đầu tư, xây dưng cơ bản của cơ quan, đơn vị.", "Các khoản thu, chi trả nợ lãi, chi viện trợ của cơ quan, đơn vị.", "Các khoản chi lương, thưởng và chi khác có tính chất thường xuyên.", "Các khoản thu, chi từ hoạt động kinh tế của cơ quan, đơn vị."], c: 2},
+  {q: "Câu 63: Theo Luật Phòng, chống tham nhũng hiện hành, những người nào sau đây có nghĩa vụ kê khai tài sản, thu nhập?", a: ["Cán bộ, công chức, viên chức; Sĩ quan Công an nhân dân; sĩ quan Quân đội nhân dân; Người giữ chức vụ từ Phó trưởng phòng và tương đương trở lên công tác tại đơn vị hành chính sự nghiệp công lập.", "Cán bộ, công chức; Sĩ quan Công an nhân dân; sĩ quan Quân đội nhân dân, quân nhân chuyên nghiệp; Người giữ chức vụ từ Phó trưởng phòng và tương đương trở lên công tác tại đơn vị sự nghiệp công lập.", "Cán bộ, công chức; Sĩ quan, hạ sĩ quan Công an nhân dân; sĩ quan, hạ sĩ quan Quân đội nhân dân; Người giữ chức vụ từ Phó trưởng phòng và tương đương trở lên công tác tại đơn vị sự nghiệp công lập.", "Cán bộ, công chức, viên chức; Sĩ quan Công an nhân dân; sĩ quan Quân đội nhân dân, quân nhân chuyên nghiệp; Người giữ chức vụ từ Phó trưởng phòng trở lên công tác tại đơn vị sự nghiệp công lập."], c: 1},
+  {q: "Câu 64: Theo quy định của Bộ luật Hình sự năm 2015 (sửa đổi, bổ sung năm 2017), mức cao nhất của khung hình phạt áp dụng đối với tội tham ô tài sản là gì?", a: ["Phạt tù 20 năm, tù chung thân hoặc tử hình.", "Phạt tù 25 năm, tù chung thân hoặc tử hình.", "Phạt tù 30 năm, tù chung thân hoặc tử hình.", "Phạt tù 35 năm, tù chung thân hoặc tử hình."], c: 0},
+  {q: "Câu 65: Theo quy định của Bộ luật Hình sự năm 2015 (sửa đổi, bổ sung năm 2017), mức cao nhất của khung hình phạt áp dụng đối với tội tham ô tài sản là gì?", a: ["Phạt tù 20 năm, tù chung thân hoặc tử hình.", "Phạt tù 25 năm, tù chung thân hoặc tử hình.", "Phạt tù 30 năm, tù chung thân hoặc tử hình.", "Phạt tù 35 năm, tù chung thân hoặc tử hình."], c: 0},
+  {q: "Câu 66: Theo Luật Phòng, chống tham nhũng năm 2018, Cơ sở dữ liệu quốc gia về kiểm soát tài sản, thu nhập được xây dựng và quản lý tập trung tại cơ quan nào?", a: ["Thanh tra Chính phủ.", "Thủ tướng Chính phủ.", "Bộ Tài chính.", "Uỷ ban nhân dân các cấp."], c: 0},
+  {q: "Câu 67: Quyền của trẻ em theo Hiến pháp 2013 gồm các quyền nào sau đây?", a: ["Trẻ em được Nhà nước, gia đình và xã hội bảo vệ chăm sóc, giáo dục; được tham gia lao động phù hợp độ tuổi. Nghiêm cấm xâm hại, hành hạ, ngược đãi, bỏ mặc, lạm dụng, bóc lột sức lao động và những hành vi khác vi phạm quyền trẻ em.", "Trẻ em được Nhà nước, gia đình và xã hội đảm bảo quyền và lợi ích hợp pháp; được tham gia vào các vấn đề về trẻ em. Nghiêm cấm xâm hại, hành hạ, ngược đãi, bỏ mặc, bóc lột sức lao động và những hành vi khác vi phạm quyền trẻ em.", "Trẻ em được Nhà nước, gia đình và xã hội bảo vệ, chăm sóc và giáo dục; được tham gia vào các vấn đề về trẻ em. Nghiêm cấm xâm hại, hành hạ, ngược đãi, bỏ mặc, lạm dụng, bóc lột sức lao động và những hành vi khác vi phạm quyền trẻ em.", "Trẻ em được Nhà nước, gia đình và xã hội đảm bảo công bằng; được tham gia vào các vấn đề về quyển của trẻ em. Nghiêm cấm xâm hại, hành hạ, ngược đãi, bỏ mặc, lạm dụng, bóc lột sức lao động và những hành vi khác vi phạm quyền trẻ em."], c: 2},
+  {q: "Câu 68: Quyền tự do tư tưởng, tín ngưỡng, tôn giáo theo Hiến pháp 2013 gồm các nội dung nào sau đây?", a: ["Mọi người có quyền tự do tín ngưỡng, tôn giáo, theo hoặc không theo một tôn giáo nào; Nhà nước tôn trọng và bảo hộ quyền tự do tín ngưỡng, tôn giáo; Không ai được xâm phạm tự do tín ngưỡng, tôn giáo hoặc lợi dụng tín ngưỡng, tôn giáo để vi phạm pháp luật.", "Mọi người có quyền tự do tín ngưỡng, tôn giáo, theo hoặc không theo một tôn giáo nào; Nhà nước tôn trọng và bảo hộ quyền bí mật đời tư của công dân; Không ai được xâm phạm tự do tín ngưỡng, tôn giáo hoặc lợi dụng tín ngưỡng, tôn giáo để vi phạm pháp luật.", "Mọi người có quyền tự do tín ngưỡng, tôn giáo, theo hoặc không theo một tôn giáo; Nhà nước tôn trọng và bảo hộ quyền tự do ngôn luận, tự do báo chí; Không ai được xâm phạm tự do tín ngưỡng, tôn giáo hoặc lợi dụng tín ngưỡng, tôn giáo để vi phạm pháp luật.", "Mọi người có quyền tự do tín ngưỡng, tôn giáo, theo hoặc không theo một tôn giáo nào; Nhà nước tôn trọng và bảo đảm quyền, cơ hội bình đẳng giới; Không ai được xâm phạm tự do tín ngưỡng, tôn giáo hoặc lợi dụng tín ngưỡng, tôn giáo để vi phạm pháp luật."], c: 0},
+  {q: "Câu 69: Theo pháp luật hiện hành, quyền con người, quyền công dân bị hạn chế trong trường hợp nào?", a: ["Quyền con người, quyền công dân chỉ có thể bị hạn chế theo quy định của luật trong trường hợp cần thiết vì lý lợi ích chung, an ninh quốc gia, trật tự, an toàn xã hội, đạo đức xã hội, sức khỏe của cộng đồng.", "Quyền con người, quyền công dân chỉ có thể bị hạn chế theo quy định của luật trong trường hợp cần thiết vì lý do quốc phòng, an ninh quốc gia, trật tự, an toàn xã hội, đạo đức xã hội, sức khỏe của cộng đồng.", "Quyền con người, quyền công dân chỉ có thể bị hạn chế theo quy định của luật trong trường hợp cần thiết vì lý do quốc phòng, an ninh quốc gia, tự do tôn giáo, tín ngưỡng, đạo đức xã hội, sức khỏe của cộng đồng", "Quyền con người, quyền công dân chỉ có thể bị hạn chế theo quy định của luật trong trường hợp cần thiết vì lý do quốc phòng, trật tự, an toàn xã hội, quyền sở hữu, đạo đức xã hội, sức khỏe của cộng đồng."], c: 1},
+  {q: "Câu 70: Theo pháp luật về nhân quyền, nhóm quyền dân sự bao gồm các quyền nào sau đây?", a: ["Quyền không bị phân biệt đối xử, được thừa nhận và bình đẳng trước pháp luật; Quyền sống, tự do và an ninh cá nhân; Quyền về xét xử công bằng; Quyền về tự do đi lại, cư trú; Quyền được bảo vệ đời tư; Quyền tự do hội họp một cách hòa bình; Quyền kết hôn, lập gia đình và bình đẳng trong hôn nhân.", "Quyền không bị phân biệt đối xử, được thừa nhận và bình đẳng trước pháp luật; Quyền sống, tự do và an ninh cá nhân; Quyền về xét xử công bằng; Quyền về tự do đi lại, cư trú; Quyền được bảo vệ đời tư; Quyền tham gia vào đời sống chính trị; Quyền kết hôn, lập gia đình và bình đẳng trong hôn nhân", "Quyền không bị phân biệt đối xử, được thừa nhận và bình đẳng trước pháp luật; Quyền sống, tự do và an ninh cá nhân; Quyền về xét xử công bằng; Quyền về tự do đi lại, cư trú; Quyền được bảo vệ đời tư; Quyền tự do tư tưởng, tín ngưỡng, tôn giáo; Quyền kết hôn, lập gia đình và bình đẳng trong hôn nhân", "Quyền không bị phân biệt đối xử, được thừa nhận và bình đẳng trước pháp luật; Quyền sống, tự do và an ninh cá nhân; Quyền về xét xử công bằng; Quyền về tự do đi lại, cư trú; Quyền tự do biểu đạt; Quyền tự do lập hội; Quyền tự do tư tưởng, tín ngưỡng, tôn giáo; Quyền kết hôn, lập gia đình và bình đẳng trong hôn nhân"], c: 2},
+  {q: "Câu 71: Theo pháp luật về nhân quyền, nhóm quyền chính trị bao gồm các quyền nào sau đây?", a: ["Quyền tự do biểu đạt; Quyền về xét xử công bằng; Quyền tự do hội họp một cách hòa bình; Quyền tham gia vào đời sống chính trị.", "Quyền tự do biểu đạt; Quyền tự do lập hội; Quyền tự do tư tưởng, tín ngưỡng; Quyền tham gia vào đời sống chính trị.", "Quyền tự do biểu đạt; Quyền tự do lập hội; Quyền tự do hội họp một cách hòa bình; Quyền tham gia vào đời sống chính trị.", "Quyền tự do biểu đạt; Quyền tự do lập hội; Quyền về tự do đi lại, cư trú; Quyền tham gia vào đời sống chính trị."], c: 2},
+  {q: "Câu 72: Theo pháp luật về nhân quyền, nhóm quyền kinh tế, xã hội và văn hóa bao gồm các quyền nào sau đây?", a: ["Quyền được hưởng và duy trì tiêu chuẩn sống thích đáng; Quyền lao động; Quyền được hưởng an sinh xã hội; Quyền được hỗ trợ về gia đình; Quyền được hưởng sức khỏe về thể chất và tinh thần; Quyền giáo dục; Quyền được tham gia vào đời sống văn hóa và được hưởng các thành tựu của khoa học.", "Quyền được hưởng và duy trì tiêu chuẩn sống thích đáng; Quyền lao động; Quyền được hưởng an sinh xã hội; Quyền tự do tư tưởng, tín ngưỡng; Quyền được hưởng sức khỏe về thể chất và tinh thần; Quyền giáo dục; Quyền được tham gia vào đời sống văn hóa và được hưởng các thành tựu của khoa học.", "Quyền được hưởng và duy trì tiêu chuẩn sống thích đáng; Quyền lao động; Quyền được hưởng an sinh xã hội; Quyền được hỗ trợ về gia đình; Quyền được hưởng sức khỏe về thể chất và tinh thần; Quyền tự do lập hội; Quyền được tham gia vào đời sống văn hóa và được hưởng các thành tựu của khoa học.", "Quyền được hưởng và duy trì tiêu chuẩn sống thích đáng; Quyền lao động; Quyền được hưởng an sinh xã hội; Quyền được hỗ trợ về gia đình Quyền kết hôn, lập gia đình và bình đẳng trong hôn nhân; Quyền giáo dục; Quyền được tham gia vào đời sống văn hóa và được hưởng các thành tựu của khoa học."], c: 0},
+  {q: "Câu 73: Nguyên tắc công nhận, tôn trọng, bảo vệ, bảo đảm quyền con người, quyền công dân được ghi nhận trong Hiến pháp năm 2013 như thế nào?", a: ["Ở nước Cộng hòa xã hội chủ nghĩa Việt Nam, các quyền con người, quyền công dân về chính trị, bình đẳng giới, kinh tế, xã hội được công nhận, tôn trọng, bảo vệ, bảo đảm theo Hiến pháp và pháp luật", "Ở nước Cộng hòa xã hội chủ nghĩa Việt Nam, các quyền con người, quyền công dân về chính trị, dân sự, kinh tế, văn hóa, xã hội được công nhận, tôn trọng, bảo vệ, bảo đảm theo Hiến pháp và pháp luật.", "Ở nước Cộng hòa xã hội chủ nghĩa Việt Nam, các quyền con người, quyền công dân về chính trị, dân sự, bình đẳng, văn hóa, xã hội được công nhận, tôn trọng, bảo vệ, bảo đảm theo Hiến pháp và pháp luật.", "Ở nước Cộng hòa xã hội chủ nghĩa Việt Nam, các quyền con người, quyền công dân về chính trị, dân sự, văn hóa, an sinh xã hội được công nhận, tôn trọng, bảo vệ, bảo đảm theo Hiến pháp và pháp luật."], c: 1},
+  {q: "Câu 74: Nguyên tắc mọi người, mọi công dân đều bình đẳng trước pháp luật được ghi nhận trong Hiến pháp 2013 như thế nào?", a: ["Mọi công dân đều bình đẳng trước pháp luật. Không ai bị phân biệt đối xử trong đời sống chính trị, dân sự, kinh tế, văn hóa, xã hội.", "Mọi cá nhân đều bình đẳng trước pháp luật. Không ai bị phân biệt đối xử trong đời sống chính trị, dân sự, kinh tế, văn hóa, xã hội.", "Mọi chủ thể đều bình đẳng trước pháp luật. Không ai bị phân biệt đối xử trong đời sống chính trị, dân sự, kinh tế, văn hóa, xã hội.", "Mọi người đều bình đẳng trước pháp luật. Không ai bị phân biệt đối xử trong đời sống chính trị, dân sự, kinh tế, văn hóa, xã hội."], c: 3},
+  {q: "Câu 75: Quyền được tham gia vào đời sống chính trị của công dân Việt Nam theo Hiến pháp 2013 bao gồm các quyền nào sau đây?", a: ["Quyền bầu cử, ứng cử; Quyền tự do đi lại và cư trú ở trong nước; Quyền tự do ngôn luận, tự do báo chí, tiếp cận thông tin, hội họp, lập hội, biểu tình.", "Quyền bầu cử, ứng cử; Quyền khiếu nại, tố cáo với cơ quan, tổ chức, cá nhân có thẩm quyền; Quyền tự do ngôn luận, hội họp, lập hội, biểu tình.", "Quyền bầu cử, ứng cử; Quyền bất khả xâm phạm về chỗ ở; Quyền tự do ngôn luận, tự do báo chí, tiếp cận thông tin, hội họp, lập hội, biểu tình.", "Quyền bầu cử, ứng cử; Quyền tham gia quản lý Nhà nước và xã hội; Quyền tự do ngôn luận, tự do báo chí, tiếp cận thông tin, hội họp, lập hội, biểu tình."], c: 3},
+  {q: "Câu 76: Quyền tự do ý kiến và biểu đạt của công dân Việt Nam theo Hiến pháp 2013 bao gồm các quyền nào sau đây?", a: ["Công dân có quyền tự do ngôn luận, tự do báo chí, tiếp cận thông tin, tự do tín ngưỡng, tôn giáo. Việc thực hiện các quyền này do pháp luật quy định.", "Công dân có quyền tự do ngôn luận, có quyền bất khả xâm phạm về đời sống riêng tư, bí mật cá nhân. Việc thực hiện các quyền này do pháp luật quy định", "Công dân có quyền tự do ngôn luận, tự do báo chí, tiếp cận thông tin, hội họp, lập hội, biểu tình. Việc thực hiện các quyền này do pháp luật quy định", "Công dân có quyền tự do ngôn luận. Không ai bị bắt nếu không có quyết định của Toà án nhân dân. Việc thực hiện các quyền này do pháp luật quy định"], c: 2},
+  {q: "Câu 77: Quyền được bảo vệ để khỏi bị bắt, giam giữ của công dân Việt Nam theo Hiến pháp 2013 gồm các nội dung nào sau đây?", a: ["Không ai bị bắt nếu không có quyết định của Viện kiểm sát nhân dân, quyết định hoặc phê chuẩn của Cơ quan Công an, trừ trường hợp phạm tội quả tang. Việc bắt, giam, giữ người do luật định.", "Không ai bị bắt nếu không có quyết định của Toà án nhân dân, quyết định hoặc phê chuẩn của Viện kiểm sát nhân dân, trừ trường hợp phạm tội quả tang. Việc bắt, giam, giữ người do luật định", "Không ai bị bắt nếu không có quyết định của Toà án, Viện kiểm sát, quyết định hoặc phê chuẩn của Cơ quan điều tra, trừ trường hợp bị bắt phạm tội quả tang. Việc bắt, giam, giữ người do luật định.", "Không ai bị bắt nếu không có quyết định của Cơ quan điều tra, quyết định hoặc phê chuẩn của Viện kiểm sát nhân dân, trừ trường hợp phạm tội quả tang. Việc bắt, giam, giữ người do luật định."], c: 1},
+  {q: "Câu 78: Quyền được bảo vệ đời tư của công dân Việt Nam theo Hiến pháp 2013 gồm các nội dung nào sau đây?", a: ["Mọi người đều bình đẳng trước pháp luật, được pháp luật bảo vệ bí mật cá nhân và bí mật gia đình; Mọi người có quyền bí mật thư tín, điện thoại, điện tín và các hình thức trao đổi thông tin riêng tư khác.", "Mọi người có có nghĩa vụ tôn trọng quyền của người khác, được bảo vệ bí mật cá nhân và bí mật gia đình; Mọi người có quyền bí mật thư tín, điện thoại và các hình thức trao đổi thông tin riêng tư khác.", "Mọi người có quyền bất khả xâm phạm về đời sống riêng tư, bí mật cá nhân và bí mật gia đình; Mọi người có quyền bí mật thư tín, điện thoại, điện tín và các hình thức trao đổi thông tin riêng tư khác.", "Mọi người có quyền bất khả xâm phạm về chỗ ở, được bảo vệ bí mật cá nhân và bí mật gia đình; Mọi người có quyền bí mật thư tín, điện thoại, điện tín và các hình thức trao đổi thông tin riêng tư khác."], c: 2},
+  {q: "Câu 79: Quyền được tham gia vào đời sống văn hóa và được hưởng các thành tựu của khoa học của công dân Việt Nam theo Hiến pháp 2013 gồm các quyền nào sau đây?", a: ["Mọi người có quyền nghiên cứu khoa học và công nghệ, sáng tạo văn học, nghệ thuật và thụ hưởng lợi ích từ các hoạt động đó; Mọi người có quyền hưởng thụ và tiếp cận các giá trị văn hoá, tham gia vào đời sống văn hóa, sử dụng các cơ sở văn hóa.", "Mọi người có quyền được bảo vệ, chăm sóc sức khỏe, khám chữa bệnh, bình đẳng trong việc sử dụng các dịch vụ y tế; Mọi người có quyền hưởng thụ và tiếp cận các giá trị văn hoá, tham gia vào đời sống văn hóa, sử dụng các cơ sở văn hóa", "Mọi người có quyền làm việc, lựa chọn nghề nghiệp, việc làm, sáng tạo văn học, nghệ thuật và thụ hưởng lợi ích từ các hoạt động đó; Mọi người có quyền hưởng thụ và tiếp cận các giá trị văn hoá, tham gia vào đời sống văn hóa, sử dụng các cơ sở văn hóa", "Mọi người có quyền sở hữu về thu nhập hợp pháp, của cải để dành, nhà ở, tư liệu sinh hoạt, tư liệu sản xuất, phần vốn góp; Mọi người có quyền hưởng thụ và tiếp cận các giá trị văn hoá, tham gia vào đời sống văn hóa, sử dụng các cơ sở văn hóa"], c: 0},
+  {q: "Câu 80: Quyền làm việc và hưởng thù lao công bằng, hợp lý của công dân Việt Nam theo Hiến pháp 2013 gồm các quyền nào sau đây?", a: ["Công dân có quyền tự do kinh doanh, tự do lựa chọn nghề nghiệp, việc làm và nơi làm việc; Người làm công ăn lương được bảo đảm các điều kiện làm việc; được hưởng lương, chế độ nghỉ ngơi.", "Công dân có quyền được bảo đảm an sinh xã hội, lựa chọn nghề nghiệp, việc làm và nơi làm việc; Người làm công ăn lương được bảo đảm các điều kiện làm việc công bằng, an toàn; chế độ nghỉ ngơi.", "Công dân có quyền làm việc, lựa chọn nghề nghiệp, việc làm và nơi làm việc; Người làm công ăn lương được bảo đảm các điều kiện làm việc công bằng, an toàn; được hưởng lương, chế độ nghỉ ngơi.", "Công dân sở hữu về thu nhập hợp pháp, của cải để dành; có quyền làm việc, lựa chọn nghề nghiệp; Người làm công được bảo đảm điều kiện làm việc công bằng; được hưởng lương, chế độ nghỉ ngơi."], c: 2},
+  {q: "Câu 81: Theo pháp luật hiện hành của nước ta, Luật Hành chính được hiểu là gì?", a: ["Là các văn bản quy phạm pháp luật, là ngành luật Việt Nam điều chỉnh các quan hệ xã hội phát sinh từ hoạt động quản lý hành chính nhà nước tại Việt Nam.", "Là hệ thống văn bản quy phạm pháp luật điều chỉnh các quan hệ xã hội phát sinh trong quá trình quản lý nhà nước tại Việt Nam.", "Là ngành luật Việt Nam điều chỉnh các quan hệ xã hội phát sinh từ hoạt động quản lý kinh tế tại Việt Nam.", "Là các văn bản quy phạm pháp luật, là ngành luật Việt Nam điều chỉnh các quan hệ hành chính trong đời sống xã hội Việt Nam."], c: 0},
+  {q: "Câu 82: Theo pháp luật hiện hành của nước ta, quản lý hành chính nhà nước ở nước ta được thực hiện thông qua các hình thức nào?", a: ["Ban hành văn bản pháp luật, văn bản áp dụng pháp luật; Thực hiện hoạt động pháp lý khác và tác động nghiệp vụ-kỹ thuật; Áp dụng biện pháp tổ chức trực tiếp.", "Ban hành văn bản quy phạm pháp luật; Ban hành văn bản áp dụng pháp luật; Áp dụng biện pháp tổ chức trực tiếp; Thực hiện tác động nghiệp vụ-kỹ thuật.", "Ban hành văn bản áp dụng pháp luật; Thực hiện những hoạt động khác mang tính chất pháp lý; Áp dụng những biện pháp tổ chức trực tiếp.", "Ban hành văn bản áp dụng pháp luật; Áp dụng những biện pháp tổ chức trực tiếp; Thực hiện những tác động về nghiệp vụ-kỹ thuật; Thực hiện những hoạt động khác."], c: 0},
+  {q: "Câu 83: Theo pháp luật hiện hành của nước ta, hệ thống cơ quan hành chính nhà nước Việt Nam bao gồm các cơ quan nào?", a: ["Chính phủ, Bộ, Tổng cục, Cục, Ủy ban nhân dân tỉnh, huyện, xã và tương đương, Ban quản lý các khu kinh tế, khu công nghiệp.", "Chính phủ, Bộ, Cơ quan ngang Bộ, Ủy ban nhân dân cấp tỉnh, Ủy ban nhân dân cấp huyện, Ủy ban nhân dân cấp xã.", "Chính phủ, các Bộ, cơ quan ngang Bộ, các Ủy ban nhân dân các cấp, các sở, ban thuộc Ủy ban nhân dân các cấp, Ban quản lý các khu công nghiệp, khu công nghệ cao.", "Chính phủ, các Bộ, Ban, ngành ở Trung ương và các Ủy ban nhân dân các cấp ở địa phương."], c: 1},
+  {q: "Câu 84: Theo pháp luật hiện hành của nước ta, địa vị pháp lý hành chính của Chính phủ được Hiến pháp năm 2013 quy định như thế nào?", a: ["Là cơ quan hành chính cao nhất, cơ quan chỉ huy toàn thể bộ máy nhà nước nước Cộng hoà xã hội chủ nghĩa Việt Nam từ Trung ương đến địa phương.", "Là cơ quan chấp hành của Quốc hội, cơ quan điều hành toàn thể bộ máy nhà nước nước Cộng hoà xã hội chủ nghĩa Việt Nam.", "Là cơ quan hành chính nhà nước cao nhất của nước Việt Nam, thực hiện quyền hành pháp, là cơ quan chấp hành của Quốc hội.", "Là cơ quan hành chính cao nhất của nước Việt Nam, cơ quan chấp hành của Quốc hội, đứng đầu hệ thống hành chính nhà nước."], c: 2},
+  {q: "Câu 85: Theo pháp luật hiện hành của nước ta, địa vị pháp lý hành chính của Ủy ban nhân dân được Hiến pháp năm 2013 quy định như thế nào?", a: ["Là cơ quan chấp hành của Hội đồng nhân dân, cơ quan hành chính nhà nước ở địa phương, hoạt động theo nghị quyết của Hội đồng nhân dân.", "Là cơ quan chấp hành của Hội đồng nhân dân, cơ quan hành chính ở địa phương, chịu trách nhiệm trước Hội đồng nhân dân và cơ quan nhà nước cấp trên.", "Là cơ quan chấp hành của Hội đồng nhân dân, cơ quan hành chính ở địa phương, hoạt động theo sự chỉ đạo của cơ quan hành chính nhà nước cấp trên.", "Là cơ quan chấp hành của Hội đồng nhân dân, cơ quan hành chính nhà nước ở địa phương, tổ chức thi hành Hiến pháp, pháp luật, văn bản pháp lý của cấp trên."], c: 3},
+  {q: "Câu 86: Theo pháp luật hiện hành của nước ta, Vi phạm hành chính được hiểu là gì?", a: ["Là hành vi có lỗi do cá nhân, tổ chức thực hiện, vi phạm pháp luật về quản lý nhà nước mà không phải là tội phạm và phải bị xử phạt vi phạm hành chính.", "Là hành vi có lỗi do cá nhân thực hiện, vi phạm pháp luật về quản lý nhà nước và theo quy định của pháp luật phải bị xử phạt vi phạm hành chính.", "Là hành vi có lỗi do tổ chức thực hiện, vi phạm quy định quản lý nhà nước mà phải bị xử phạt vi phạm hành chính.", "Là hành vi có lỗi do cá nhân, tổ chức thực hiện, vi phạm quy định về quản lý nhà nước mà không phải là tội phạm."], c: 0},
+  {q: "Câu 87: Theo pháp luật hiện hành của nước ta, Luật Hình sự được hiểu là gì?", a: ["Là văn bản quy phạm pháp luật, là ngành luật Việt Nam quy định về việc bảo vệ quyền, lợi ích hợp pháp của Nhà nước, công dân, tổ chức và phòng chống tội phạm.", "Là văn bản quy phạm pháp luật, là ngành luật Việt Nam quy định về tội phạm và hình phạt theo quy định pháp luật đối với người phạm tội.", "Là văn bản quy phạm pháp luật, là ngành luật Việt Nam quy định các biện pháp đấu tranh phòng chống tội phạm, giáo dục ý thức tuân theo pháp luật.", "Là văn bản quy phạm pháp luật, là ngành luật Việt Nam điều chỉnh các quan hệ xã hội phát sinh từ hành vi phạm tội và hình phạt đối với người phạm tội."], c: 1},
+  {q: "Câu 88: Theo pháp luật hình sự hiện hành của nước ta, hình phạt được hiểu là gì?", a: ["Là biện pháp cưỡng chế nghiêm khắc nhất của Nhà nước nhằm tước bỏ hoặc hạn chế quyền, lợi ích của người phạm tội.", "Là biện pháp cưỡng chế theo quy định của Luật Hình sự được Nhà nước áp dụng nhằm tước bỏ hoặc hạn chế quyền, lợi ích của người phạm tội.", "Là biện pháp cưỡng chế theo quy định của Luật Hình sự được Nhà nước áp dụng nhằm hạn chế quyền, lợi ích của người phạm tội.", "Là biện pháp cưỡng chế theo quy định của Luật Hình sự được Nhà nước áp dụng nhằm tước bỏ quyền, lợi ích của người phạm tội."], c: 0},
+  {q: "Câu 89: Theo pháp luật hình sự hiện hành của nước ta, khi quyết định hình phạt, Tòa án phải dựa vào các căn cứ pháp lý nào?", a: ["Bộ luật Hình sự và các quy định khác của pháp luật có liên quan, mức độ nguy hiểm cho xã hội của hành vi phạm tội, các tình tiết giảm nhẹ trách nhiệm hình sự.", "Bộ luật Hình sự, tính chất và mức độ nguy hiểm cho xã hội của hành vi phạm tội, nhân thân người phạm tội, các tình tiết giảm nhẹ, tăng nặng trách nhiệm hình sự.", "Bộ luật Hình sự, tính chất nguy hiểm cho xã hội của hành vi phạm tội, nhân thân người phạm tội, các tình tiết giảm nhẹ, tăng nặng trách nhiệm hình sự.", "Bộ luật Hình sự, quy định khác của pháp luật có liên quan, tính chất và mức độ nguy hiểm cho xã hội của hành vi phạm tội, các tình tiết giảm nhẹ trách nhiệm hình sự."], c: 1},
+  {q: "Câu 90: Theo pháp luật hình sự hiện hành của nước ta, các tội xâm phạm về môi trường bao gồm các tội danh nào?", a: ["Gây ô nhiễm không khí, nguồn nước, đất; Vi phạm quy định về quản lý chất thải nguy hại; Nhập khẩu công nghệ, máy móc, thiết bị, phế thải, chất không bảo đảm tiêu chuẩn bảo vệ môi trường.", "Vi phạm quy định về phòng ngừa sự cố môi trường; Làm lây lan dịch bệnh nguy hiểm cho người,cho động vật, thực vật; Huỷ hoại nguồn lợi thuỷ sản, rừng.", "Vi phạm quy định về bảo vệ động vật; vi phạm chế độ bảo vệ đặc biệt đối với khu bảo tồn thiên nhiên hoang dã; Nhập khẩu, phát tán các loài ngoại lai hoang dã quý hiếm.", "Vi phạm quy định về bảo vệ động vật hoang dã quý hiếm; vi phạm chế độ bảo vệ đặc biệt đối với khu bảo tồn thiên nhiên; Nhập khẩu, phát tán các loài ngoại lai xâm hại."], c: 3},
+  {q: "Câu 91: Theo pháp luật hình sự hiện hành của nước ta, tội kinh doanh trái phép được hiểu là gì?", a: ["Là kinh doanh không có đăng ký kinh doanh, không đúng với nội dung đã đăng ký hoặc không có giấy phép trong trường hợp pháp luật quy định phải có giấy phép.", "Là kinh doanh không đúng với nội dung đã đăng ký hoặc không có giấy phép trong trường hợp pháp luật quy định phải có giấy phép.", "Là kinh doanh không có đăng ký kinh doanh hoặc không có giấy phép trong trường hợp pháp luật quy định phải có giấy phép.", "Là kinh doanh không theo quy định pháp luật, không đúng với nội dung đã đăng ký hoặc không có giấy phép trong trường hợp pháp luật quy định phải có giấy phép."], c: 0},
+  {q: "Câu 92: Theo pháp luật hình sự hiện hành của nước ta, tội đầu cơ được hiểu là gì?", a: ["Tạo ra sự khan hiếm giả tạo trong tình hình thiên tai, dịch bệnh, chiến tranh mua vét hàng hoá có số lượng lớn nhằm bán lại thu lợi bất chính gây hậu quả nghiêm trọng.", "Tạo ra, lợi dụng tình hình khan hiếm trong thiên tai, dịch bệnh, chiến tranh mua vét hàng hoá có số lượng lớn nhằm bán lại thu lợi bất chính gây hậu quả nghiêm trọng.", "Lợi dụng tình hình khan hiếm trong tình hình thiên tai, dịch bệnh mua vét hàng hoá có số lượng lớn nhằm bán lại thu lợi bất chính gây hậu quả nghiêm trọng.", "Lợi dụng tình hình thiên tai, dịch bệnh, chiến tranh mua vét hàng hoá có số lượng lớn nhằm bán lại thu lợi bất chính gây hậu quả nghiêm trọng."], c: 1},
+  {q: "Câu 93: Theo pháp luật hình sự hiện hành của nước ta, tội xâm phạm quyền sở hữu công nghiệp được hiểu là gì?", a: ["Là hành vi cố ý xâm phạm quyền sở hữu công nghiệp đối với nhãn hiệu hàng hóa đang được bảo hộ tại Việt Nam với quy mô thương mại.", "Là hành vi cố ý xâm phạm quyền sở hữu công nghiệp đối với nhãn hiệu dịch vụ đang được bảo hộ tại Việt Nam với quy mô thương mại.", "Là hành vi cố ý xâm phạm quyền sở hữu công nghiệp đối với nhãn hiệu hoặc chỉ dẫn địa lý đang được bảo hộ tại Việt Nam với quy mô thương mại.", "Là hành vi cố ý xâm phạm quyền sở hữu công nghiệp đối với chỉ dẫn địa lý đang được bảo hộ tại Việt Nam với quy mô thương mại."], c: 2},
+  {q: "Câu 94: Theo pháp luật tố tụng hiện hành của nước ta, Luật tố tụng được hiểu là gì?", a: ["Là văn bản pháp luật, là bộ phận của pháp luật Việt Nam điều chỉnh các quan hệ xã hội phát sinh từ hoạt động tố tụng tại Tòa án hoặc Trọng tài thương mại.", "Là hệ thống văn bản pháp luật Việt Nam điều chỉnh các quan hệ xã hội phát sinh từ hoạt động tố tụng tại Tòa án nhân dân theo các trình tự, thủ thục đặc biệt.", "Là bộ phận của pháp luật Việt Nam điều chỉnh các quan hệ xã hội phát sinh từ hoạt động tố tụng dân sự, hành chính, hình sự tại Tòa án nhân dân có thẩm quyền.", "Là bộ phận của pháp luật Việt Nam điều chỉnh các quan hệ xã hội phát sinh từ hoạt động tố tụng tại Trọng tài thương mại theo sự lựa chọn của các bên tranh chấp."], c: 0},
+  {q: "Câu 95: Theo pháp luật tố tụng hiện hành của nước ta, Tòa án giải quyết các vụ án dân sự, kinh tế-thương mại, hành chính, hình sự theo các thủ tục nào?", a: ["Thủ tục sơ thẩm; Thủ tục phúc thẩm, Thủ tục giám đốc thẩm; Thủ tục tái thẩm.", "Thủ tục sơ thẩm; Thủ tục phúc thẩm, Thủ tục hòa giải; Thủ tục tái thẩm.", "Thủ tục sơ thẩm; Thủ tục phúc thẩm, Thủ tục hòa giải; Thủ tục rút gọn.", "Thủ tục sơ thẩm; Thủ tục hòa giải, Thủ tục giám đốc thẩm; Thủ tục rút gọn."], c: 0},
+  {q: "Câu 96: Theo pháp luật tố tụng hiện hành của nước ta, Trọng tài thương mại có thẩm quyền giải quyết các tranh chấp nào?", a: ["Tranh chấp phát sinh từ hoạt động thương mại mà pháp luật quy định được giải quyết bằng Trọng tài hoặc theo quy định của hợp đồng giữa các bên tranh chấp.", "Tranh chấp phát sinh từ hoạt động thương mại mà pháp luật quy định được giải quyết bằng Trọng tài hoặc theo quy định của Thỏa thuận trọng tài hợp pháp.", "Tranh chấp phát sinh từ hoạt động kinh tế, thương mại theo hợp đồng giữa các bên tranh chấp hoặc theo Thỏa thuận hợp pháp giữa các bên tranh chấp.", "Tranh chấp phát sinh từ hoạt động thương mại mà hợp đồng giữa các bên tranh chấp có quy định giải quyết theo quy định của Thỏa thuận trọng tài hợp pháp."], c: 1},
+  {q: "Câu 97: Theo pháp luật tố tụng hiện hành của nước ta, thỏa thuận trọng tài được hiểu là gì?", a: ["Là điều khoản trong hợp đồng kinh tế, thương mại giữa các bên về việc giải quyết bằng Trọng tài các tranh chấp có thể phát sinh trong tương lai.", "Là văn bản thoả thuận giữa các bên được đính kèm hợp đồng kinh tế, thương mại về việc giải quyết bằng Trọng tài các tranh chấp có thể phát sinh trong tương lai.", "Là thoả thuận hợp pháp giữa các bên về việc giải quyết bằng Trọng tài tranh chấp có thể phát sinh hoặc đã phát sinh.", "Là thoả thuận hợp pháp giữa các bên về việc giải quyết bằng Trọng tài các tranh chấp đã phát sinh giữa các bên đó."], c: 2},
+  {q: "Câu 98: Theo pháp luật tố tụng hiện hành của nước ta, thoả thuận trọng tài sẽ vô hiệu trong các trường hợp nào?", a: ["Tranh chấp phát sinh trong lĩnh vực thuộc thẩm quyền của Trọng tài; Hình thức của Thoả thuận trọng tài phù hợp với quy định của pháp luật.", "Người xác lập Thoả thuận trọng tài có thẩm quyền, có năng lực hành vi dân sự theo pháp luật; Thỏa thuận trọng tài phù hợp quy định của pháp luật.", "Các bên không bị lừa dối, đe doạ, cưỡng ép trong quá trình xác lập Thoả thuận trọng tài và không có yêu cầu tuyên bố Thoả thuận trọng tài đó là vô hiệu.", "Tranh chấp phát sinh trong lĩnh vực không thuộc thẩm quyền của Trọng tài; Hình thức của Thoả thuận trọng tài không phù hợp với quy định của pháp luật."], c: 3},
+  {q: "Câu 99: Theo pháp luật tố tụng hiện hành của nước ta, Trọng tài thương mại giải quyết các tranh chấp kinh tế-thương mại theo thủ tục nào?", a: ["Thủ tục sơ-chung thẩm", "Thủ tục sơ thẩm; Thủ tục rút gọn.", "Thủ tục sơ thẩm; Thủ tục phúc thẩm.", "Thủ tục sơ thẩm; Thủ tục hòa giải."], c: 0},
+  {q: "Câu 100: Theo pháp luật tố tụng hiện hành của nước ta, chứng cứ trong vụ án được hiểu là gì?", a: ["Là những gì thu thập được theo trình tự, thủ tục do các luật cụ thể quy định mà Tòa án có thẩm quyền dùng làm căn cứ cần thiết để giải quyết đúng đắn vụ án.", "Là những gì có thật, được thu thập theo trình tự, thủ tục do luật định mà Cơ quan tố tụng dùng làm căn cứ cần thiết cho việc giải quyết đúng đắn vụ án.", "Là những gì có thật, thu thập được theo trình tự, thủ tục do luật định mà Tòa án dùng làm căn cứ để giải quyết đúng đắn vụ án đã được đưa đến Tòa.", "Là những gì cá nhân, cơ quan, tổ chức liên quan giao nộp cho cơ quan tố tụng và được cơ quan tố tụng dùng làm căn cứ cần thiết cho việc giải quyết đúng đắn vụ án."], c: 1}
+];
+
+let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
+let timerInterval;
+let timeLeft = 0;
+let autoNextTimer;
+let sessionTotal = 0;
+
+const elInterface = document.getElementById("quiz-interface");
+const elResult = document.getElementById("result-interface");
+const elQuestion = document.getElementById("question");
+const elAnswers = document.getElementById("answers");
+const elCounter = document.getElementById("question-counter");
+const elCombo = document.getElementById("combo-display");
+const elProgressBar = document.getElementById("progress-bar");
+const elBtnNext = document.getElementById("btn-next");
+const elBtnSkip = document.getElementById("btn-skip");
+const elBtnPrev = document.getElementById("btn-prev");
+const elTimer = document.getElementById("timer-display");
+const elResultTime = document.getElementById("result-time");
+const elControlPopup = document.getElementById("control-popup");
+const elReviewContainer = document.getElementById("review-container");
+const elBtnRetryWrong = document.getElementById("btn-retry-wrong");
+
+function initGame(retryWrongOnly = false) {
+    score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
+    activeQueue = []; skippedQueue = []; isPhaseSkipped = false;
+    if (!retryWrongOnly) userAnswers = {};
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const configShuffleQ = urlParams.get('sq') !== 'false'; 
+    const configTime = parseInt(urlParams.get('time')) || 0;
+
+    if (retryWrongOnly) {
+        let wrongIndices = [];
+        originalQuiz.forEach((item, idx) => {
+            if (userAnswers.hasOwnProperty(idx)) {
+                if (userAnswers[idx] !== item.c) wrongIndices.push(idx);
+            }
+        });
+        
+        if (wrongIndices.length === 0) {
+            alert("Bạn không có câu sai nào để làm lại!");
+            return;
+        }
+
+        userAnswers = {}; 
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+             let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+             return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+        
+        activeQueue = wrongIndices;
+        if(configShuffleQ) shuffleArray(activeQueue);
+    } else {
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+            let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+            return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+
+        let indices = sessionQuiz.map((_, i) => i);
+        if(configShuffleQ) shuffleArray(indices);
+        activeQueue = indices;
+    }
+    
+    sessionTotal = activeQueue.length;
+
+    elInterface.style.display = "flex";
+    elResult.style.display = "none";
+    elControlPopup.style.display = "flex";
+
+    if (configTime > 0) {
+        timeLeft = configTime * 60;
+        startCountdown();
+    } else {
+        timeLeft = 0;
+        startCountUp();
+    }
+
+    updateStats();
+    loadQuestion();
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function startCountdown() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay(timeLeft);
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("⏰ Hết giờ! Bài thi sẽ tự động nộp.");
+            finishGame();
+        }
+    }, 1000);
+}
+
+function startCountUp() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft++;
+        updateTimerDisplay(timeLeft);
+    }, 1000);
+}
+
+function updateTimerDisplay(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    elTimer.innerText = `${m}:${s}`;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const limit = parseInt(urlParams.get('time')) || 0;
+    
+    if (limit > 0 && seconds < 60) elTimer.classList.add('danger');
+    else elTimer.classList.remove('danger');
+}
+
+function loadQuestion() {
+    clearTimeout(autoNextTimer);
+
+    const qIndex = activeQueue[currentIndex];
+    const data = sessionQuiz[qIndex];
+    const hasAnswered = userAnswers.hasOwnProperty(qIndex);
+
+    elQuestion.innerText = data.q;
+    elAnswers.innerHTML = "";
+
+    if (isPhaseSkipped) {
+        document.getElementById("phase-display").style.display = "inline-block";
+        elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
+    } else {
+        document.getElementById("phase-display").style.display = "none";
+        elCounter.innerText = `Câu ${currentIndex + 1}/${activeQueue.length}`;
+    }
+
+    const labels = ["A", "B", "C", "D"];
+    data.a.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<b>${labels[idx]}.</b> ${ans}`;
+        
+        if (hasAnswered) {
+            btn.disabled = true;
+            const userPick = userAnswers[qIndex];
+            if (idx === data.c) btn.classList.add("correct");
+            if (idx === userPick && userPick !== data.c) btn.classList.add("wrong");
+            if (idx === userPick) btn.classList.add("user-selected");
+        } else {
+            btn.onclick = () => checkAnswer(qIndex, idx, btn);
+        }
+        elAnswers.appendChild(btn);
+    });
+
+    elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
+    
+    if (hasAnswered) {
+        elBtnSkip.style.display = "none";
+        elBtnNext.style.display = "block";
+    } else {
+        elBtnSkip.style.display = "block";
+        elBtnNext.style.display = "none";
+    }
+
+    updateStats();
+}
+
+function checkAnswer(qIndex, selectedIdx, btnElement) {
+    const data = sessionQuiz[qIndex];
+    const isCorrect = selectedIdx === data.c;
+    userAnswers[qIndex] = selectedIdx;
+
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        
+        if (idx === data.c) {
+            btn.classList.add("correct");
+            if (!isCorrect) {
+                btn.classList.add("flash-correct");
+            }
+        }
+        
+        if (idx === selectedIdx && !isCorrect) {
+            btn.classList.add("wrong");
+        }
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+        triggerMiniConfetti(btnElement);
+    } else {
+        combo = 0; wrongStreak++;
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+
+    autoNextTimer = setTimeout(() => {
+        nextQuestion();
+    }, 1200);
+}
+
+function nextQuestion() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    clearTimeout(autoNextTimer);
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        if(confirm(`Bạn đã bỏ qua ${skippedQueue.length} câu. Bạn có muốn làm lại ngay bây giờ không?`)) {
+             isPhaseSkipped = true;
+            activeQueue = [...skippedQueue];
+            skippedQueue = [];
+            currentIndex = 0;
+            loadQuestion();
+        } else {
+            finishGame();
+        }
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const pct = ((currentIndex + 1) / activeQueue.length) * 100;
+    elProgressBar.style.width = `${pct}%`;
+    elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
+}
+
+function finishGame() {
+    clearInterval(timerInterval);
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+    elControlPopup.style.display = "none"; 
+    
+    elResultTime.innerText = `Thời gian làm bài: ${elTimer.innerText}`;
+
+    const total = sessionTotal; 
+    const correctCount = score;
+    const wrongCount = total - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, var(--border-color) 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+
+    elReviewContainer.innerHTML = "";
+    let hasWrong = false;
+
+    sessionQuiz.forEach((item, qIndex) => {
+        const uAns = userAnswers[qIndex];
+        const correctAns = item.c;
+        if (uAns !== undefined && uAns !== correctAns) {
+            hasWrong = true;
+            const labels = ["A", "B", "C", "D"];
+            
+            const div = document.createElement("div");
+            div.className = "review-item";
+            div.innerHTML = `
+                <div class="review-question">Câu ${qIndex + 1}: ${item.q}</div>
+                <div class="review-detail">
+                    <div style="color: var(--danger)">❌ Bạn chọn: ${labels[uAns]}. ${item.a[uAns]}</div>
+                    <div style="color: var(--success)">✅ Đáp án đúng: ${labels[correctAns]}. ${item.a[correctAns]}</div>
+                </div>
+            `;
+            div.onclick = function() {
+                this.classList.toggle("active");
+            }
+            elReviewContainer.appendChild(div);
+        }
+    });
+
+    if (!hasWrong) {
+        elReviewContainer.innerHTML = `<p style="color: var(--success); font-weight: bold;">Xuất sắc! Bạn không sai câu nào! 🎉</p>`;
+        elBtnRetryWrong.style.display = "none";
+    } else {
+        elBtnRetryWrong.style.display = "block";
+    }
+}
+
+function retryWrongAnswers() {
+    initGame(true);
+}
+
+initGame(false);
+</script>
+</body>
+</html>
