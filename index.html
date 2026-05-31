@@ -3,84 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Cổng Thi Trắc Nghiệm - Nahhh</title>
+<title>Hệ Thống Ôn Thi Trực Tuyến</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
         --primary: #4f46e5;
-        --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --card-bg: rgba(255, 255, 255, 0.95);
-        --text: #1f2937;
+        --primary-light: #6366f1;
+        --bg-gradient: linear-gradient(135deg, #f0f4ff 0%, #dbeafe 100%);
+        --card-bg: rgba(255, 255, 255, 0.85);
+        --text-main: #1e293b;
+        --text-sub: #64748b;
     }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Nunito', sans-serif; background: var(--bg-gradient); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 15px; }
     
-    .container { width: 100%; max-width: 600px; text-align: center; z-index: 1; margin: auto; }
-    .main-title { color: white; font-size: 2rem; font-weight: 800; margin-bottom: 5px; text-shadow: 0 3px 6px rgba(0,0,0,0.2); }
-    .sub-title { color: #e0e7ff; font-size: 0.95rem; margin-bottom: 30px; }
+    body { 
+        font-family: 'Nunito', sans-serif; 
+        background: var(--bg-gradient); 
+        color: var(--text-main); 
+        min-height: 100vh; 
+        display: flex; flex-direction: column; align-items: center; 
+        padding: 40px 15px; 
+    }
     
-    .grid-menu { display: flex; flex-direction: column; gap: 15px; }
-    .card { background: var(--card-bg); border-radius: 20px; padding: 18px; text-decoration: none; color: var(--text); box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; align-items: center; transition: transform 0.2s; cursor: pointer; border: 2px solid transparent;}
-    .card:active { transform: scale(0.98); background: #fff; }
-    .card-icon { font-size: 2.5rem; margin-right: 15px; background: #f3f4f6; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
+    .container { 
+        width: 100%; max-width: 800px; 
+        z-index: 1; margin: auto; 
+    }
+    
+    .header-section { text-align: center; margin-bottom: 40px; }
+    .main-title { 
+        color: var(--primary); font-size: 2.5rem; font-weight: 800; 
+        margin-bottom: 8px; letter-spacing: -0.5px;
+    }
+    .sub-title { color: var(--text-sub); font-size: 1.1rem; font-weight: 600; }
+    
+    /* Lưới danh sách môn học */
+    .grid-menu { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+        gap: 20px; 
+    }
+    
+    /* Thiết kế thẻ (Card) Glassmorphism */
+    .card { 
+        background: var(--card-bg); 
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 20px; 
+        padding: 20px; 
+        text-decoration: none; color: var(--text-main); 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        display: flex; align-items: center; 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        cursor: pointer; 
+    }
+    .card:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 15px 35px rgba(79, 70, 229, 0.15); 
+        border-color: rgba(79, 70, 229, 0.3);
+    }
+    .card:active { transform: scale(0.98); }
+    
+    .card-icon { 
+        font-size: 2.2rem; margin-right: 18px; 
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
+        width: 65px; height: 65px; 
+        display: flex; align-items: center; justify-content: center; 
+        border-radius: 18px; flex-shrink: 0; 
+        box-shadow: inset 0 2px 4px rgba(255,255,255,0.8);
+    }
+    
     .card-content { text-align: left; flex-grow: 1; }
-    .card-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 3px; line-height: 1.2;}
-    .card-desc { font-size: 0.8rem; color: #6b7280; }
-    .badge { display: inline-block; background: #e0e7ff; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; color: var(--primary); margin-top: 5px; }
-    .creator-badge { margin-top: 30px; color: rgba(255,255,255,0.7); font-size: 0.8rem; }
+    .card-title { 
+        font-size: 1.15rem; font-weight: 800; color: #1e293b; 
+        margin-bottom: 4px; line-height: 1.3;
+    }
+    .card-desc { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 8px;}
+    
+    .badge { 
+        display: inline-block; background: #f1f5f9; padding: 4px 10px; 
+        border-radius: 12px; font-size: 0.75rem; font-weight: 700; 
+        color: var(--primary); border: 1px solid #e2e8f0;
+    }
+    
+    .creator-badge { 
+        text-align: center; margin-top: 40px; 
+        color: var(--text-sub); font-size: 0.85rem; font-weight: 600;
+    }
 
-    /* Modal */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.2s; padding: 20px; }
+    /* Modal Setup Giao Diện Mới */
+    .modal-overlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(5px); 
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 1000; display: flex; justify-content: center; align-items: center; 
+        opacity: 0; visibility: hidden; transition: all 0.3s; padding: 20px; 
+    }
     .modal-overlay.active { opacity: 1; visibility: visible; }
-    .modal-box { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; transform: translateY(20px); transition: 0.3s; box-shadow: 0 20px 50px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
-    .modal-overlay.active .modal-box { transform: translateY(0); }
     
-    .close-btn { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; color: #9ca3af; cursor: pointer; line-height: 1; }
-    .modal-header { margin-bottom: 20px; text-align: center; }
-    .modal-title { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+    .modal-box { 
+        background: white; width: 100%; max-width: 420px; 
+        border-radius: 24px; padding: 30px; 
+        transform: translateY(30px) scale(0.95); opacity: 0; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
+    }
+    .modal-overlay.active .modal-box { transform: translateY(0) scale(1); opacity: 1; }
+    
+    .close-btn { 
+        position: absolute; top: 18px; right: 20px; 
+        font-size: 1.8rem; color: #94a3b8; cursor: pointer; 
+        line-height: 1; transition: color 0.2s;
+    }
+    .close-btn:hover { color: #ef4444; }
+    
+    .modal-header { margin-bottom: 25px; text-align: center; }
+    .modal-title { font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin-bottom: 5px; }
 
-    .settings-group { background: #f9fafb; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e7eb; }
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .settings-group { 
+        background: #f8fafc; border-radius: 16px; padding: 18px; 
+        margin-bottom: 20px; border: 1px solid #e2e8f0; 
+    }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .toggle-row:last-child { margin-bottom: 0; }
-    .toggle-label { font-weight: 700; color: #374151; font-size: 0.95rem; }
+    .toggle-label { font-weight: 700; color: #334155; font-size: 0.95rem; }
     
-    .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+    /* Toggle Switch Hiện Đại */
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
     .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; }
-    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     input:checked + .slider { background-color: var(--primary); }
-    input:checked + .slider:before { transform: translateX(20px); }
+    input:checked + .slider:before { transform: translateX(22px); }
 
-    .time-input-container { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e7eb; animation: slideDown 0.3s; }
+    .time-input-container { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; animation: slideDown 0.3s; }
     .time-input-group { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
-    .time-input { width: 60px; padding: 5px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1rem; }
-    .time-unit { font-size: 0.9rem; color: #6b7280; font-weight: 600; }
+    .time-input { width: 70px; padding: 8px; border: 2px solid #cbd5e1; border-radius: 10px; text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--primary); outline: none; transition: border-color 0.2s;}
+    .time-input:focus { border-color: var(--primary); }
+    .time-unit { font-size: 0.95rem; color: #64748b; font-weight: 700; }
 
-    .warning-box { text-align:left; font-size:0.85rem; color:#be123c; background:#fff1f2; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #fecdd3; }
+    .warning-box { text-align:left; font-size:0.85rem; color:#b45309; background:#fff7ed; padding:12px 15px; border-radius:12px; margin-bottom:20px; border:1px solid #fdba74; font-weight: 600; line-height: 1.4;}
     
-    #tin-hoc-note { display: none; background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; padding: 10px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 15px; font-weight: 600; text-align: left; }
-
-    .contact-area { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
-    .social-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 12px; text-decoration: none; color: white; font-weight: 700; font-size: 0.85rem; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .contact-area { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+    .social-btn { 
+        flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; 
+        padding: 12px; border-radius: 14px; text-decoration: none; color: white; 
+        font-weight: 700; font-size: 0.9rem; transition: all 0.2s; 
+    }
+    .social-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
     .social-btn:active { transform: scale(0.96); }
     .btn-fb { background: #1877F2; }
-    .btn-tele { background: #229ED9; }
+    .btn-tele { background: #0088cc; }
 
-    .start-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
+    .start-btn { 
+        width: 100%; padding: 16px; background: var(--primary); color: white; 
+        border: none; border-radius: 16px; font-size: 1.15rem; font-weight: 800; 
+        cursor: pointer; transition: all 0.2s; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+    }
+    .start-btn:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); }
+    .start-btn:active { transform: scale(0.98); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
     
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.6s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.8s cubic-bezier(0.165, 0.84, 0.44, 1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 </head>
 <body>
 
 <div class="container fade-in">
-    <h1 class="main-title">TRẮC NGHIỆM</h1>
-    <p class="sub-title">Hệ thống ôn thi trực tuyến</p>
+    <div class="header-section">
+        <h1 class="main-title">Trắc Nghiệm HUBT</h1>
+        <p class="sub-title">Hệ thống ôn thi trực tuyến thông minh</p>
+    </div>
 
     <div class="grid-menu">
-        <div onclick="openModal('1.html', 'Dẫn luận Ngôn ngữ', false)" class="card">
+        <div onclick="openModal('4.html', 'Lịch sử Đảng')" class="card">
+            <div class="card-icon">🚩</div>
+            <div class="card-content">
+                <div class="card-title">Lịch sử Đảng</div>
+                <div class="card-desc">Lịch sử Đảng Cộng sản Việt Nam</div>
+                <div class="badge">120 Câu</div>
+            </div>
+        </div>
+
+        <div onclick="openModal('3.html', 'Kinh tế chính trị')" class="card">
+            <div class="card-icon">⚖️</div>
+            <div class="card-content">
+                <div class="card-title">Kinh tế chính trị</div>
+                <div class="card-desc">Mác - Lênin</div>
+                <div class="badge">Đang cập nhật</div>
+            </div>
+        </div>
+
+        <div onclick="openModal('7.html', 'Triết học Mác - Lênin')" class="card">
+            <div class="card-icon">🧠</div>
+            <div class="card-content">
+                <div class="card-title">Triết học Mác - Lênin</div>
+                <div class="card-desc">Triết học Mác - Lênin</div>
+                <div class="badge">150 Câu</div>
+            </div>
+        </div>
+
+        <div onclick="openModal('6.html', 'Pháp luật đại cương')" class="card">
+            <div class="card-icon">🏛️</div>
+            <div class="card-content">
+                <div class="card-title">Pháp luật đại cương</div>
+                <div class="card-desc">Các ngành không chuyên luật</div>
+                <div class="badge">100 Câu</div>
+            </div>
+        </div>
+
+        <div onclick="openModal('1.html', 'Dẫn luận Ngôn ngữ')" class="card">
             <div class="card-icon">📚</div>
             <div class="card-content">
                 <div class="card-title">Dẫn luận Ngôn ngữ</div>
@@ -89,34 +229,24 @@
             </div>
         </div>
 
-        <div onclick="openModal('2.html', 'Tin học Đại cương', true)" class="card">
+        <div onclick="openModal('2.html', 'Tin học Đại cương (Tin 1)', true)" class="card">
             <div class="card-icon">💻</div>
             <div class="card-content">
-                <div class="card-title">Tin 1</div>
-                <div class="card-desc">Word, PPT</div>
+                <div class="card-title">Tin học Đại cương</div>
+                <div class="card-desc">Word, PowerPoint</div>
                 <div class="badge">223 Câu</div>
             </div>
         </div>
 
-        <div onclick="openModal('3.html', 'tin 2', false)" class="card">
-            <div class="card-icon">⚖️</div>
+        <div onclick="openModal('tin2.html', 'Tin học 2 (AI)')" class="card"> <div class="card-icon">🤖</div>
             <div class="card-content">
-                <div class="card-title">Tin 2 (AI)</div>
-                <div class="card-desc">Tin 2 (AI)</div>
-                <div class="badge"></div>
+                <div class="card-title">Tin học 2 (AI)</div>
+                <div class="card-desc">Trí tuệ nhân tạo</div>
+                <div class="badge">169 Câu</div>
             </div>
         </div>
 
-        <div onclick="openModal('4.html', 'Lịch sử Đảng', false)" class="card">
-            <div class="card-icon">🚩</div>
-            <div class="card-content">
-                <div class="card-title">Lịch sử Đảng Cộng sản Việt Nam</div>
-                <div class="card-desc">Lịch sử Đảng Cộng sản Việt Nam</div>
-                <div class="badge">120 Câu</div>
-            </div>
-        </div>
-
-        <div onclick="openModal('5.html', 'Cơ sở Văn hóa Việt Nam', false)" class="card">
+        <div onclick="openModal('5.html', 'Cơ sở Văn hóa Việt Nam')" class="card">
             <div class="card-icon">🪷</div>
             <div class="card-content">
                 <div class="card-title">Cơ sở Văn hóa Việt Nam</div>
@@ -126,6 +256,7 @@
         </div>
 
     </div>
+    
     <div class="creator-badge">Designed by <b>Nahhh</b></div>
 </div>
 
@@ -134,12 +265,12 @@
         <div class="close-btn" onclick="closeModal()">&times;</div>
         <div class="modal-header">
             <div class="modal-title" id="modalSubject">Môn Học</div>
-            <div style="font-size:0.9rem; color:#6b7280">Cài đặt bài thi</div>
+            <div style="font-size:0.9rem; color:var(--text-sub); font-weight: 600;">Cài đặt thông số bài thi</div>
         </div>
 
         <div class="settings-group">
             <div class="toggle-row">
-                <div class="toggle-label">🔀 Đảo câu hỏi</div>
+                <div class="toggle-label">🔀 Đảo thứ tự câu hỏi</div>
                 <label class="switch">
                     <input type="checkbox" id="shuffleQ" checked>
                     <span class="slider"></span>
@@ -162,12 +293,8 @@
             </div>
         </div>
 
-        <div id="tin-hoc-note">
-            ⏳ <b>Lưu ý:</b> Môn này có nhiều hình ảnh, vui lòng đợi tải xong rồi hãy làm nhé!
-        </div>
-
-        <div class="warning-box">
-            ⚠️ <b>Lưu ý:</b> Nếu phát hiện lỗi sai, vui lòng báo cáo ngay.
+        <div class="warning-box" id="warning-msg">
+            💡 <b>Nhắc nhở:</b> Hãy đảm bảo kết nối mạng ổn định. Nếu phát hiện lỗi câu hỏi, vui lòng liên hệ Admin.
         </div>
 
         <div class="contact-area">
@@ -179,23 +306,34 @@
             </a>
         </div>
 
-        <button class="start-btn" onclick="startExam()">BẮT ĐẦU LÀM BÀI 🚀</button>
+        <button class="start-btn" onclick="startExam()">BẮT ĐẦU THI 🚀</button>
     </div>
 </div>
 
 <script>
     let currentUrl = '';
 
-    function openModal(url, title, showNote = false) {
+    function openModal(url, title, isHeavy = false) {
         currentUrl = url;
         document.getElementById('modalSubject').innerText = title;
-        const note = document.getElementById('tin-hoc-note');
-        if (showNote) { note.style.display = 'block'; } else { note.style.display = 'none'; }
+        
+        const warningBox = document.getElementById('warning-msg');
+        if (isHeavy) {
+            warningBox.innerHTML = "⏳ <b>Lưu ý:</b> Môn này chứa nhiều hình ảnh, vui lòng kiên nhẫn đợi tải xong trước khi làm bài!";
+        } else {
+            warningBox.innerHTML = "💡 <b>Nhắc nhở:</b> Hãy đảm bảo kết nối mạng ổn định. Nếu phát hiện lỗi câu hỏi, vui lòng báo cáo ngay.";
+        }
+        
         document.getElementById('setupModal').classList.add('active');
     }
 
-    function closeModal() { document.getElementById('setupModal').classList.remove('active'); }
-    function closeModalOnOutside(e) { if (e.target.id === 'setupModal') closeModal(); }
+    function closeModal() { 
+        document.getElementById('setupModal').classList.remove('active'); 
+    }
+    
+    function closeModalOnOutside(e) { 
+        if (e.target.id === 'setupModal') closeModal(); 
+    }
 
     function toggleTimeInput() {
         const isChecked = document.getElementById('timeLimitToggle').checked;
@@ -209,177 +347,8 @@
         if (document.getElementById('timeLimitToggle').checked) {
             timeParam = document.getElementById('timeMinutes').value;
         }
-        window.location.href = `${currentUrl}?sq=${sQ}&sa=false&time=${timeParam}`;
-    }
-</script>
-</body>
-</html>
-    
-    .close-btn { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; color: #9ca3af; cursor: pointer; line-height: 1; }
-    .modal-header { margin-bottom: 20px; text-align: center; }
-    .modal-title { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
-
-    .settings-group { background: #f9fafb; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e7eb; }
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .toggle-row:last-child { margin-bottom: 0; }
-    .toggle-label { font-weight: 700; color: #374151; font-size: 0.95rem; }
-    
-    .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; }
-    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--primary); }
-    input:checked + .slider:before { transform: translateX(20px); }
-
-    .time-input-container { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e7eb; animation: slideDown 0.3s; }
-    .time-input-group { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
-    .time-input { width: 60px; padding: 5px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1rem; }
-    .time-unit { font-size: 0.9rem; color: #6b7280; font-weight: 600; }
-
-    .warning-box { text-align:left; font-size:0.85rem; color:#be123c; background:#fff1f2; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #fecdd3; }
-    
-    #tin-hoc-note { display: none; background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; padding: 10px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 15px; font-weight: 600; text-align: left; }
-
-    .contact-area { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
-    .social-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 12px; text-decoration: none; color: white; font-weight: 700; font-size: 0.85rem; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .social-btn:active { transform: scale(0.96); }
-    .btn-fb { background: #1877F2; }
-    .btn-tele { background: #229ED9; }
-
-    .start-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
-    
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.6s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-</style>
-</head>
-<body>
-
-<div class="container fade-in">
-    <h1 class="main-title">TRẮC NGHIỆM</h1>
-    <p class="sub-title">Hệ thống ôn thi trực tuyến</p>
-
-    <div class="grid-menu">
-        <div onclick="openModal('1.html', 'Dẫn luận Ngôn ngữ', false)" class="card">
-            <div class="card-icon">📚</div>
-            <div class="card-content">
-                <div class="card-title">Dẫn luận Ngôn ngữ</div>
-                <div class="card-desc">Lý thuyết đại cương</div>
-                <div class="badge">100 Câu</div>
-            </div>
-        </div>
-
-        <div onclick="openModal('2.html', 'Tin học Đại cương', true)" class="card">
-            <div class="card-icon">💻</div>
-            <div class="card-content">
-                <div class="card-title">Tin 1</div>
-                <div class="card-desc">Word, PPT</div>
-                <div class="badge">223 Câu</div>
-            </div>
-        </div>
-
-        <div onclick="openModal('3.html', 'Kinh tế chính trị', false)" class="card">
-            <div class="card-icon">⚖️</div>
-            <div class="card-content">
-                <div class="card-title">Kinh tế chính trị Mác - Lênin</div>
-                <div class="card-desc">Mác - Lênin HUBT</div>
-                <div class="badge">khong co file khong lam duoc</div>
-            </div>
-        </div>
-
-        <div onclick="openModal('4.html', 'Lịch sử Đảng', false)" class="card">
-            <div class="card-icon">🚩</div>
-            <div class="card-content">
-                <div class="card-title">Lịch sử Đảng Cộng sản Việt Nam</div>
-                <div class="card-desc">Lịch sử Đảng Cộng sản Việt Nam</div>
-                <div class="badge">120 Câu</div>
-            </div>
-        </div>
-
-    </div>
-    <div class="creator-badge">Designed by <b>Nahhh</b></div>
-</div>
-
-<div id="setupModal" class="modal-overlay" onclick="closeModalOnOutside(event)">
-    <div class="modal-box">
-        <div class="close-btn" onclick="closeModal()">&times;</div>
-        <div class="modal-header">
-            <div class="modal-title" id="modalSubject">Môn Học</div>
-            <div style="font-size:0.9rem; color:#6b7280">Cài đặt bài thi</div>
-        </div>
-
-        <div class="settings-group">
-            <div class="toggle-row">
-                <div class="toggle-label">🔀 Đảo câu hỏi</div>
-                <label class="switch">
-                    <input type="checkbox" id="shuffleQ" checked>
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div class="toggle-row">
-                <div class="toggle-label">⏱️ Giới hạn thời gian</div>
-                <label class="switch">
-                    <input type="checkbox" id="timeLimitToggle" onchange="toggleTimeInput()">
-                    <span class="slider"></span>
-                </label>
-            </div>
-
-            <div id="timeInputBox" class="time-input-container">
-                <div class="time-input-group">
-                    <input type="number" id="timeMinutes" class="time-input" value="45" min="1" max="180">
-                    <span class="time-unit">Phút</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="tin-hoc-note">
-            ⏳ <b>Lưu ý:</b> Môn này có nhiều hình ảnh, vui lòng đợi tải xong rồi hãy làm nhé!
-        </div>
-
-        <div class="warning-box">
-            ⚠️ <b>Lưu ý:</b> Nếu phát hiện lỗi sai, vui lòng báo cáo ngay.
-        </div>
-
-        <div class="contact-area">
-            <a href="https://www.facebook.com/pna1301" target="_blank" class="social-btn btn-fb">
-                <span>📘</span> Facebook
-            </a>
-            <a href="https://t.me/justn1" target="_blank" class="social-btn btn-tele">
-                <span>✈️</span> Telegram
-            </a>
-        </div>
-
-        <button class="start-btn" onclick="startExam()">BẮT ĐẦU LÀM BÀI 🚀</button>
-    </div>
-</div>
-
-<script>
-    let currentUrl = '';
-
-    function openModal(url, title, showNote = false) {
-        currentUrl = url;
-        document.getElementById('modalSubject').innerText = title;
-        const note = document.getElementById('tin-hoc-note');
-        if (showNote) { note.style.display = 'block'; } else { note.style.display = 'none'; }
-        document.getElementById('setupModal').classList.add('active');
-    }
-
-    function closeModal() { document.getElementById('setupModal').classList.remove('active'); }
-    function closeModalOnOutside(e) { if (e.target.id === 'setupModal') closeModal(); }
-
-    function toggleTimeInput() {
-        const isChecked = document.getElementById('timeLimitToggle').checked;
-        document.getElementById('timeInputBox').style.display = isChecked ? 'block' : 'none';
-    }
-
-    function startExam() {
-        if (!currentUrl) return;
-        const sQ = document.getElementById('shuffleQ').checked;
-        let timeParam = 0;
-        if (document.getElementById('timeLimitToggle').checked) {
-            timeParam = document.getElementById('timeMinutes').value;
-        }
+        
+        // Mặc định luôn truyền sa=false để không đảo đáp án
         window.location.href = `${currentUrl}?sq=${sQ}&sa=false&time=${timeParam}`;
     }
 </script>
