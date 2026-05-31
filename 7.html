@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Triết học Mác - Lênin - Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    /* --- CSS BIẾN ĐỔI GIAO DIỆN --- */
+    :root {
+        --primary: #d32f2f;
+        --secondary: #64748b;
+        --success: #16a34a;
+        --danger: #dc2626;
+        
+        --bg-color: #fef2f2;
+        --card-bg: #ffffff;
+        --text-main: #0f172a;
+        --text-sub: #475569;
+        --border-color: #e2e8f0;
+        --btn-bg: #f1f5f9;
+        --shadow: rgba(0,0,0,0.1);
+    }
+
+    body.dark-mode {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-main: #e2e8f0;
+        --text-sub: #94a3b8;
+        --border-color: #333333;
+        --btn-bg: #2d2d2d;
+        --shadow: rgba(0,0,0,0.5);
+        --danger: #ef5350; 
+        --success: #66bb6a; 
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+    /* HEADER */
+    .header {
+        padding: 10px 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px var(--shadow); z-index: 10; flex-shrink: 0; font-size: 0.95rem;
+    }
+    .header-item { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+    #timer-display { background: rgba(0,0,0,0.25); padding: 4px 12px; border-radius: 12px; font-family: monospace; font-size: 1.1rem; letter-spacing: 0.5px; }
+    #timer-display.danger { background: #ef4444; animation: pulse 1s infinite; }
+    .combo-badge { background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; }
+    
+    .progress-container { width: 100%; height: 4px; background: var(--border-color); flex-shrink: 0; }
+    .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+    /* CONTAINER */
+    .container { width: 100%; max-width: 100%; background: var(--card-bg); display: flex; flex-direction: column; flex-grow: 1; position: relative; overflow: hidden; transition: background 0.3s; }
+
+    /* VÙNG NỘI DUNG */
+    .quiz-body { padding: 20px 15px; overflow-y: auto; flex-grow: 1; padding-bottom: 120px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+
+    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px; font-weight: bold; width: fit-content; }
+    .question-text { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; line-height: 1.5; color: var(--text-main); word-wrap: break-word; }
+    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+
+    .option-btn { 
+        width: 100%; text-align: left; padding: 15px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 14px; font-size: 1rem; font-weight: 600; color: var(--text-sub); cursor: pointer; position: relative; line-height: 1.4; word-wrap: break-word; transition: all 0.2s; 
+    }
+    .option-btn:active { background: var(--btn-bg); transform: scale(0.98); }
+    
+    .option-btn.correct { border-color: var(--success); background: rgba(22, 163, 74, 0.1); color: var(--success); }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    
+    .option-btn.wrong { border-color: var(--danger); background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    .option-btn.user-selected { border-width: 2px; }
+
+    /* HIỆU ỨNG NHÁY XANH ĐÁP ÁN ĐÚNG KHI CHỌN SAI */
+    @keyframes flashGreen {
+        0%, 100% { background: rgba(22, 163, 74, 0.1); border-color: var(--success); transform: scale(1); }
+        50% { background: rgba(22, 163, 74, 0.35); border-color: #15803d; transform: scale(1.02); }
+    }
+    .flash-correct { animation: flashGreen 1s ease; }
+
+    /* POPUP MENU */
+    .control-popup {
+        position: fixed; bottom: 50px; right: 15px; background: var(--card-bg); backdrop-filter: blur(10px); padding: 8px; border-radius: 30px; box-shadow: 0 5px 25px var(--shadow); display: flex; flex-direction: row; gap: 10px; z-index: 100; border: 1px solid var(--border-color); touch-action: none; 
+    }
+    
+    .btn { width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: transform 0.1s; flex-shrink: 0; background: var(--btn-bg); color: var(--text-sub); }
+    .btn:active { transform: scale(0.9); }
+    .btn-skip { background: #fff7ed; color: #d97706; }
+    body.dark-mode .btn-skip { background: #451a03; color: #fbbf24; }
+    .btn-next { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3); }
+    
+    .btn-move { width: 32px; height: 32px; font-size: 1.1rem; position: absolute; top: -15px; right: 5px; border: 2px solid var(--card-bg); background: var(--secondary); color: white; z-index: 101; cursor: grab; }
+    .btn-move:active { cursor: grabbing; }
+    .btn-theme { width: 32px; height: 32px; font-size: 1rem; position: absolute; top: -15px; left: 5px; border: 2px solid var(--card-bg); background: #333; color: #ffd700; z-index: 101; }
+
+    /* RESULT SCREEN */
+    .result-screen { text-align: center; padding: 30px 20px; display: none; overflow-y: auto; height: 100%; background: var(--card-bg); z-index: 50; }
+    .score-circle { width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(var(--success) 0%, var(--border-color) 0%); margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--text-main); position: relative; }
+    .score-circle::before { content: ''; position: absolute; width: 120px; height: 120px; background: var(--card-bg); border-radius: 50%; transition: background 0.3s; }
+    .score-text { position: relative; z-index: 2; }
+
+    .review-box { text-align: left; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+    .review-item { background: rgba(220, 38, 38, 0.05); border: 1px solid var(--danger); border-radius: 12px; padding: 15px; margin-bottom: 12px; cursor: pointer; }
+    .review-question { font-weight: bold; font-size: 1rem; margin-bottom: 8px; color: var(--text-main); }
+    .review-detail { display: none; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 0.95rem; }
+    .review-item.active .review-detail { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-item" id="timer-display">00:00</div>
+    <div class="header-item" id="question-counter">1/150</div>
+    <div class="combo-badge" id="combo-display">🔥 0</div>
+</div>
+<div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<div class="container">
+    <div id="quiz-interface" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="quiz-body">
+            <div id="phase-display" class="phase-badge">LÀM LẠI CÂU BỎ QUA</div>
+            <h2 class="question-text" id="question">Đang tải...</h2>
+            <div class="options-grid" id="answers"></div>
+        </div>
+
+        <div class="control-popup" id="control-popup">
+            <button class="btn btn-theme" onclick="toggleTheme()">🌗</button>
+            <button class="btn btn-move" id="drag-handle">⇄</button>
+            
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">⬅</button>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">⤵</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">➜</button>
+        </div>
+    </div>
+
+    <div id="result-interface" class="result-screen">
+        <h2>🎉 Hoàn thành!</h2>
+        <div style="font-size: 1rem; color: var(--text-sub); margin-bottom: 20px;" id="result-time">Thời gian: 00:00</div>
+        
+        <div class="score-circle" id="score-circle">
+            <span class="score-text" id="final-score">0%</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.3rem; color:var(--success)">0</span></div>
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.3rem; color:var(--danger)">0</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction: column; gap:10px; margin-bottom: 30px;">
+             <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
+                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="location.reload()">🔄 Làm lại tất cả</button>
+             </div>
+             <button id="btn-retry-wrong" class="btn" style="background:#dc2626; color:white; width:100%; border-radius:15px; display:none; font-size: 1rem;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
+        </div>
+
+        <h3 style="text-align: left; color: var(--danger); border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Xem lại câu sai 👇</h3>
+        <div id="review-container" class="review-box">
+            <p style="color: var(--text-sub); font-style: italic;">Bạn làm đúng hết rồi! Giỏi quá! 👏</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- HIỆU ỨNG NỔ NHẸ KHI CHỌN ĐÁP ÁN ĐÚNG ---
+function triggerMiniConfetti(btn) {
+    const rect = btn.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const colors = ['#f44336', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0'];
+    
+    for (let i = 0; i < 25; i++) {
+        const particle = document.createElement('div');
+        particle.style.position = 'fixed';
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+        particle.style.width = '7px';
+        particle.style.height = '7px';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '9999';
+        document.body.appendChild(particle);
+
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 50 + 20; 
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity - 20; 
+
+        particle.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+        ], {
+            duration: 600 + Math.random() * 300,
+            easing: 'cubic-bezier(0, .9, .57, 1)'
+        }).onfinish = () => particle.remove();
+    }
+}
+
+// --- DRAGGABLE MENU LOGIC ---
+const popup = document.getElementById('control-popup');
+const handle = document.getElementById('drag-handle');
+let isDragging = false, offsetX, offsetY;
+
+handle.addEventListener('mousedown', startDrag);
+handle.addEventListener('touchstart', startDrag, {passive: false});
+
+function startDrag(e) {
+    e.preventDefault();
+    isDragging = true;
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+    const rect = popup.getBoundingClientRect();
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, {passive: false});
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+}
+
+function onDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+
+    let newLeft = clientX - offsetX;
+    let newTop = clientY - offsetY;
+
+    const maxX = window.innerWidth - popup.offsetWidth;
+    const maxY = window.innerHeight - popup.offsetHeight;
+
+    newLeft = Math.max(0, Math.min(newLeft, maxX));
+    newTop = Math.max(0, Math.min(newTop, maxY));
+
+    popup.style.left = newLeft + 'px';
+    popup.style.top = newTop + 'px';
+    popup.style.right = 'auto'; 
+    popup.style.bottom = 'auto'; 
+}
+
+function stopDrag() {
+    isDragging = false;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+}
+
+// --- DARK MODE ---
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+
+// --- DATA CÂU HỎI TRÍCH XUẤT TỪ PDF (150 CÂU TRIẾT HỌC) ---
+const originalQuiz = [
+  {q: "Câu 1. Tìm đáp án thiếu nội dung nhất về vai trò của thực tiễn đối với nhận thức trong các đáp án dưới đây:", a: ["Là cơ sở, mục đích, động lực chủ yếu và trực tiếp của nhận thức và là tiêu chuẩn của chân lý.", "Là nguồn gốc, cơ sở, mục đích của nhận thức.", "Là mục đích, cơ sở, động lực của nhận thức và làm tiêu chuẩn cho kinh nghiệm.", "Thước đo để phát hiện sự đúng sai của cảm giác, của kinh nghiệm và của lý luận."], c: 3},
+  {q: "Câu 2. Hãy chỉ ra luận điểm thể hiện lập trường Duy tâm trong các luận điểm dưới đây:", a: ["Chân lý là tri thức phản ánh đúng hiện thực khách quan và đã được thực tiễn kiểm nghiệm, vì vậy, có thể áp dụng chân lý đó vào mọi nơi, mọi lúc, mọi việc đều đúng.", "Giới động vật và thực vật hoàn toàn tách rời nhau, không có nguồn gốc chung.", "Sự phát huy tính năng động chủ quan của con người muốn có hiệu quả bao giờ cũng phải dựa vào cơ sở vật chất.", "Chân lý chỉ tồn tại trong nhận thức con người. Vì vậy nội dung của chân lý là do chủ quan của con người tạo ra."], c: 3},
+  {q: "Câu 3. Hãy chỉ ra luận điểm thể hiện lập trường Duy tâm trong các luận điểm dưới đây:", a: ["Không có lý luận thì hoạt động thực tiễn của con người mò mẫm, mất phương hướng. Do đó lý luận phải có trước và không phụ thuộc vào thực tiễn.", "Sự phát huy tính năng động chủ quan của con người muốn có hiệu quả bao giờ cũng phải dựa vào cơ sở vật chất.", "Mọi tri thức dù trực tiếp hay gián tiếp, dù trình độ cao hay thấp, xét đến cùng đều bắt nguồn từ thực tiễn.", "Động vật và thực vật hoàn toàn khác nhau, không có nguồn gốc chung."], c: 0},
+  {q: "Câu 4. Hãy chỉ ra luận điểm thuộc lập trường Duy vật biện chứng trong các luận điểm dưới đây:", a: ["Thế giới tồn tại khách quan, còn quy luật vận động và phát triển của thế giới do ý thức con người tạo ra.", "Phát triển là quá trình tiến bộ, theo đường thẳng.", "Mỗi chân lý khoa học dù có tính tương đối vẫn chứa đựng yếu tố của chân lý tuyệt đối.", "Vật chất là thực tại, tồn tại phụ thuộc vào cảm giác của con người."], c: 2},
+  {q: "Câu 5. Hãy chỉ ra luận điểm thuộc lập trường Duy vật siêu hình trong các luận điểm dưới đây:", a: ["Mâu thuẫn là nguồn gốc, động lực của mọi sự vận động và phát triển.", "Phủ định của phủ định là sự loại bỏ hoàn toàn sự vật cũ.", "Nhân quả là mối liên hệ có tính chủ quan, do con người xác lập.", "Nhận thức chẳng qua chỉ là phức hợp các cảm giác của con người."], c: 1},
+  {q: "Câu 6. Hãy chỉ ra luận điểm thuộc lập trường Duy vật siêu hình trong các luận điểm dưới đây:", a: ["Nhận thức của con người là một quá trình biện chứng.", "Cái tất nhiên và ngẫu nhiên không có quan hệ với nhau vì cái tất nhiên sâu sắc, bên trong, ổn định còn cái ngẫu nhiên phong phú, bên ngoài, biến đổi.", "Nội dung chân lý có tính khách quan còn hình thức chân lý có tính chủ quan.", "Phủ định của phủ định là quy luật phổ biến trong tự nhiên, trong xã hội và tư duy."], c: 1},
+  {q: "Câu 7. Hãy chỉ ra luận điểm thể hiện lập trường Duy vật siêu hình về lịch sử trong các luận điểm dưới đây:", a: ["Quan hệ sản xuất có tính vật chất, quyết định mọi quan hệ xã hội khác.", "Nguyên nhân của mọi biến đổi trong lịch sử, xét đến cùng là do tư tưởng của con người đang luôn luôn thay đổi.", "Nhân tố kinh tế là nhân tố quyết định duy nhất trong lịch sử.", "Cơ sở hạ tầng quyết định kiến trúc thượng tầng, đồng thời kiến trúc thượng tầng tác động ngược trở lại đối với cơ sở hạ tầng."], c: 2},
+  {q: "Câu 8. Hãy chỉ ra luận điểm thể hiện lập trường Duy tâm về lịch sử trong các luận điểm dưới đây:", a: ["Sự thịnh suy của mỗi dân tộc là do ý chí của người đứng đầu quốc gia quyết định.", "Quan hệ sản xuất là những quan hệ xã hội có tính vật chất được hình thành không tuỳ thuộc ý muốn của những người sản xuất.", "Nhân tố kinh tế là nhân tố quyết định duy nhất trong lịch sử.", "Trong một cung điện, người ta suy nghĩ khác trong một túp lều tranh."], c: 0},
+  {q: "Câu 9. Hãy chỉ ra luận điểm thể hiện lập trường Duy vật siêu hình về lịch sử trong các luận điểm dưới đây:", a: ["Phương thức sản xuất là cách thức con người tiến hành quá trình sản xuất vật chất ở những giai đoạn lịch sử nhất định của xã hội loài người.", "Xã hội là một tổng số các bộ phận được cấu thành và biến đổi tuỳ ý muốn con người.", "Xã hội là một tổ hợp các bộ phận được cấu thành và biến đổi một cách ngẫu nhiên.", "Tất cả cái gì thúc đẩy con người hành động đều phải thông qua đầu óc của họ. Vì vậy phải tìm động lực sâu xa của lịch sử ở trong tư tưởng và ý chí của con người."], c: 2},
+  {q: "Câu 10. Hãy chỉ ra luận điểm thể hiện lập trường Duy tâm về lịch sử trong các luận điểm dưới đây:", a: ["Dân dĩ thực vi thiên.", "Do có được những Lực lượng sản xuất mới, loài người thay đổi Phương thức sản xuất của mình, đồng thời thay đổi tất cả những quan hệ xã hội của mình.", "Trong tất cả những chuyển biến lịch sử thì chuyển biến về kinh tế là chuyển biến quan trọng nhất, quyết định sự phát triển của lịch sử.", "Xã hội vận động theo những quy luật phụ thuộc vào ý thức con người."], c: 3},
+  {q: "Câu 11. Hãy chỉ ra luận điểm thể hiện lập trường Duy tâm về lịch sử trong các luận điểm dưới đây:", a: ["Về mặt khách quan, nhà nước xuất hiện là do mâu thuẫn giai cấp không thể điều hoà được.", "Cơ sở trưc tiếp hình thành các giai cấp là lòng tham của con người.", "Giai cấp nào chi phối những tư liệu sản xuất vật chất thì cũng chi phối luôn cả những tư liệu và điều kiện sản xuất tinh thần.", "Đạo đức và nghệ thuật là các yếu tố phản ánh và phụ thuộc vào các hoạt động kinh tế."], c: 1},
+  {q: "Câu 12. Hãy chỉ ra luận điểm thể hiện lập trường Duy tâm trong các luận điểm dưới đây:", a: ["Chỉ dựa vào các quan hệ kinh tế hiện có cũng có thể giải thích đầy đủ bất kỳ học thuyết chính trị nào.", "Chỉ dựa vào các quan hệ kinh tế hiện có cũng có thể giải thích đúng bất kỳ tư tưởng pháp quyền nào.", "Mọi thuyết đạo đức có từ trước đến nay, xét đến cùng, đều là sản phẩm của tình hình kinh tế lúc bấy giờ.", "Hoạt động của con người khác với động vật là có ý thức, vì thế ý thức của con người quyết định sự tồn tại của họ."], c: 3},
+  {q: "Câu 13. Hãy chỉ ra luận điểm thể hiện lập trường Duy vật lịch sử trong các luận điểm dưới đây:", a: ["Quan hệ sản xuất là những quan hệ xã hội có tính vật chất quyết định mọi quan hệ xã hội khác.", "Nguyên nhân của mọi biến đổi trong lịch sử, xét đến cùng là do tư tưởng của con người đang luôn luôn thay đổi.", "Nhân tố kinh tế là nhân tố quyết định duy nhất trong lịch sử.", "Sự thịnh suy của mỗi dân tộc là do ý chí của người đứng đầu quốc gia quyết định."], c: 0},
+  {q: "Câu 14. Hãy chỉ ra luận điểm thể hiện lập trường Duy tâm về lịch sử trong các luận điểm dưới đây:", a: ["Những quy luật kinh tế có vai trò quyết định sự vận động, phát triển của xã hội, nhưng chính sách kinh tế có thể kìm hãm hoặc thúc đẩy tác động của những quy luật kinh tế đó.", "Xã hội là một tổng số các bộ phận được cấu thành và biến đổi tuỳ theo hoàn cảnh địa lý.", "Nhân tố kinh tế là nhân tố quyết định duy nhất trong lịch sử.", "Sự thịnh suy của mỗi dân tộc là do ý chí của người đứng đầu quốc gia quyết định."], c: 3},
+  {q: "Câu 15. Tìm luận điểm tóm tắt sai về khái niệm Tồn tại xã hội trong các luận điểm dưới đây:", a: ["Đó là một khái niệm cơ bản của chủ nghĩa duy vật lịch sử.", "Chỉ toàn bộ các yếu tố vật chất bảo đảm cho sự tồn tại và phát triển của xã hội loài người. Bao gồm hoàn cảnh địa lý tự nhiên, dân cư và phương thức sản xuất.", "Trong ba yếu tố của Tồn tại xã hội thì hoàn cảnh địa lý tự nhiên là yếu tố quan trọng nhất, quyết định sự biến đổi, phát triển của xã hội.", "Trong ba yếu tố của Tồn tại xã hội thì phương thức sản xuất là yếu tố quan trọng nhất, quyết định sự biến đổi, phát triển của xã hội."], c: 2},
+  {q: "Câu 16. Tìm đáp án tóm tắt sai về khái niệm Quan hệ sản xuất trong các đáp án dưới đây:", a: ["Mối quan hệ giữa người và người trong quá trình sản xuất của cải vật chất được gọi là Quan hệ sản xuất.", "Cũng như Lực lượng sản xuất, Quan hệ sản xuất thuộc lĩnh vực đời sống vật chất xã hội.", "Tính vật chất của Quan hệ sản xuất được biểu hiện ở chỗ chúng tồn tại khách quan, phụ thuộc vào ý thức con người.", "Quan hệ sản xuất là quan hệ kinh tế cơ bản của một hình thái kinh tế-xã hội."], c: 2},
+  {q: "Câu 17. Tìm đáp án tóm tắt sai về mối quan hệ biện chứng giữa Lực lượng sản xuất và Quan hệ sản xuất trong các đáp án dưới đây:", a: ["Lực lượng sản xuất và Quan hệ sản xuất là hai mặt của Phương thức sản xuất, tồn tại không tách rời nhau.", "Mối quan hệ biện chứng giữa Lực lượng sản xuất và Quan hệ sản xuất là nội dung quy luật về sự phù hợp của Quan hệ sản xuất với trình độ và tính chất của Lực lượng sản xuất.", "Quy luật về sự phù hợp của Quan hệ sản xuất với trình độ và tính chất của Lực lượng sản xuất là quy luật xã hội phổ biến trong tất cả các xã hội có đối kháng giai cấp.", "Quy luật về sự phù hợp của Quan hệ sản xuất với trình độ và tính chất của Lực lượng sản xuất vạch rõ sự phụ thuộc khách quan của Quan hệ sản xuất vào sự phát triển của Lực lượng sản xuất, đồng thời Quan hệ sản xuất cũng tác động trở lại Lực lượng sản xuất."], c: 2},
+  {q: "Câu 18. Phát hiện luận điểm sai về Lực lượng sản xuất trong các luận điểm sau đây:", a: ["Đối tượng lao động là yếu tố động nhất và cách mạng nhất trong Lực lượng sản xuất.", "Tư liệu lao động là cơ sở của sự kế tục lịch sử xã hội.", "Cái cối xay quay bằng tay đưa lại xã hội có lãnh chúa phong kiến.", "Năng suất lao động xã hội là thước đo trình độ phát triển của Lực lượng sản xuất."], c: 0},
+  {q: "Câu 19. Phát hiện luận điểm sai về Lực lượng sản xuất trong các luận điểm sau đây:", a: ["Cái cối xay chạy bằng hơi nước đưa lại xã hội có nhà tư bản công nghiệp.", "Tư liệu lao động là cơ sở của sự kế tục lịch sử xã hội.", "Các quan hệ xã hội tồn tại độc lập với Lực lượng sản xuất của xã hội.", "Trình độ phát triển của Tư liệu lao động là thước đo trình độ chinh phục tự nhiên của loài người."], c: 2},
+  {q: "Câu 20. Luận điểm: “Từ sự phân công xã hội lớn đầu tiên, đã nảy sinh sự phân chia lớn đầu tiên trong xã hội thành hai giai cấp: chủ nô và nô lệ, kẻ bóc lột và người bị bóc lột” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa duy vật lịch sử.", "Chủ nghĩa duy tâm lịch sử.", "Chủ nghĩa duy vật tầm thường.", "Chủ nghĩa duy tâm chủ quan."], c: 0},
+  {q: "Câu 21. Tìm luận điểm trả lời đúng nhất về Phủ định biện chứng trong các luận điểm dưới đây:", a: ["Là sự phủ định có tính khách quan, tự thân, có tính kế thừa và có thêm yếu tố mới.", "Là sự phủ định có sự can thiệp của con người, có tính kế thừa và làm chấm dứt quá trình phát triển.", "Là tự thân phủ định làm cho cái cũ hoàn toàn mất đi và làm cho cái mới khác nhau về chất với cái cũ.", "Là sự phủ nhận hoàn toàn cái cũ, xác lập cái mới khác cái cũ do có sự can thiệp của con người."], c: 0},
+  {q: "Câu 22. Tìm luận điểm trả lời đúng nhất về phạm trù Cái chung trong các luận điểm dưới đây:", a: ["Là cái được tập hợp từ tất cả Cái riêng lại, mang tính khách quan, phổ biến trong tự nhiên, xã hội, tư duy.", "Là phạm trù triết học dùng để chỉ những thuộc tính chung lặp lại trong nhiều sự vật, hiện tượng hay quá trình riêng lẻ khác.", "Là cái toàn thể được tập hợp lại từ nhiều bộ phận hợp thành mang tính khách quan, phổ biến.", "Là những mặt, thuộc tính, quá trình có trong nhiều Cái riêng được con người tạo ra rất phổ biến."], c: 1},
+  {q: "Câu 23. Tìm luận điểm trả lời đúng nhất về phạm trù Cái riêng trong các luận điểm dưới đây:", a: ["Cái riêng là phạm trù triết học dùng để chỉ một sự vật, một hiện tượng, một quá trình riêng lẻ nhất định.", "Chỉ một sự vật, hiện tượng, quá trình tồn tại ngẫu nhiên, không lặp lại với Cái riêng khác.", "Chỉ một cái khác với Cái chung, là cái bộ phận của Cái chung.", "Chỉ một sự vật, hiện tượng có tính quy định không chỉnh thể, phụ thuộc vào Cái riêng khác."], c: 0},
+  {q: "Câu 24. Tìm luận điểm trả lời đúng về phạm trù Hiện tượng trong các luận điểm dưới đây:", a: ["Là những mặt, mối liên hệ, yếu tố bên ngoài có tính chủ quan, là hình thức của Bản chất.", "Hiện tượng là phạm trù triết học phản ánh tất cả mọi biểu hiện ra bên ngoài của bản chất.", "Chỉ phương thức tồn tại, tổ chức kết cấu của Nội dung.", "Là những mặt, mối liên hệ, yếu tố biểu hiện bên trong của Bản chất."], c: 1},
+  {q: "Câu 25. Tìm luận điểm trả lời đúng nhất về phạm trù Nội dung trong các luận điểm dưới đây:", a: ["Nội dung là phạm trù triết học phản ánh tổng hợp tất cả những mặt, những yếu tố, những quá trình tạo nên sự vật.", "Là tổng hợp các mặt, yếu tố, quan hệ, do con người tạo nên sự vật, hiện tượng nào đó.", "Là tổng số các mặt, yếu tố, quan hệ được sắp xếp tùy ý để tạo nên sự vật, hiện tượng nào đó.", "Là tổng hợp các mặt có tính quy định tạo nên sự vật."], c: 0},
+  {q: "Câu 26. Tìm luận điểm trả lời đúng nhất về phạm trù Hình thức trong các luận điểm dưới đây:", a: ["Hình thức là phạm trù triết học dùng để chỉ phương thức tồn tại và phát triển của sự vật, phản ánh kết cấu, hệ thống các mối liên hệ tương đối bền vững giữa các yếu tố của sự vật đó.", "Là tổng số các mặt biểu hiện bên ngoài của nội dung.", "Là vẻ bề ngoài của nội dung.", "Là phương thức kết cấu của nội dung, có tính chủ quan do con người tạo ra cho phù hợp với nội dung."], c: 0},
+  {q: "Câu 27. Tìm quan niệm sai về Thực tiễn trong các quan niệm dưới đây:", a: ["Thực tiễn là nguồn gốc của nhận thức vì qua thực tiễn bộc lộ các thuộc tính, mối liên hệ bản chất của đối tượng.", "Thực tiễn là hoạt động sản xuất của con người do đó thực tiễn không cần gắn với lý luận.", "Thực tiễn là cơ sở, động lực của nhận thức.", "Thực tiễn là tiêu chuẩn để kiểm tra tính đúng đắn của chân lý."], c: 1},
+  {q: "Câu 28. Tìm luận điểm thể hiện lập trường Duy vật về lịch sử trong các luận điểm dưới đây:", a: ["Quan hệ sản xuất là những quan hệ xã hội có tính pháp lý, quyết định mọi quan hệ xã hội khác.", "Trong sự sản xuất ra đời sống của mình, con người có những quan hệ nhất định, tất yếu, không tuỳ thuộc vào ý muốn của họ.", "Xã hội là một tổ hợp các bộ phận được cấu thành và biến đổi một cách ngẫu nhiên.", "Sự thịnh suy của mỗi dân tộc là do định mệnh chi phối."], c: 1},
+  {q: "Câu 29. Tìm đáp án thể hiện lập trường Duy tâm về lịch sử trong các đáp án dưới đây:", a: ["Nhân tố kinh tế là nhân tố quyết định duy nhất trong lịch sử.", "Vì cơ sở hạ tầng quyết định kiến trúc thượng tầng nên kiến trúc thượng tầng chỉ đóng vai trò thụ động trong sự phát triển lịch sử.", "Quan hệ sản xuất là những quan hệ xã hội có tính vật chất quyết định mọi quan hệ xã hội khác.", "Xã hội là một tổ hợp các bộ phận được cấu thành và biến đổi tuỳ theo ý muốn của người đứng đầu."], c: 3},
+  {q: "Câu 30. Tìm đáp án thể hiện lập trường Duy vật tầm thường trong các đáp án dưới đây:", a: ["Dân dĩ thực vi thiên.", "Do có được những lực lượng sản xuất mới, loài người thay đổi phương thức sản xuất của mình, đồng thời thay đổi tất cả những quan hệ xã hội của mình.", "Trong tất cả những chuyển biến lịch sử thì chuyển biến về chính trị là chuyển biến quan trọng nhất, quyết định sự phát triển của lịch sử.", "Duy chỉ có kinh tế là nhân tố quyết định trong lịch sử."], c: 3},
+  {q: "Câu 31. Tìm đáp án sai về các yếu tố cấu thành Quan hệ sản xuất trong các đáp án dưới đây:", a: ["Quan hệ thuê mướn người lao động.", "Quan hệ về sở hữu tư liệu sản xuất.", "Quan hệ về tổ chức quản lý.", "Quan hệ phân phối sản phẩm lao động."], c: 0},
+  {q: "Câu 32. Tìm yếu tố viết sai về các bộ phận cấu thành Hình thái Kinh tế - xã hội trong các yếu tố dưới đây:", a: ["Lực lượng sản xuất.", "Cơ sở hạ tầng.", "Điều kiện địa lý – tự nhiên.", "Kiến trúc thượng tầng."], c: 2},
+  {q: "Câu 33. Tìm đáp án viết sai về tính độc lập tương đối của Ý thức xã hội trong các đáp án dưới đây:", a: ["Ý thức xã hội thường lạc hậu hơn so với Tồn tại xã hội.", "Ý thức xã hội quyết định Tồn tại xã hội.", "Ý thức xã hội có tính kế thừa trong sự phát triển.", "Ý thức xã hội tác động trở lại Tồn tại xã hội."], c: 1},
+  {q: "Câu 34. Tìm đáp án viết sai về vai trò Lực lượng sản xuất trong một Hình thái kinh tế - xã hội trong các đáp án dưới đây:", a: ["Lực lượng sản xuất là nền tảng vật chất- kỹ thuật của xã hội.", "Lực lượng sản xuất là nhân tố, xét đến cùng, quyết định sự hình thành và phát triển của mọi xã hội.", "Lực lượng sản xuất thể hiện tính liên tục trong sự phát triển của xã hội loài người.", "Lực lượng sản xuất đại diện cho bộ mặt của xã hội ở mỗi giai đoạn phát triển."], c: 3},
+  {q: "Câu 35. Tìm đáp án bị viết sai về vai trò Quan hệ sản xuất trong một Hình thái kinh tế - xã hội trong các đáp án dưới đây:", a: ["Quan hệ sản xuất là quan hệ cơ bản, quyết định tất cả các quan hệ xã hội khác.", "Quan hệ sản xuất là cơ sở kinh tế của các hiện tượng xã hội.", "Quan hệ sản xuất thể hiện tính năng động trong sự phát triển của xã hội loài người.", "Quan hệ sản xuất tiêu biểu cho bộ mặt của xã hội ở mỗi giai đoạn phát triển nhất định."], c: 2},
+  {q: "Câu 36. Xác định quan niệm đúng nhất về xã hội trong các quan niệm dưới đây:", a: ["Xã hội là một tổng số những bộ phận rời rạc.", "Xã hội là một tổng hợp có tính máy móc, ngẫu nhiên các yếu tố.", "Xã hội là một chỉnh thể phức tạp, vận động và phát triển theo các quy luật khách quan.", "Xã hội là một tổng thể được cấu thành chỉ bởi những con người sinh vật."], c: 2},
+  {q: "Câu 37. Luận điểm “Những thời đại kinh tế khác nhau không phải ở chỗ chúng sản xuất ra cái gì mà là ở chỗ chúng sản xuất bằng cách nào, với những tư liệu lao động nào” nhấn mạnh yếu tố nào trong các đáp án dưới đây:", a: ["Công cụ lao động.", "Người lao động.", "Đối tượng lao động.", "Công cụ phụ trợ."], c: 0},
+  {q: "Câu 38. Hãy chỉ ra nguyên nhân đúng và cơ bản nhất dẫn tới sự phân chia xã hội thành giai cấp trong các nguyên nhân dưới đây:", a: ["Nguyên nhân kinh tế.", "Nguyên nhân chính trị.", "Nguyên nhân năng lực bẩm sinh ở từng nhóm người.", "Nguyên nhân nghề nghiệp khác nhau."], c: 0},
+  {q: "Câu 39. Chọn đáp án đúng nhất về cơ sở triết học của bệnh chủ quan duy ý chí trong các đáp án dưới đây:", a: ["Chủ nghĩa duy vật tầm thường.", "Chủ nghĩa duy vật biện chứng.", "Chủ nghĩa duy tâm chủ quan.", "Chủ nghĩa duy tâm khách quan."], c: 2},
+  {q: "Câu 40. Hãy chọn đáp án đúng nhất về chân lý trong các đáp án dưới đây:", a: ["Chân lý là quan điểm được đa số ủng hộ.", "Chân lý là quan điểm được mọi người trong cuộc họp bỏ phiếu tán thành.", "Chân lý là một quan điểm được nhiều nhà khoa học thừa nhận.", "Chân lý là một quan điểm được chứng minh trong thực tiễn là đúng."], c: 3},
+  {q: "Câu 41. Chọn đáp án viết sai về biểu hiện của bệnh chủ quan duy ý chí trong các đáp án dưới đây:", a: ["Suy nghĩ và hành động nóng vội.", "Chạy theo nguyện vọng chủ quan.", "Không tính tới điều kiện và khả năng thực tế.", "Luôn luôn tôn trọng quy luật khách quan."], c: 3},
+  {q: "Câu 42. Hãy chỉ ra một nguyên tắc sai trong việc phòng ngừa và khắc phục bệnh chủ quan duy ý chí trong các nguyên tắc dưới đây:", a: ["Nhìn thẳng vào sự thật, đánh giá đúng sự thật, nói rõ sự thật.", "Tôn trọng và hành động theo quy luật khách quan.", "Lấy dân làm gốc, lắng nghe nguyện vọng chính đáng của dân.", "Lấy ý chí và nguyện vọng làm điểm khởi đầu cho mọi chủ trương, kế hoạch công tác."], c: 3},
+  {q: "Câu 43. Hãy chỉ ra một đáp án thể hiện nhận thức sai về hoàn cảnh địa lý trong các đáp án dưới đây:", a: ["Hoàn cảnh địa lý là một trong ba yếu tố cấu thành tồn tại xã hội.", "Hoàn cảnh địa lý giữ vai trò quan trọng trong sự phát triển xã hội.", "Hoàn cảnh địa lý là yếu tố thường xuyên, tất yếu của sự tồn tại và phát triển của xã hội.", "Hoàn cảnh địa lý là nhân tố quyết định sự tồn vong và phát triển của xã hội loài người."], c: 3},
+  {q: "Câu 44. Hãy chỉ ra một đáp án thể hiện nhận thức sai về vấn đề môi trường trong các đáp án dưới đây:", a: ["Vấn đề môi trường phụ thuộc vào trình độ nhận thức của con người.", "Vấn đề môi trường phụ thuộc vào năng lực vận dụng các quy luật tự nhiên.", "Vấn đề môi trường phụ thuộc vào mật độ dân số.", "Vấn đề môi trường không lệ thuộc vào trình độ sản xuất vật chất."], c: 3},
+  {q: "Câu 45. Hãy chỉ ra một đáp án thể hiện nhận thức sai về vấn đề dân cư trong các đáp án dưới đây:", a: ["Dân cư là điều kiện tất yếu, thường xuyên của sự phát triển xã hội.", "Vấn đề dân cư diễn ra theo quy luật tự nhiên, nhưng bị điều chỉnh bởi quy luật xã hội.", "Dân cư không giữ vai trò quyết định sự phát triển xã hội.", "Vấn đề dân cư giữ vai trò quyết định sự phát triển của xã hội."], c: 3},
+  {q: "Câu 46. Tìm nhận định sai về giai đoạn nhận thức trực quan sinh động trong các nhận định dưới đây:", a: ["Giai đoạn nhận thức trực quan sinh động là giai đoạn đầu tiên của quá trình nhận thức.", "Giai đoạn nhận thức trực quan sinh động là giai đoạn phản ánh trực tiếp khách thể bằng các phán đoán.", "Giai đoạn nhận thức trực quan sinh động là giai đoạn nhận thức đối tượng bằng các hình thức: cảm giác, tri giác, biểu tượng.", "Giai đoạn nhận thức trực quan sinh động là giai đoạn chưa nhận thức được bản chất, quy luật của sự vật."], c: 1},
+  {q: "Câu 47. Tìm định nghĩa sai về giai đoạn tư duy trừu tượng (nhận thức lý tính) trong các định nghĩa dưới đây:", a: ["Là giai đoạn nhận thức tiếp theo giai đoạn trực quan sinh động.", "Là giai đoạn nhận thức cao hơn dựa trên cơ sở những tài liệu do trực quan sinh động đem lại.", "Là giai đoạn phản ánh gián tiếp hiện thực nên có nguy cơ phản ánh sai lệch hiện thực.", "Là giai đoạn nhận thức bằng cảm giác, tri giác và biểu tượng."], c: 3},
+  {q: "Câu 48. Tìm đáp án giải thích chưa đúng về Nguyên tắc Toàn diện trong các đáp án dưới đây:", a: ["Cơ sở lý luận của nguyên tắc này là Nguyên lý về mối liên hệ phổ biến.", "Nguyên tắc này đòi hỏi khi nhận thức sự vật phải xem xét tất cả các mặt, các mối liên hệ của nó.", "Phải xem xét sự vật trong tính toàn vẹn và phức tạp của nó.", "Căn cứ của nguyên tắc này là tư duy của con người ở mỗi thời điểm đều có thể bao quát được hết mọi mặt phong phú của sự vật."], c: 3},
+  {q: "Câu 49. Tìm đáp án giải thích sai về Nguyên tắc Phát triển trong các đáp án dưới đây:", a: ["Cơ sở lý luận của nguyên tắc này là nguyên lý về sự phát triển.", "Theo nguyên tắc này, cần vận dụng quy luật Lượng-chất để hiểu được cách thức phát triển của sự vật.", "Theo nguyên tắc này cần phân đôi cái thống nhất và nhận thức các bộ phận đối lập của nó để hiểu được nguồn gốc và động lực phát triển của sự vật.", "Theo nguyên tắc này ta chỉ cần thống kê các giai đoạn vận động lịch sử mà sự vật đã trải qua là hiểu được thực chất sự phát triển của sự vật."], c: 3},
+  {q: "Câu 50. Tìm đáp án trả lời sai về phạm trù Kiến trúc thượng tầng trong các đáp án dưới đây:", a: ["Sự hình thành và phát triển của Kiến trúc thượng tầng là do cơ sở hạ tầng quyết định.", "Đồng thời Kiến trúc thượng tầng còn có quan hệ kế thừa đối với một số yếu tố của kiến trúc thượng tầng của xã hội cũ.", "Bất cứ sự biến đổi nào trong Kiến trúc thượng tầng cũng chỉ do nguyên nhân kinh tế.", "Bản thân những yếu tố trong Kiến trúc thượng tầng cũng tác động lẫn nhau, gây ra những biến đổi nhất định của những yếu tố đó."], c: 2},
+  {q: "Câu 51. Tìm đáp án trả lời sai về phạm trù Kiến trúc thượng tầng trong các đáp án dưới đây:", a: ["Các yếu tố của Kiến trúc thượng tầng không tồn tại tách rời nhau, mà tác động qua lại lẫn nhau.", "Những tác động qua lại trong nội bộ Kiến trúc thượng tầng dẫn tới những kết quả nhiều khi không thể giải thích được chỉ bằng những nguyên nhân kinh tế.", "Các yếu tố của Kiến trúc thượng tầng đều nảy sinh trên Cơ sở hạ tầng, phản ánh Cơ sở hạ tầng.", "Các yếu tố thuộc Kiến trúc thượng tầng đều có mối quan hệ như nhau đối với Cơ sở hạ tầng."], c: 3},
+  {q: "Câu 52. Tìm đáp án trả lời sai về vai trò của Cơ sở hạ tầng đối với Kiến trúc thượng tầng trong các đáp án dưới đây:", a: ["Cơ sở hạ tầng nào thì sinh ra Kiến trúc thượng tầng ấy.", "Những biến đổi căn bản trong Cơ sở hạ tầng sớm hay muộn cũng sẽ dẫn tới sự biến đổi căn bản trong Kiến trúc thượng tầng.", "Cơ sở hạ tầng cũ mất đi thì Kiến trúc thượng tầng tương ứng với nó sẽ mất theo ngay tức khắc.", "Cũng có những yếu tố thuộc Kiến trúc thượng tầng cũ tồn tại dai dẳng sau khi Cơ sở kinh tế sinh ra nó không tồn tại."], c: 2},
+  {q: "Câu 53. Xác định quan niệm sai về Phủ định biện chứng trong các quan niệm dưới đây:", a: ["Là phủ định có tính kế thừa.", "Là phủ định đồng thời cũng là sự khẳng định.", "Là phủ định chấm dứt quá trình phát triển.", "Là phủ định có tính khách quan, phổ biến."], c: 2},
+  {q: "Câu 54. Xác định quan niệm sai về mối quan hệ giữa Cái Chung với Cái Riêng trong các quan niệm dưới đây:", a: ["Cái Chung chỉ tồn tại trong Cái Riêng, thông qua Cái Riêng mà biểu hiện sự tồn tại của mình.", "Quan hệ giữa Cái Chung và Cái Riêng là quan hệ có tính chủ quan.", "Quan hệ giữa Cái Chung và Cái Riêng là có tính phổ biến.", "Cái Riêng là cái toàn bộ, phong phú hơn Cái chung, Cái chung là cái bộ phận, nhưng sâu sắc hơn Cái riêng."], c: 1},
+  {q: "Câu 55. Chọn đáp án trả lời đúng trong các đáp án dưới đây:", a: ["Triết học Mác là triết học tách rời giữa lý luận và thực tiễn.", "Triết học Mác là triết học thống nhất giữa lý luận và thực tiễn.", "Triết học Mác là triết học chỉ coi trọng thực tiễn.", "Triết học Mác là triết học chỉ coi trọng lý luận."], c: 1},
+  {q: "Câu 56. Quan điểm: “Ý thức thật sự chỉ có tác dụng khi nó thông qua hoạt động thực tiễn của con người” thuộc về lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật biện chứng.", "Chủ nghĩa Duy vật siêu hình.", "Nhị nguyên luận.", "Chủ nghĩa Duy tâm chủ quan."], c: 0},
+  {q: "Câu 57. Quan điểm: “Nội dung của chân lý lệ thuộc vào chủ quan của con người” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật biện chứng.", "Chủ nghĩa Duy vật siêu hình.", "Chủ nghĩa Duy tâm chủ quan.", "Chủ nghĩa Duy tâm khách quan."], c: 2},
+  {q: "Câu 58. Quan điểm: “Không có lý luận thì hoạt động thực tiễn của con người mò mẫm mất phương hướng. Lý luận không phục vụ cho thực tiễn, trở thành lý luận suông, giáo điều” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật biện chứng.", "Chủ nghĩa Duy vật siêu hình.", "Nhị nguyên luận.", "Chủ nghĩa Duy tâm khách quan."], c: 0},
+  {q: "Câu 59. Quan điểm “Tính năng động chủ quan của ý thức con người muốn phát huy có hiệu quả bao giờ cũng phải dựa trên cơ sở vật chất” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật biện chứng.", "Chủ nghĩa Duy vật siêu hình.", "Nhị nguyên luận.", "Chủ nghĩa Duy tâm chủ quan."], c: 0},
+  {q: "Câu 60. Quan điểm “Mọi tri thức, dù trực tiếp hay gián tiếp, dù ở trình độ cao hay thấp, xét đến cùng đều dựa trên cơ sở thực tiễn” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật biện chứng.", "Chủ nghĩa Duy vật siêu hình.", "Nhị nguyên luận.", "Chủ nghĩa Duy tâm chủ quan."], c: 0},
+  {q: "Câu 61. Quan điểm “Thực tiễn là tiêu chuẩn của chân lý” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật biện chứng.", "Chủ nghĩa Duy vật siêu hình.", "Chủ nghĩa Duy vật tầm thường.", "Chủ nghĩa Duy tâm chủ quan."], c: 0},
+  {q: "Câu 62. Luận điểm “Những thời đại kinh tế khác nhau không phải ở chỗ chúng sản xuất ra cái gì, mà là ở chỗ chúng sản xuất bằng cách nào, với những tư liệu lao động nào” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật lịch sử.", "Chủ nghĩa Duy vật tầm thường.", "Thuyết không thể biết.", "Chủ nghĩa Duy tâm lịch sử."], c: 0},
+  {q: "Câu 63. Điền đáp án đúng vào chỗ trống trong luận điểm sau: “Phương thức sản xuất đời sống vật chất ............ toàn bộ quá trình đời sống xã hội, đời sống chính trị và đời sống tinh thần của xã hội”:", a: ["thúc đẩy.", "chi phối.", "phụ thuộc.", "liên quan."], c: 1},
+  {q: "Câu 64. Hãy chỉ ra một đáp án sai về yếu tố cấu thành Tồn tại xã hội trong các đáp án dưới đây:", a: ["Hoàn cảnh tự nhiên.", "Văn hoá phi vật thể.", "Dân cư.", "Phương thức sản xuất."], c: 1},
+  {q: "Câu 65. Hãy chỉ ra một đáp án sai về kết cấu vật chất của Lực lượng sản xuất trong các đáp án dưới đây:", a: ["Đối tượng lao động.", "Công cụ lao động.", "Người lao động.", "Tư liệu lao động."], c: 3},
+  {q: "Câu 66. Điền đáp án đúng vào chỗ trống trong luận điểm sau: “Theo quan điểm duy vật lịch sử, nhân tố ................ trong lịch sử, xét đến cùng là sự sản xuất và tái sản xuất ra đời sống hiện thực”:", a: ["thứ yếu.", "chủ yếu.", "quan trọng.", "quyết định."], c: 3},
+  {q: "Câu 67. Điền đáp án đúng vào chỗ trống trong luận điểm sau: “Quy luật về sự phù hợp của quan hệ sản xuất với trình độ và tính chất của lực lượng sản xuất là quy luật......... của sự phát triển xã hội”:", a: ["đặc thù.", "tạm thời.", "riêng biệt.", "chung nhất."], c: 3},
+  {q: "Câu 68. Quan niệm “Sự thay thế phương thức sản xuất đã lỗi thời bằng phương thức sản xuất tiến bộ hơn, đó là cách mạng xã hội” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật lịch sử.", "Chủ nghĩa Duy tâm lịch sử.", "Chủ nghĩa Duy vật tầm thường.", "Chủ nghĩa Duy vật siêu hình."], c: 0},
+  {q: "Câu 69. Luận điểm “Ý thức xã hội là sự phản ánh tích cực, năng động, sáng tạo tồn tại xã hội” thể hiện lập trường triết học nào dưới đây:", a: ["Chủ nghĩa Duy vật lịch sử.", "Chủ nghĩa Duy vật tầm thường.", "Chủ nghĩa Duy tâm chủ quan.", "Chủ nghĩa Duy tâm khách quan."], c: 0},
+  {q: "Câu 70. Quan điểm “Ý thức xã hội là cái phản ánh tồn tại xã hội, vì vậy nó không có vai trò gì đối với tồn tại xã hội” biểu hiện lập trường triết học nào dưới đây:", a: ["Nhị nguyên luận.", "Chủ nghĩa Duy vật lịch sử.", "Chủ nghĩa Duy vật siêu hình.", "Chủ nghĩa Duy tâm lịch sử."], c: 2},
+  {q: "Câu 71. Hãy chọn đáp án đúng về mặt thứ nhất trong vấn đề cơ bản của triết học trong các đáp án dưới đây:", a: ["Giữa vật chất và ý thức cái nào có trước, cái nào có sau, cái nào quyết định cái nào.", "Con người có khả năng nhận thức được thế giới hay không.", "Vấn đề mối quan hệ giữa vật chất và ý thức.", "Vấn đề mối quan hệ giữa tư duy và tồn tại."], c: 0},
+  {q: "Câu 72. Hãy chọn đáp án đúng trong quan điểm về vật chất của các nhà triết học duy vật thời kỳ cổ đại trong các đáp án dưới đây:", a: ["Xuất phát từ thế giới vật chất để đưa ra quan niệm về vật chất.", "Xuất phát từ Chúa trời để giải thích về vật chất.", "Xuất phát từ kinh nghiệm để giải thích về vật chất.", "Xuất phát từ trí tưởng tượng để giải thích về vật chất."], c: 0},
+  {q: "Câu 73. Quan niệm coi vận động của vật chất chỉ là biểu hiện của vận động cơ học, là quan niệm của trường phái triết học nào trong các trường phái dưới đây:", a: ["Chủ nghĩa duy vật ngây thơ chất phác thời cổ đại.", "Chủ nghĩa duy vật siêu hình thế kỷ 17-18.", "Chủ nghĩa duy vật biện chứng.", "Chủ nghĩa duy tâm thế kỷ 17-18."], c: 1},
+  {q: "Câu 74. Quan điểm: “Vận động của tự nhiên và lịch sử là sự tha hóa từ sự vận động của ý niệm tuyệt đối” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa duy vật biện chứng.", "Chủ nghĩa duy tâm chủ quan.", "Chủ nghĩa duy tâm khách quan.", "Chủ nghĩa duy vật siêu hình."], c: 2},
+  {q: "Câu 75. Thế giới quan khoa học dựa trên lập trường triết học nào dưới đây:", a: ["Chủ nghĩa duy tâm chủ quan.", "Chủ nghĩa duy vật biện chứng.", "Chủ nghĩa duy tâm khách quan.", "Nhị nguyên luận."], c: 1},
+  {q: "Câu 76. Hãy chỉ ra luận điểm thuộc lập trường Duy vật siêu hình trong các luận điểm dưới đây:", a: ["Vật chất và ý thức là hai nguồn gốc riêng biệt hình thành nên thế giới.", "Vận động là thuộc tính cố hữu của vật chất, gắn liền với vật chất.", "Vật chất và ý thức đều cùng tồn tại nên không có cái nào có trước và quyết định cái nào cả.", "Vật chất là cái có trước, ý thức là cái có sau; vật chất quyết định ý thức."], c: 3},
+  {q: "Câu 77. Hãy chỉ ra luận điểm thuộc lập trường Duy vật biện chứng trong những luận điểm dưới đây:", a: ["Việc phát huy tính năng động chủ quan phụ thuộc vào tính sáng tạo chủ quan của con người, không phụ thuộc vào hiện thực khách quan.", "Phát huy tính sáng tạo của con người bao giờ cũng dựa vào tiền đề vật chất.", "Ý thức do vật chất sinh ra và quyết định nên nó không có vai trò gì đối với hoạt động thực tiễn của con người.", "Ý thức của con người chẳng qua là bắt chước hiện thực khách quan và làm đúng như nó nên con người không có gì là sáng tạo cả."], c: 1},
+  {q: "Câu 78. Hãy chỉ ra luận điểm thuộc lập trường Duy tâm khách quan trong những luận điểm dưới đây:", a: ["Vận động của tự nhiên và lịch sử là sự tha hóa từ sự vận động của ý niệm tuyệt đối.", "Vận động là thuộc tính cố hữu của vật chất, là phương thức tồn tại của vật chất.", "Đứng im là một trường hợp đặc biệt của vận động.", "Vận động của vật chất mang tính khách quan còn vận động của tinh thần mang tính chủ quan."], c: 0},
+  {q: "Câu 79. Hãy chỉ ra luận điểm thuộc lập trường Duy vật siêu hình trong những luận điểm dưới đây:", a: ["Ý thức do vật chất sinh ra và quyết định nhưng nó có tác động ngược trở lại với hoạt động thực tiễn của con người.", "Sự tác động của ý thức đối với vật chất phải thông qua hoạt động thực tiễn của con người.", "Ý thức giúp con người có tri thức về các sự vật, hiện tượng trong thế giới khách quan và các quy luật của sự vận động.", "Ý thức là sự phản ánh hiện thực khách quan một cách thụ động giống chiếc gương soi."], c: 3},
+  {q: "Câu 80. Hãy chọn ra quan điểm đúng nhất về triết học Mác trong các quan điểm dưới đây:", a: ["Triết học Mác được xem là khoa học của các khoa học.", "Triết học Mác nghiên cứu những quy luật chung nhất của tự nhiên, xã hội và tư duy trên lập trường duy vật triệt để.", "Triết học Mác xem xét thế giới như một bức tranh do các yếu tố rời rạc cấu thành.", "Triết học Mác xem xét giới tự nhiên và con người như những hệ thống máy móc phức tạp, không liên quan gì đến nhau."], c: 1},
+  {q: "Câu 81. Nhận định: “Nhân tố kinh tế là nhân tố duy nhất quyết định sự phát triển của xã hội” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa duy vật biện chứng.", "Chủ nghĩa duy tâm.", "Nhị nguyên luận.", "Chủ nghĩa duy kinh tế."], c: 3},
+  {q: "Câu 82. Hãy chỉ ra luận điểm thuộc lập trường Duy vật biện chứng trong các luận điểm dưới đây:", a: ["Vật chất là cái có trước, ý thức là cái có sau và phụ thuộc hoàn toàn vào vật chất.", "Vật chất là cái sinh ra ý thức, ý thức do vật chất quyết định nhưng sau khi ra đời nó tác động trở lại vật chất thông qua hoạt động thực tiễn của con người.", "Ý thức do vật chất sinh ra và tác động trở lại vật chất nên chúng có vai trò như nhau trong hoạt động thực tiễn của con người.", "Ý thức là cái có trước và quyết định vật chất. Vật chất là cái có sau, phụ thuộc vào ý thức."], c: 1},
+  {q: "Câu 83. Hãy chỉ ra luận điểm thuộc lập trường Duy tâm chủ quan trong các luận điểm dưới đây:", a: ["Cảm giác, ý thức là cái có trước và tồn tại sẵn trong con người, các sự vật bên ngoài chỉ là phức hợp của các cảm giác ấy mà thôi.", "Vận động của tự nhiên và lịch sử là sự tha hóa từ sự vận động của ý niệm tuyệt đối.", "Ý thức do vật chất sinh ra và quyết định, vì vậy nó không có vai trò gì đối với hoạt động thực tiễn của con người.", "Vật chất là cái có trước và quyết định ý thức, nhưng sau khi ra đời ý thức tác động trở lại vật chất thông qua hoạt động thực tiễn của con người."], c: 0},
+  {q: "Câu 84. Xác định đáp án đúng nhất về nguyên tắc được rút ra từ nguyên lý về mối quan hệ biện chứng giữa vật chất và ý thức trong các đáp án dưới đây:", a: ["Nguyên tắc toàn diện.", "Nguyên tắc lịch sử - cụ thể.", "Nguyên tắc khách quan.", "Nguyên tắc phát triển."], c: 2},
+  {q: "Câu 85. Xác định đáp án sai về kết cấu của ý thức trong các đáp án dưới đây:", a: ["Theo chiều sâu của ý thức bao gồm các yếu tố: tự ý thức, tiềm thức, vô thức.", "Theo chiều ngang của ý thức bao gồm các yếu tố: tri thức, tình cảm, niềm tin, ý chí… trong đó tri thức là yếu tố cơ bản, cốt lõi nhất.", "Theo chiều ngang của ý thức bao gồm các yếu tố: tự ý thức, tiềm thức, vô thức.", "Tự ý thức là ý thức hướng về nhận thức bản thân mình trong mối quan hệ với ý thức về thế giới bên ngoài."], c: 2},
+  {q: "Câu 86. Xác định đáp án sai về tiềm thức trong các đáp án dưới đây:", a: ["Tiềm thức là những hoạt động tâm lý diễn ra bên ngoài sự kiểm soát của ý thức.", "Tiềm thức là những tri thức mà chủ thể đã có từ trước nhưng đã hình thành bản năng, thành kỹ năng trong tầng sâu ý thức của chủ thể, là ý thức ở dạng tiềm tàng.", "Tiềm thức có thể tự động gây ra các hoạt động tâm lý và nhận thức mà chủ thể không cần kiểm soát chúng một cách trực tiếp.", "Tiềm thức không thể tự động gây ra các hoạt động tâm lý và nhận thức mà chủ thể không cần kiểm soát chúng một cách trực tiếp."], c: 3},
+  {q: "Câu 87. Xác định đáp án sai về bản chất của ý thức trong các đáp án dưới đây:", a: ["Ý thức là hình ảnh chủ quan của thế giới khách quan.", "Ý thức có tính tích cực, sáng tạo gắn bó chặt chẽ với thực tiễn xã hội.", "Ý thức là hình thức phản ánh cao nhất riêng có của óc người về hiện thực khách quan trên cơ sở thực tiễn – xã hội.", "Ý thức là hình ảnh khách quan về thế giới chủ quan."], c: 3},
+  {q: "Câu 88. Xác định đáp án đúng nhất về nguyên tắc được rút ra từ nguyên lý về mối liên hệ phổ biến trong các đáp án dưới đây:", a: ["Nguyên tắc khách quan.", "Nguyên tắc phát triển.", "Nguyên tắc toàn diện.", "Nguyên tắc khách quan và nguyên tắc phát triển."], c: 2},
+  {q: "Câu 89. Xác định đáp án đúng về vị trí, vai trò của quy luật mâu thuẫn trong các đáp án dưới đây:", a: ["Là khuynh hướng của sự vận động, phát triển của sự vật hiện tượng.", "Là nguồn gốc, động lực của sự vận động, phát triển của sự vật hiện tượng.", "Là cách thức diễn ra sự vận động phát triển của sự vật hiện tượng.", "Là cơ sở của sự vận động, phát triển của sự vật hiện tượng."], c: 1},
+  {q: "Câu 90. Xác định đáp án sai về sự đấu tranh của các mặt đối lập trong các đáp án dưới đây:", a: ["Sự đấu tranh của các mặt đối lập là tuyệt đối, là thường xuyên, gắn liền với tính tuyệt đối của sự vận động của sự vật nói riêng, của thế giới hiện thực nói chung.", "Sự đấu tranh của các mặt đối lập là một quá trình phức tạp, chia thành nhiều giai đoạn, mỗi giai đoạn có những đặc điểm riêng.", "Nhờ có sự đấu tranh của các mặt đối lập mà sự vật mới xuất hiện thay thế sự vật cũ, thế giới luôn luôn vận động, phát triển.", "Sự đấu tranh của các mặt đối lập là tương đối, gắn liền với tính tương đối của sự vận động của sự vật nói riêng, của thế giới hiện thực nói chung."], c: 3},
+  {q: "Câu 91. Điền từ vào chỗ trống để hoàn thiện luận điểm sau: “… hình thành một cách khách quan, là quan hệ đầu tiên, cơ bản chủ yếu, quyết định mọi quan hệ xã hội”.", a: ["Quan hệ giai cấp.", "Quan hệ dân tộc.", "Quan hệ gia đình.", "Quan hệ sản xuất."], c: 3},
+  {q: "Câu 92. Tìm đáp án đúng nhất bàn về vai trò của Biểu tượng trong các đáp án dưới đây:", a: ["Là hình ảnh chủ quan của thế giới khách quan.", "Phản ánh khách thể một cách gián tiếp.", "Là sản phẩm của những tri giác cảm tính trước đó.", "Là khâu trung gian giữa trực quan sinh động và tư duy trừu tượng."], c: 3},
+  {q: "Câu 93. Hãy chỉ ra một luận điểm viết sai về Tri giác trong các luận điểm dưới đây:", a: ["Là hình thức cơ bản của nhận thức cảm tính.", "Là hình thức liên hệ giữa các khái niệm.", "Phản ánh đối tượng có tính toàn vẹn trực tiếp nhờ sự tổng hợp nhiều thuộc tính khác nhau của sự vật do nhiều cảm giác đem lại.", "Từ tri giác nhận thức cảm tính chuyển sang hình thức cao hơn đó là biểu tượng."], c: 1},
+  {q: "Câu 94. Tìm đáp án sai về Khái niệm trong các đáp án dưới đây:", a: ["Là hình thức cơ bản của tư duy trừu tượng.", "Là kết quả của sự tổng hợp, khái quát những tài liệu do nhận thức cảm tính đem lại.", "Bao quát những thuộc tính cơ bản có tính bản chất của cả một lớp sự vật.", "Là giai đoạn đầu tiên, đơn giản nhất của nhận thức cảm tính."], c: 3},
+  {q: "Câu 95. Hãy phát hiện một quan điểm sai về nguyên tắc thống nhất giữa lý luận và thực tiễn trong các đáp án dưới đây:", a: ["Lý luận đóng vai trò quyết định đối với thực tiễn.", "Thực tiễn là hoạt động vật chất còn lý luận là hoạt động tinh thân.", "Thực tiễn mà không có lý luận hướng dẫn thì thành thực tiễn mù quáng.", "Lý luận không liên hệ với thực tiễn là lý luận suông."], c: 0},
+  {q: "Câu 96. Xác định đáp án đúng nhất về cơ sở lý luận của nguyên tắc lịch sử - cụ thể trong các đáp án dưới đây:", a: ["Dựa trên nguyên lý về mối liên hệ phổ biến và nguyên lý về sự phát triển.", "Dựa trên mối quan hệ biện chứng giữa tồn tại xã hội và ý thức xã hội.", "Dựa trên mối quan hệ biện chứng giữa lực lượng sản xuất và quan hệ sản xuất.", "Dựa trên mối quan hệ biện chứng giữa cơ sở hạ tầng và kiến trúc thượng tầng."], c: 0},
+  {q: "Câu 97. Xác định đáp án sai về khái niệm Phát triển trong các đáp án dưới đây:", a: ["Khái niệm phát triển không đồng nhất với khái niệm vận động nói chung.", "Khái niệm phát triển đồng nhất với khái niệm vận động nói chung.", "Sự phát triển là quá trình vận động tiến lên từ thấp đến cao, từ đơn giản đến phức tạp, từ kém hoàn thiện đến hoàn thiện hơn của một sự vật.", "Sự phát triển là là kết quả thay đổi của quá trình thay đổi dần về lượng dẫn đến sự thay đổi về chất, quá trình diễn ra theo đường xoắn ốc và hết mỗi chu kỳ sự vật lặp lại dường như sự vật ban đầu nhưng ở mức độ cao hơn."], c: 1},
+  {q: "Câu 98. Xác định đáp án thể hiện lập trường siêu hình về Sự phát triển trong các đáp án dưới đây:", a: ["Sự phát triển chỉ là sự tăng, giảm thuần tuý về lượng, không có sự thay đổi về chất của sự vật, hiện tượng.", "Sự phát triển dùng để chỉ quá trình vận động của sự vật, hiện tượng theo khuynh hướng đi lên: từ trình độ thấp đến trình độ cao, từ kém hoàn thiện đến hoàn thiện hơn.", "Sự phát triển không phải là sự biến đổi tăng lên hay giảm đi đơn thuần về lượng hay sự biến đổi tuần hoàn lặp đi lặp lại ở chất cũ mà là sự biến đổi về chất theo hướng càng ngày càng hoàn thiện của sự vật ở những trình độ ngày càng cao hơn.", "Sự phát triển cũng là quá trình phát sinh và giải quyết mâu thuẫn khách quan vốn có của sự vật hiện tượng, là quá trình thống nhất giữa phủ định các nhân tố tiêu cực và kế thừa, nâng cao nhân tố tích cực từ sự vật, hiện tượng cũ trong hình thái của sự vật, hiện tượng mới."], c: 0},
+  {q: "Câu 99. Xác định đáp án đúng nhất về nguyên tắc Phát triển trong các đáp án dưới đây:", a: ["Nguyên tắc phát triển đối lập với quan điểm chủ quan duy ý chí.", "Nguyên tắc phát triển đối lập với quan điểm bảo thủ, trì trệ, định kiến.", "Nguyên tắc phát triển đối lập với quan điểm lịch sử - cụ thể.", "Nguyên tắc phát triển đối lập với quan điểm phiến diện, một chiều."], c: 1},
+  {q: "Câu 100. Xác định đáp án sai về mối quan hệ giữa cái Riêng, cái Chung và cái Đơn nhất trong các đáp án dưới đây:", a: ["Cái Chung chỉ tồn tại trong cái Riêng, thông qua cái Riêng mà biểu hiện sự tồn tại của mình.", "Cái Riêng chỉ tồn tại trong mối liên hệ với cái Chung.", "Cái Riêng là cái toàn bộ, phong phú hơn cái Chung, cái Chung là cái bộ phận, nhưng sâu sắc hơn cái Riêng.", "Cái Riêng là cái bộ phận, sâu sắc hơn cái Chung, cái Chung là cái toàn thể, phong phú hơn cái Riêng."], c: 3},
+  {q: "Câu 101. Hãy xác định đáp án đúng theo quan điểm Chủ nghĩa duy vật biên chứng về vai trò của Ý thức trong các đáp án dưới đây:", a: ["Ý thức tự nó chỉ làm thay đổi tư tưởng. Như vậy ý thức hoàn toàn không có tác dụng gì đối với thực tiễn.", "Ý thức là phản ánh năng động, sáng tạo thực tại khách quan và đồng thời có tác động trở lại mạnh mẽ thực tại đó thông qua hoạt động thực tiễn của con người.", "Ý thức là cái phụ thuộc vào nguồn gốc sinh ra nó. Vì thế chỉ có vật chất mới là cái năng động, tích cực.", "Ý thức là cái quyết định vật chất . Vật chất chỉ là cái thụ động."], c: 1},
+  {q: "Câu 102. Hãy xác định câu trả lời theo quan điểm siêu hình về Mối liên hệ giữa các sự vật, hiện tượng trong thế giới hiện thực khách quan trong các câu trả lời dưới đây:", a: ["Là sự tác động lẫn nhau, chi phối chuyển hoá lẫn nhau một cách khách quan, phổ biến, nhiều vẻ giữa các mặt, quá trình của sự vật, hiện tượng, hoặc giữa các sự vật, hiện tượng.", "Là sự thừa nhận rằng giữa các mặt của sự vật, hiện tượng và giữa các sự vật với nhau trong thực tế khách quan không có mối liên hệ nào cả.", "Quan điểm cho rằng ngoài tính khách quan, tính phổ biến của mối liên hệ còn có quan điểm về tính phong phú của mối liên hệ.", "Là sự tác động lẫn nhau, có tính khách quan, phổ biến, nhiều vẻ, có thể chuyển hoá cho nhau."], c: 1},
+  {q: "Câu 103. Hãy xác định luận điểm thể hiện quan điểm siêu hình về Sự phát triển trong các luận điểm dưới đây:", a: ["Sự phát triển là xu hướng vận động làm nảy sinh cái mới", "Sự phát triển là xu hướng thống trị của thế giới, tiến lên từ đơn giản đến phức tạp, từ thấp đến cao, từ kém hoàn thiện đến hoàn thiện hơn theo những quy luật nhất định.", "Sự phát triển là xu hướng vận động tiến lên từ thấp đến cao, từ đơn giản đến phức tạp, từ kém hoàn thiện đến hoàn thiện hơn của các sự vật hiện tượng.", "Sự phát triển là xu hướng vận động làm cho sự vật, hiện tượng tăng lên chỉ về khối lượng, thể tích, quy mô, trọng lượng, kích thước."], c: 3},
+  {q: "Câu 104. Hãy xác định luận điểm thể hiện quan điểm siêu hình về ý nghĩa phương pháp luận của Mối quan hệ biện chứng giữa Bản chất và Hiện tượng trong các luận điểm dưới đây:", a: ["Hiện tượng thường làm sai lệch bản chất nên cần thận trọng trong nghiên cứu những biểu hiện bên ngoài của sự vật.", "Phương pháp nhận thức đúng là đi từ hiện tượng đến bản chất, đi từ bản chất ít sâu sắc đến bản chất sâu sắc hơn, không nhầm lẫn hiện tượng với bản chất.", "Để nghiên cứu bản chất của sự vật cần nghiên cứu toàn diện các hiện tượng của nó.", "Muốn nhận thức đúng bản chất, con người đi thẳng vào tìm hiểu và nắm lấy bản chất sẽ tránh được sai lầm."], c: 3},
+  {q: "Câu 105. Hãy chỉ ra luận điểm sai về ý nghĩa phương pháp luận của mối quan hệ giữa Nội dung và Hình thức trong các luận điểm dưới đây:", a: ["Trong nhận thức và hành động không được tách rời hoặc tuyệt đối hoá một mặt nội dung hay hình thức.", "Trong nhận thức và hành động không được tách rời, tuyệt đối hoá một mặt nội dung hay hình thức. Trước hết phải chú trọng vai trò quyết định của hình thức đồng thời coi trọng nội dung.", "Trong nhận thức và hành động không được tách rời, tuyệt đối hoá một mặt nội dung hay hình thức. Trước hết phải chú trọng vai trò quyết định của nội dung, nhưng phải chú trọng tới hình thức.", "Trong nhận thức và hành động không được tuyệt đối hoá một mặt nội dung hay hình thức."], c: 1},
+  {q: "Câu 106. Tìm luận điểm Siêu hình về quan hệ giữa Nguyên nhân và Kết quả trong các luận điểm dưới đây:", a: ["Trong những điều kiện xác định, nguyên nhân có trước kết quả, một nguyên nhân sinh ra nhiều kết quả và ngược lại, nguyên nhân và kết quả có thể chuyển hoá cho nhau.", "Trong điều kiện xác định, nguyên nhân có trước kết quả, một nguyên nhân chỉ sinh ra một kết quả và ngược lại, nguyên nhân và kết quả không thể chuyển hoá cho nhau.", "Trong điều kiện xác định, nguyên nhân có sau kết quả. Một nguyên nhân có thể sinh ra nhiều kết quả và ngược lại. Nguyên nhân và kết quả có thể chuyển hoá cho nhau.", "Trong điều kiện xác định, nguyên nhân có trước kết quả, một nguyên nhân sinh ra nhiều kết quả và ngược lại. Nguyên nhân và kết quả có thể chuyển hoá cho nhau trong quá trình vận động."], c: 1},
+  {q: "Câu 107. Tìm luận điểm Duy tâm về quan hệ Nguyên nhân – Kết quả trong các luận điểm dưới đây:", a: ["Để có kết quả theo mong muốn phải biết phát hiện và điều khiển các nguyên nhân, khắc phục những nguyên nhân ngược chiều, tạo điều kiện cho nguyên nhân cùng chiều hướng tới kết quả.", "Trong quá trình vận động, phát triển, nguyên nhân và kết quả có thể đổi chỗ, chuyển hóa cho nhau.", "Quan hệ nhân quả là quan hệ do chủ quan của con người tạo ra cho nên trong nhận thức và hành động con người chắc chắn nhận được kết quả do mình tạo ra.", "Nguyên nhân có trước kết quả vì thế cứ chờ đợi thì sớm hay muộn kết quả sẽ tới."], c: 2},
+  {q: "Câu 108. Tìm luận điểm Bất khả tri về mối quan hệ giữa cái Tất nhiên và Ngẫu nhiên trong các luận điểm dưới đây:", a: ["Thông qua nghiên cứu nhiều cái ngẫu nhiên để phát hiện cái tất nhiên. Nắm lấy cái tất nhiên để hành động đồng thời dự phòng xử lý kịp thời với cái ngẫu nhiên.", "Mục đích của nhận thức và hành động là đạt tới cái tất nhiên để có tự do. Nhưng cái tất nhiên tồn tại như vật tự nó nên con người chỉ có thể nắm được cái ngẫu nhiên", "Nắm lấy cái tất nhiên, chi phối, điều khiển, phòng ngừa cái ngẫu nhiên. Đó là mục đích của nhận thức và hành động của con người trong khi giải quyết mối quan hệ giữa tất nhiên và ngẫu nhiên.", "Nắm lấy cái tất nhiên để chi phối, điều khiển, phòng ngừa mặt tác hại của ngẫu nhiên. Đó là mục đích của nhận thức và hành động không phải bằng cách đi từ phân tích ngẫu nhiên mà đi thẳng vào cái tất nhiên."], c: 1},
+  {q: "Câu 109. Tìm đáp án thể hiện quan điểm Duy tâm về Thực tiễn trong các đáp án dưới đây:", a: ["Là toàn bộ những hoạt động có tính vật chất, tính mục đích, tính xã hội - lịch sử của con người làm biến đổi tự nhiên, xã hội theo hướng tích cực, tiến bộ, trong đó sản xuất vật chất là thực tiễn cơ bản nhất.", "Là toàn bộ những hoạt động của con người có tính mục đích, tính xã hội- lịch sử làm biến đổi tự nhiên, xã hội theo hướng tích cực, tiến bộ, trong đó sản xuất vật chất là thực tiễn cơ bản nhất.", "Là toàn bộ những hoạt động của con người có tính mục đích, tính vật chất, làm biến đổi tự nhiên, xã hội theo hướng tích cực, trong đó sản xuất vật chất là thực tiễn cơ bản nhất.", "Là toàn bộ những hoạt động của con người có tính mục đích, tính vật chất, tính lịch sử - xã hội, trong đó sản xuất tinh thần là thực tiễn cơ bản nhất."], c: 3},
+  {q: "Câu 110. Vận dụng quan điểm Duy vật biện chứng để tìm đáp án đúng nhất trong các đáp án dưới đây:", a: ["Do vật chất quyết định ý thức nên chỉ cần tăng lương cho người lao động là họ sẽ hăng hái sản xuất ra nhiều sản phẩm tốt.", "Do vai trò tác động tích cực của ý thức nên chỉ cần thường xuyên giáo dục ý thức, tư tưởng cho người lao động là họ sẽ tự giác hăng hái sản xuất ra nhiều sản phẩm tốt.", "Vì vật chất và ý thức có quan hệ biện chứng nên đối với người lao động phải vừa khuyến khích vật chất vừa giáo dục chính trị tư tưởng.", "Vì chân lý là cụ thể nên phải tuỳ hoàn cảnh, tuỳ đối tượng cụ thể mà tăng thêm khuyến khích vật chất hoặc tăng cường giáo dục chính trị tư tưởng."], c: 2},
+  {q: "Câu 111. Chọn luận điểm đúng nhất về quy luật Phủ định của phủ định trong các luận điểm dưới đây:", a: ["Đặc điểm quan trọng nhất của quy luật phủ định của phủ định là phủ định hai lần", "Đặc điểm quan trọng nhất của quy luật phủ định của phủ định là sự phát triển do mâu thuẫn bên trong.", "Đặc điểm quan trọng nhất của quy luật phủ định của phủ định là phát triển theo chu kỳ.", "Đặc điểm quan trọng nhất của quy luật phủ định của phủ định là tính kế thừa, tính lặp lại và tính chất tiến lên của sự phát triển."], c: 3},
+  {q: "Câu 112. Tìm đáp án đúng và đầy đủ nhất về nội dung quy luật Phủ định của phủ định trong các đáp án dưới đây:", a: ["Phủ định của phủ định là sự lặp lại hoàn toàn cái ban đầu.", "Phủ định của phủ định là sự tổng hợp biện chứng của cái khẳng định ban đầu và cái phủ định lần thứ nhất.", "Phủ định của phủ định là sự phủ định trong đó sự xuất hiện cái mới như là kết quả tổng hợp của những yếu tố tích cực trong cái khẳng định ban đầu và trong cái phủ định lần thứ nhất.", "Phủ định của phủ định là sự phủ định trong đó sự xuất hiện cái mới có nội dung toàn diện, phong phú và cao hơn cái khẳng định ban đầu và cái phủ định lần thứ nhất."], c: 3},
+  {q: "Câu 113. Tìm đáp án đúng và đầy đủ nhất về Vận động trong các đáp án dưới đây:", a: ["Là phương thức tồn tại, thuộc tính cố hữu của vật chất, bao gồm tất cả mọi sự thay đổi và mọi quá trình diễn ra trong vũ trụ, kể từ sự thay đổi vị trí đơn giản cho đến tư duy.", "Là phương thức tồn tại của vật chất, bao gồm tất cả mọi sự thay đổi và mọi quá trình diễn ra trong vũ trụ, kể từ sự thay đổi vị trí đơn giản đến vận động tư duy.", "Là phương thức tồn tại, thuộc tính cố hữu của vật chất bao gồm mọi sự thay đổi và mọi quá trình diễn ra trong hành tinh của chúng ta kể từ sự thay đổi vị trí giản đơn đến tư duy.", "Là phương thức tồn tại, thuộc tính cố hữu của vật chất bao gồm mọi sự thay đổi và mọi quá trình diễn ra trong trái đất của chúng ta, kể từ sự thay đổi vị trí giản đơn đến tư duy."], c: 0},
+  {q: "Câu 114. Tìm luận điểm đúng nhất về mối quan hệ biện chứng giữa Đứng im và Vận động của vật chất trong các luận điểm dưới đây:", a: ["Vận động của vật chất là tuyệt đối, còn sự đứng im là tương đối nhằm bảo đảm các dạng cụ thể của vật chất phân hoá trong tồn tại. Đứng im và vận động là một mâu thuẫn biện chứng.", "Từng hình thức vận động của vật chất chỉ tồn tại tương đối với đặc trưng của những dạng vật chất cụ thể, còn sự vận động của vật chất là tuyệt đối nói chung, nó chỉ khác nhau mà không có mâu thuẫn.", "Các hình thức vận động chuyển hoá cho nhau từ thấp đến cao và ngược lại gây ra sự đứng im là tương đối, sự vận động là một mâu thuẫn biện chứng.", "Sự đứng im tương đối và sự vận động là tuyệt đối của vật chất thể hiện sự phân hoá của vật chất về lượng mà không thay đổi về chất."], c: 0},
+  {q: "Câu 115. Tìm đáp án đúng nhất về nguồn gốc tự nhiên của Ý thức trong các đáp án dưới đây:", a: ["Bộ óc người cùng với thế giới bên ngoài tác động lên bộ óc- đó là nguồn gốc tự nhiên của ý thức.", "Ý thức có nguồn gốc siêu nhiên, đó là sản phẩm tinh thần đặc biệt được tạo hoá kết tinh lại gọi là tinh thần thế giới tha hoá vào con người.", "Ý thức có nguồn gốc tự nhiên, ở mọi dạng vật chất đều có vì thế con người có ý thức cũng giống như gan tiết ra mật, cây sinh ra quả vậy.", "Đi tìm nguồn gốc của sự hình thành ý thức không phải tìm ở thế giới bên ngoài con người, mà tìm thấy từ bên trong con người. Đó là tổng hợp các cảm giác của con người. Điều đó khẳng định không có cảm giác thì không có ý thức."], c: 0},
+  {q: "Câu 116. Tìm đáp án đúng nhất về nguồn gốc xã hội của Ý thức trong các đáp án dưới đây:", a: ["Ý thức con người trực tiếp được hình thành từ quá trình lao động và ngôn ngữ.", "Sự hình thành ý thức con người có 2 nguồn gốc tự nhiên và xã hội, trong đó nguồn gốc xã hội là gián tiếp còn nguồn gốc tự nhiên là trực tiếp hình thành.", "Ý thức có hai nguồn gốc: tự nhiên và xã hội. Nguồn gốc xã hội chứng tỏ ý thức con người giống động vật cũng có hệ thần kinh trung ương - não người.", "Triết học duy tâm chủ quan cho ý thức con người là tổng hợp của các cảm giác."], c: 0},
+  {q: "Câu 117. Xác định đáp án đúng nhất về bản chất của Ý thức trong các đáp án dưới đây:", a: ["Là sản phẩm của một dạng vật chất - đó là não người. Não người sinh ra ý thức cũng như mọi sản phẩm vật chất khác do con người tạo ra.", "Là hình ảnh khách quan của thế giới chủ quan.", "Triết học duy vật siêu hình giải thích bản chất ý thức là sự phản ánh hiện thực khách quan một cách thụ động hoàn toàn giống cái gương soi.", "Là sự phản ánh tích cực, năng động, sáng tạo thế giới khách quan bằng não người."], c: 3},
+  {q: "Câu 118. Tìm đáp án đúng nhất về mối quan hệ giữa Vật chất và Ý thức trong các đáp án dưới đây:", a: ["Giới tự nhiên, xã hội có trước và sinh ra ý thức, còn ý thức có sau và phụ thuộc hoàn toàn vào vật chất.", "Ý thức được vật chất sinh ra và quyết định, nhưng sau khi ra đời nó tác động tích cực trở lại vật chất thông qua nhận thức và hoạt động thực tiễn.", "Không có con người, không có cảm giác của con người thì mọi cái tồn tại ngoài con người đều trở thành không xác định. Vì thế sự tồn tại con người có trước tất cả và quyết định tất cả.", "Thế giới trước hết có cái tinh thần. Nó được triển khai do quá trình phát triển theo các quy luật biện chứng thành thế giới vật chất và con người. Con người trở lại tự nhận thức mình cũng là cái tinh thần có đầu tiên trở lại tự nhận thức mình."], c: 1},
+  {q: "Câu 119. Tìm câu trả lời đúng nhất về những điều kiện đảm bảo cho Ý thức có tính năng động, sáng tạo trong những câu dưới đây:", a: ["Ý thức chỉ phụ thuộc vật chất khi nó sinh ra (nguồn gốc). Còn khi đã hình thành thì nó không còn phụ thuộc vào vật chất nữa, nó có đời sống riêng. Chỉ khi đó ý thức mới phát huy được tính năng động, sáng tạo.", "Sự năng động, sáng tạo của ý thức luôn luôn dựa trên những tiền đề vật chất và hoạt động thực tiễn của con người.", "Sáng tạo của ý thức không phụ thuộc vào điều kiện vật chất. Nó hoạt động độc lập, năng động, chủ quan.", "Ý thức và vật chất có vai trò ngang nhau, chúng tự thân vận động theo quy luật riêng của chúng."], c: 1},
+  {q: "Câu 120. Tìm câu trả lời đúng nhất về mối quan hệ biện chứng giữa Lượng và Chất của sự vật trong các câu dưới đây:", a: ["Sự vật nào cũng có sự thống nhất giữa Lượng và Chất. Chất và Lượng có mâu thuẫn với nhau. Sự biến đổi về Lượng tích luỹ lại dẫn đến sự biến đổi về Chất. Sự biến đổi căn bản về Chất tạo ra bước nhảy và chuyển sự vật cũ sang sự vật mới.", "Sự biến đổi về Chất và Lượng không phải mâu thuẫn. Chỉ có sự khác nhau là Lượng biến đổi nhanh hơn Chất. Bước nhảy chỉ xảy ra khi chất biến đổi căn bản.", "Sự biến đổi về Chất nhanh hơn biến đổi về Lượng mới tạo ra bước thay đổi căn bản về Chất. Chất cũ mất đi, sự vật cũ bị phá vỡ, sự vật mới sinh ra.", "Chỉ có sự thay đổi từ Lượng đến Chất là theo xu hướng tiến lên. Còn sự thay đổi từ Chất đến Lượng là không thể diễn ra."], c: 0},
+  {q: "Câu 121. Tìm câu trả lời đúng nhất về nội dung quy luật Phủ định của phủ định trong các câu dưới đây:", a: ["Là phủ định lần thứ hai, vừa phủ định lại vừa khẳng định lần phủ định thứ nhất, làm cho sự vận động diễn ra theo đường xoáy ốc, sự vật hình như lặp lại cái cũ nhưng trên cơ sở cao hơn.", "Là sự phát triển cao hơn, có hình thức đa dạng, phong phú theo đường thẳng, đường xoáy ốc hay đường sin.", "Là vừa phủ định và phủ nhận mang nhiều hình thức phong phú, nhiều vẻ như đường tròn, đường xoáy ốc hoặc đường thẳng theo xu hướng tiến lên đến vô cùng.", "Là sự khẳng định có tính kế thừa làm cho hình thức phủ định qua nhiều giai đoạn phong phú và được lặp lại theo đường tròn khép kín, đường dích dắc, đường xoáy ốc."], c: 0},
+  {q: "Câu 122. Tìm câu trả lời đúng nhất theo quan điểm Mác-xít về những nguyên tắc cơ bản của Lý luận nhận thức trong các câu dưới đây:", a: ["Là sự thừa nhận thế giới khách quan tồn tại độc lập với ý thức, thừa nhận ý thức có khả năng phản ánh đúng thế giới khách quan, nhận thức là một quá trình biện chứng, cơ sở chủ yếu, trực tiếp nhất của nhận thức là thực tiễn.", "Là sự thừa nhận thế giới khách quan tồn tại độc lập với ý thức, thừa nhận khả năng nhận thức của con người, thừa nhận con người có nhiều điều không thể biết.", "Sự thừa nhận nhận thức là một quá trình biện chứng, thừa nhận đối tượng nhận thức là khách quan; khả năng nhận thức của con người là có hạn.", "Là sự thừa nhận đối tượng nhận thức tồn tại khách quan; chủ thể nhận thức là con người, có thể nhận thức đúng, quá trình nhận thức diễn ra trực tiếp một lần là hoàn thiện."], c: 0},
+  {q: "Câu 123. Tìm câu trả lời đúng nhất về khả năng nhận thức thế giới hiện thực khách quan của con người trong các câu dưới đây:", a: ["Con người có khả năng nhận thức thế giới hiện thực khách quan, đối với con người không có điều gì là không thể biết, mà chỉ có cái chưa biết. Sự hiểu biết là một quá trình tuân theo các quy luật biện chứng như quy luật mâu thuẫn, quy luật lượng chất, quy luật phủ định của phủ định và những quy luật khác của tư duy.", "Con người có khả năng nhận thức thế giới hiện thực khách quan, đối với con người không phải là cái gì cũng biết mà có những cái không thể biết. Sự hiểu biết của con người là quá trình cộng dần những hiểu biết có hạn lại thành cái vô hạn.", "Con người có khả năng nhận thức thế giới hiện thực khách quan, đối với con người không có gì là không thể biết chỉ có những cái chưa biết. Sự hiểu biết đó diễn ra bằng con đường tích luỹ dần của từng người cộng lại nhiều lần tạo thành.", "Con người không có khả năng nhận thức thế giới hiện thực khách quan, đối với con người có phần nhận thức đúng, có phần không thể hiểu biết đúng được thế giới. Vì thế giới là mênh mông vô hạn. Còn mỗi con người chỉ là có hạn mà thôi."], c: 0},
+  {q: "Câu 124. Tìm đáp án đúng nhất về những tính chất của Chân lý trong những đáp án dưới đây:", a: ["Chân lý có tính cụ thể, có nội dung khách quan, vừa có tính tuyệt đối, vừa có tính tương đối.", "Không có chân lý trừu tượng, chân lý có hình thức chủ quan, nội dung khách quan, không có tính tương đối vì chân lý luôn luôn đúng trong mọi hoàn cảnh.", "Chân lý có nội dung khách quan, hình thức chủ quan, chân lý có tính trừu tượng cao siêu, chân lý còn có tính tuyệt đối và tính tương đối.", "Chân lý có hình thức chủ quan và nội dung khách quan, chân lý bao giờ cũng cụ thể, chỉ có chân lý tương đối, không có chân lý tuyệt đối vì thực tiễn luôn luôn biến đổi và nhận thức của con người là có hạn."], c: 0},
+  {q: "Câu 125. Tìm câu trả lời đúng nhất về ý nghĩa phương pháp luận của quy luật Phủ định của phủ định trong các câu dưới đây:", a: ["Phủ định của phủ định là quá trình cái cũ mất đi, cái mới hợp quy luật ra đời. Cần có thái độ tích cực ủng hộ, giúp đỡ, bảo vệ cái mới và kiên quyết từ bỏ cái cũ lỗi thời. Cái mới ra đời thường gặp nhiều khó khăn, trở ngại.", "Phủ định của phủ định là quá trình cái mới ra đời. Cần có thái độ giúp đỡ, ủng hộ, bảo vệ cái mới. Vì khi nó ra đời thường gặp nhiều khó khăn.", "Phủ định của phủ định là làm cho cái cũ mất đi, cái mới ra đời phù hợp quy luật. Cần phải xây dựng thái độ ủng hộ, giúp đỡ, phê phán cái mới.", "Phủ định của phủ định là quá trình cái cũ mất đi, cái mới ra đời hợp quy luật. Cần có nhận thức đúng về vai trò tích cực, tiến bộ của cái mới."], c: 0},
+  {q: "Câu 126. Tìm câu trả lời đúng nhất về quan hệ biện chứng giữa Lượng và Chất trong các câu dưới đây:", a: ["Lượng- chất có quan hệ biện chứng. Phải kiên trì tích luỹ về lượng mới có sự thay đổi về chất, tạo ra bước ngoặt. Không được nóng vội, chủ quan, duy ý chí, đốt cháy giai đoạn. Ngược lại, chỉ có thay đổi căn bản về chất mới chuyển được cái cũ sang cái mới.", "Lượng- chất có quan hệ biện chứng. Không được nóng vội, chủ quan, duy ý chí khi chưa tích luỹ được lượng cần thiết. Nhưng đôi khi chưa tích luỹ đủ lượng cũng phải thay đổi về chất.", "Lượng- chất có quan hệ biện chứng. Không được nóng vội, chủ quan, duy ý chí khi lượng đã được tích luỹ đầy đủ..", "Phải kiên quyết, không chần chừ, do dự, thay đổi về chất khi lượng đã được tích luỹ đủ."], c: 0},
+  {q: "Câu 127. Xác định quan niệm siêu hình về Chân lý trong các quan niệm dưới đây:", a: ["Nội dung chân lý có tính khách quan, còn hình thức biểu hiện chân lý thì mang tính chủ quan.", "Chân lý bao giờ cũng cụ thể, không có chân lý trừu tượng.", "Chân lý không bao giờ chuyển hoá thành sai lầm.", "Chân lý là kiến thức đúng đắn được thực tiễn kiểm nghiệm."], c: 2},
+  {q: "Câu 128. Hãy xác định nhận định về chủ trương có tính Duy tâm chủ quan trong các nhận định dưới đây:", a: ["Đại hội VIII năm 1996 nhận định: Nhiệm vụ chuẩn bị các tiền đề cho công nghiệp hoá đã cơ bản hoàn thành, cho phép chuyển sang thời kì mới đẩy mạnh công nghiệp hoá, hiện đại hoá đất nước.", "Đại hội IX năm 2001 chủ trương: trước hết phải phát triển mạnh lực lượng sản xuất, rồi tuỳ theo trình độ phát triển của lực lượng sản xuất mà quan hệ sản xuất từng bước được cải tiến theo cho phù hợp.", "Trong điều kiện lực lượng sản xuất phát triển không đồng đều như ở nước ta hiện nay, chúng chúng ta chủ trương thực hiện nhiều loại hình sở hữu, do đó tồn tại nhiều thành phần kinh tế.", "Trong 5 năm (1976- 1980) khi bố trí cơ cấu kinh tế, các nhà lãnh đạo nước ta thường xuất phát từ lòng mong muốn đi nhanh, không tính tới điều kiện và khả năng thực tế của đất nước."], c: 3},
+  {q: "Câu 129. Hãy xác định đáp án đúng về cấu trúc của cơ sở hạ tầng trong các đáp án dưới đây:", a: ["Bao gồm quan hệ sản xuất thống trị, quan hệ sản xuất tàn dư, quan hệ sản xuất mầm mống. Trong đó quan hệ sản xuất thống trị là đặc trưng cho cơ sở hạ tầng của xã hội đó.", "Bao gồm quan hệ sản xuất thống trị, quan hệ sản xuất tàn dư, quan hệ sản xuất mầm mống. Trong đó quan hệ sản xuất mầm mống đặc trưng cho cơ sở hạ tầng của xã hội đó.", "Bao gồm lực lượng sản xuất, quan hệ sản xuất và hoàn cảnh địa lý tự nhiên", "Bao gồm hệ thống điện, đường, trường, trạm"], c: 0},
+  {q: "Câu 130. Luận điểm: “Cơ sở kinh tế thay đổi thì toàn bộ cái kiến trúc thượng tầng đồ sộ cũng bị đảo lộn ít nhiều nhanh chóng” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa duy vật lịch sử", "Chủ nghĩa duy tâm lịch sử", "Chủ nghĩa duy vật tầm thường", "Chủ nghĩa duy tâm chủ quan"], c: 0},
+  {q: "Câu 131. Xác định lập trường duy vật lịch sử về mối quan hệ giữa cơ sở hạ tầng và kiến trúc thượng tầng trong các đáp án dưới đây:", a: ["Quy luật về mối quan hệ biện chứng giữa cơ sở hạ tầng và kiến trúc thượng tầng là cơ sở khoa học cho việc nhận thức một cách đúng đắn mối quan hệ giữa văn hóa và xã hội", "Quy luật về mối quan hệ biện chứng giữa cơ sở hạ tầng và kiến trúc thượng tầng là cơ sở khoa học cho việc nhận thức một cách đúng đắn mối quan hệ giữa kinh tế và chính trị.", "Quy luật về mối quan hệ biện chứng giữa cơ sở hạ tầng và kiến trúc thượng tầng là cơ sở khoa học cho việc nhận thức một cách đúng đắn mối quan hệ giữa tôn giáo và nghệ thuật.", "Quy luật về mối quan hệ biện chứng giữa cơ sở hạ tầng và kiến trúc thượng tầng là cơ sở khoa học cho việc nhận thức một cách đúng đắn mối quan hệ giữa đạo đức và pháp quyền."], c: 1},
+  {q: "Câu 132. Tìm luận điểm viết sai về đặc trưng cơ bản của giai cấp trong các luận điểm dưới đây:", a: ["Giai cấp là những tập đoàn người có địa vị kinh tế - xã hội khác nhau trong một hệ thống sản xuất xã hội nhất định trong lịch sử.", "Dấu hiệu chủ yếu quy đinh địa vị kinh tế - xã hội của các giai cấp là các mối quan hệ kinh tế - vật chất giữa các tập đoàn người trong phương thức sản xuất.", "Thực chất của quan hệ giai cấp là quan hệ giữa bóc lột và bị bóc lột, là tập đoàn người này chiếm đoạt lao động của tập đoàn người khác do đối lập về địa vị trong một chế độ kinh tế - xã hội nhất định.", "Giai cấp là những tập đoàn người có địa vị văn hóa - xã hội khác nhau trong một hệ thống sản xuất xã hội nhất định trong lịch sử."], c: 3},
+  {q: "Câu 133. Tìm đáp án thiếu chính xác về đặc trưng của dân tộc trong các đáp án dưới đây:", a: ["Dân tộc là một cộng đồng người ổn định trên một lãnh thổ thống nhất.", "Dân tộc là một cộng đồng thống nhất về ngôn ngữ.", "Dân tộc là một cộng đồng thống nhất về kinh tế.", "Dân tộc là một cộng đồng bền vững về tình cảm, lối sống"], c: 3},
+  {q: "Câu 134. Luận điểm: “Sự phát triển của chính trị, pháp luật, triết học, tôn giáo, văn học, nghệ thuật, v.v. đều dựa trên cơ sở phát triển kinh tế. Nhưng tất cả chúng cũng có ảnh hưởng lẫn nhau và ảnh hưởng đến cơ sở kinh tế” thuộc lập trường triết học nào dưới đây:", a: ["Chủ nghĩa duy vật lịch sử", "Chủ nghĩa duy tâm lịch sử", "Chủ nghĩa duy tâm chủ quan", "Chủ nghĩa duy kinh tế"], c: 0},
+  {q: "Câu 135. Phát hiện đáp án sai về con người theo quan điểm của chủ nghĩa Mác Lênin trong các đáp án dưới đây:", a: ["Con người là thực thể sinh học - xã hội", "Con người là sản phẩm của lịch sử và của chính bản thân con người", "Con người vừa là chủ thể của lịch sử, vừa là sản phẩm của lịch sử", "Con người là sản phẩm của thượng đế"], c: 3},
+  {q: "Câu 136. Phát hiện đáp án sai về Sự phát triển trong các đáp án dưới đây:", a: ["Phát triển là quá trình vận động từ thấp đến cao, từ kém hoàn thiện đến hoàn thiện hơn, từ chất cũ đến chất mới ở trình độ cao hơn.", "Phát triển là sự tăng lên hoặc giảm đi về mặt lượng, chỉ là sự tuần hoàn, lặp đi, lặp lại mà không có sự thay đổi về chất.", "Phát triển là vận động nhưng không phải mọi vận động đều là phát triển.", "Đặc điểm chung của sự phát triển là tính tiến lên theo đường xoáy ốc, có kế thừa, có sự dường như lặp lại sự vật, hiện tượng cũ nhưng trên cơ sở cao hơn."], c: 1},
+  {q: "Câu 137. Phát hiện đáp án sai về Nhận thức trong các đáp án dưới đây:", a: ["Nhận thức là quá trình phản ánh hiện thực khách quan, là quá trình tạo thành tri thức về thế giới khách quan trong bộ óc con người", "Nhận thức là quá trình tác động biện chứng giữa chủ thể nhận thức và khách thể nhận thức trên cơ sở hoạt động thực tiễn của con người.", "Nhận thức là quá trình phản ánh hiện thực khách quan một cách tích cực, chủ động, sáng tạo bởi con người trên cơ sở thực tiễn mang tính lịch sử cụ thể.", "Nhận thức là quá trình phản ánh hiện thực khách quan một cách thụ động của con người trên cơ sở thực tiễn mang tính lịch sử cụ thể."], c: 3},
+  {q: "Câu 138. Tìm đáp án thể hiện quan điểm Duy tâm về vai trò của Ý thức trong các đáp án dưới đây:", a: ["Ý thức tự nó chỉ làm thay đổi tư tưởng. Như vậy ý thức hoàn toàn không có tác dụng gì đối với thực tiễn.", "Ý thức là phản ánh sáng tạo thực tại khách quan và đồng thời có tác động trở lại mạnh mẽ thực tại đó thông qua hoạt động thực tiễn của con người.", "Ý thức là cái phụ thuộc vào nguồn gốc sinh ra nó. Vì thế chỉ có vật chất mới là cái năng động, tích cực", "Ý thức là cái quyết định vật chất. Vật chất chỉ là cái thụ động, phụ thuộc vào ý thức."], c: 3},
+  {q: "Câu 139. Tìm đáp án thể hiện đúng nhất quan điểm Duy vật biện chứng về mối liên hệ của các sự vật, hiện tượng trong các đáp án dưới đây:", a: ["Là sự tác động lẫn nhau, chi phối chuyển hoá lẫn nhau một cách khách quan, phổ biến, nhiều vẻ giữa các mặt, quá trình của sự vật, hiện tượng, hoặc giữa các sự vật, hiện tượng.", "Là sự thừa nhận rằng giữa các mặt, các yêu tố cấu thành sự vật, hiện tượng và giữa các sự vật với nhau trong thực tế khách quan không có mối liên hệ nào cả.", "Sai lầm của phép siêu hình là ở chỗ ngoài tính khách quan, tính phổ biến của mối liên hệ còn đưa ra quan điểm về tính phong phú của mối liên hệ.", "Là sự tác động lẫn nhau, có tính khách quan, phổ biến, nhiều vẻ, có thể chuyển hoá cho nhau."], c: 0},
+  {q: "Câu 140. Tìm đáp án đúng nhất về tính chất của sự Phát triển theo Phép biện chứng duy vật trong các đáp án dưới đây:", a: ["Tính khách quan, tính phổ biến, tính kế thừa và tính đa dạng phong phú", "Tính sáng tạo, tính phổ biến, tính kế thừa và tính đa dạng phong phú", "Tính chủ quan, tính phổ biến, tính kế thừa và tính đa dạng phong phú", "Tính chọn lọc, tính phổ biến, tính kế thừa và tính đa dạng phong phú"], c: 0},
+  {q: "Câu 141. Xác định đáp án đúng và đầy đủ nhất về Thực tiễn trong những đáp án dưới đây:", a: ["Là toàn bộ những hoạt động của con người có tính vật chất, tính mục đích, tính xã hội - lịch sử làm biến đổi tự nhiên, xã hội theo hướng tích cực, tiến bộ, phục vụ cho lợi ích con người, trong đó sản xuất vật chất là thực tiễn cơ bản nhất.", "Là toàn bộ những hoạt động của con người có tính mục đích, tính xã hội - lịch sử làm biến đổi tự nhiên, xã hội theo hướng tích cực, tiến bộ, trong đó sản xuất vật chất là thực tiễn cơ bản nhất.", "Là toàn bộ những hoạt động của con người có tính mục đích, tính vật chất, làm biến đổi tự nhiên - xã hội theo hướng tích cực, trong đó sản xuất vật chất là thực tiễn cơ bản nhất.", "Là toàn bộ những hoạt động của con người có tính mục đích, tính vật chất, tính lịch sử - xã hội, trong đó sản xuất tinh thần là thực tiễn cơ bản nhất."], c: 1},
+  {q: "Câu 142. Xác định quan niệm sai về Chân lý trong các quan niệm dưới đây:", a: ["Nội dung chân lý là chủ quan vì nó do đầu óc con người tạo ra.", "Chân lý bao giờ cũng cụ thể, không có chân lý trừu tượng.", "Có thể hiểu chân lý cũng là sự phù hợp giữa chủ quan với khách quan.", "Chân lý là kiến thức đúng đắn được thực tiễn kiểm nghiệm."], c: 0},
+  {q: "Câu 143. Xác định quan niệm sai về Chân lý trong các quan niệm dưới đây:", a: ["Nội dung chân lý có tính khách quan, còn hình thức biểu hiện chân lý thì mang tính chủ quan.", "Chân lý bao giờ cũng là chân lý trừu tượng.", "Có thể hiểu chân lý cũng là sự phù hợp giữa chủ quan với khách quan.", "Chân lý là kiến thức đúng đắn được thực tiễn kiểm nghiệm."], c: 1},
+  {q: "Câu 144. Xác định quan niệm sai về Chân lý trong các quan niệm dưới đây:", a: ["Nội dung chân lý có tính khách quan, còn hình thức biểu hiện chân lý thì mang tính chủ quan.", "Chân lý bao giờ cũng cụ thể, không có chân lý trừu tượng.", "Có thể hiểu chân lý là sự phù hợp giữa nhận thức với các nguyên lý trong sách vở.", "Chân lý là kiến thức đúng đắn được thực tiễn kiểm nghiệm."], c: 2},
+  {q: "Câu 145. Xác định quan niệm sai về Chân lý trong các quan niệm dưới đây:", a: ["Nội dung chân lý có tính khách quan, còn hình thức biểu hiện chân lý thì mang tính chủ quan.", "Chân lý bao giờ cũng cụ thể, không có chân lý trừu tượng.", "Chân lý là kiến thức đúng đắn được thực tiễn kiểm nghiệm.", "Chân lý là kiến thức được số đông chấp nhận."], c: 3},
+  {q: "Câu 146. Tìm luận điểm đúng nhất về mối quan hệ biện chứng giữa Bản chất và Hiện tượng trong các luận điểm dưới đây:", a: ["Hiện tượng biểu hiện ra bên ngoài của bản chất, thường làm sai lệch bản chất nên tốt nhất là nhận thức, hành động đi thẳng vào bản chất sẽ tránh được sai lầm.", "Phương pháp nhận thức đúng là đi từ hiện tượng đến bản chất, đi từ bản chất ít sâu sắc đến bản chất sâu sắc hơn, không nhầm lẫn hiện tượng với bản chất.", "Nhận thức và hành động của con người không thể đạt tới bản chất của sự vật vì nó bị vô số hiện tượng bao bọc bên ngoài, trong đó lại có những hiện tượng làm sai lạc, xuyên tạc bản chất.", "Chỉ có bản chất mới là mối quan hệ khách quan, còn hiện tượng là mối quan hệ chủ quan do tác động tiêu cực của con người tạo ra làm sai lạc bản chất. Nên muốn nhận thức đúng bản chất, con người đi thẳng vào tìm hiểu và nắm lấy bản chất sẽ tránh được sai lầm."], c: 1},
+  {q: "Câu 147. Tìm câu thể hiện đúng nhất về ý nghĩa phương pháp luận của mối quan hệ biện chứng giữa Nội dung và Hình thức trong các câu dưới đây:", a: ["Trong nhận thức và hành động không được tách rời hoặc tuyệt đối hoá một mặt nội dung hay hình thức. Phải coi trọng nội dung đồng thời phải chú trọng thích đáng tới hình thức, bảo đảm cho nội dung có một hình thức phù hợp nhất. Khi một trong chúng đã tỏ ra lỗi thời thì phải thay đổi cho phù hợp.", "Trong nhận thức và hành động không được tách rời, tuyệt đối hoá một mặt nội dung hay hình thức. Trước hết phải chú trọng vai trò quyết định của hình thức đồng thời coi trọng nội dung. Khi một trong chúng đã lỗi thời thì phải thay đổi cho phù hợp, chống chủ nghĩa hình thức.", "Trong nhận thức và hành động không được tách rời, tuyệt đối hoá một mặt nội dung hay hình thức. Trước hết phải chú trọng vai trò quyết định của nội dung.", "Trong nhận thức và hành động không được tuyệt đối hoá một mặt nội dung hay hình thức."], c: 0},
+  {q: "Câu 148. Tìm luận điểm thể hiện quan điểm Siêu hình về mối quan hệ giữa Nguyên nhân - Kết quả trong các luận điểm dưới đây:", a: ["Trong những điều kiện xác định, nguyên nhân có trước kết quả, một nguyên nhân sinh ra nhiều kết quả và ngược lại, nguyên nhân và kết quả có thể chuyển hoá cho nhau.", "Trong điều kiện xác định, nguyên nhân có trước kết quả, một nguyên nhân chỉ sinh ra một kết quả và ngược lại, nguyên nhân và kết quả không thể chuyển hoá cho nhau.", "Trong điều kiện xác định, nguyên nhân có sau kết quả. Một nguyên nhân có thể sinh ra nhiều kết quả và ngược lại. Nguyên nhân và kết quả có thể chuyển hoá cho nhau.", "Trong điều kiện xác định, nguyên nhân có trước kết quả, một nguyên nhân sinh ra nhiều kết quả và ngược lại. Nguyên nhân và kết quả có thể chuyển hoá cho nhau trong quá trình vận động."], c: 1},
+  {q: "Câu 149. Tìm luận điểm thể hiện quan điểm Duy tâm về ý nghĩa phương pháp luận rút ra từ quan hệ Nguyên nhân – Kết quả trong các luận điểm dưới đây:", a: ["Để có kết quả theo mong muốn phải biết phát hiện và điều khiển các nguyên nhân, khắc phục những nguyên nhân ngược chiều, tạo điều kiện cho nguyên nhân cùng chiều hướng tới kết quả.", "Vì nguyên nhân có trước kết quả nên muốn có kết quả theo mong muốn thì chờ đợi ở nguyên nhân sẽ xảy ra. Sau đó lại sử dụng kết quả đó tạo ra nguyên nhân tiếp sau để được hưởng kết quả cao hơn.", "Quan hệ nhân quả là quan hệ do chủ quan của con người tạo ra cho nên trong nhận thức và hành động con người chắc chắn nhận được kết quả do mình tạo ra.", "Nguyên nhân có trước kết quả vì thế cứ chờ đợi thì sớm hay muộn kết quả sẽ tới."], c: 2},
+  {q: "Câu 150. Tìm luận điểm thể hiện đúng nhất về giá trị phương pháp luận của mối quan hệ giữa cái Tất nhiên và Ngẫu nhiên trong các luận điểm dưới đây:", a: ["Thông qua nghiên cứu nhiều cái ngẫu nhiên để phát hiện cái tất nhiên. Dựa vào cái tất nhiên để hành động đồng thời dự phòng xử lý kịp thời với cái ngẫu nhiên.", "Mục đích của nhận thức và hành động là đạt tới cái tất nhiên để có tự do. Nhưng cái tất nhiên tồn tại như vật tự nó nên con người chỉ có thể nắm được cái ngẫu nhiên.", "Nắm lấy cái tất nhiên, chi phối, điều khiển, phòng ngừa cái ngẫu nhiên. Đó là mục đích của nhận thức và hành động của con người trong khi giải quyết mối quan hệ giữa tất nhiên và ngẫu nhiên.", "Nắm lấy cái tất nhiên để chi phối, điều khiển, phòng ngừa mặt tác hại của ngẫu nhiên. Nhận thức không phải bằng cách đi từ phân tích ngẫu nhiên mà đi thẳng vào cái tất nhiên."], c: 0}
+];
+
+let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
+let timerInterval;
+let timeLeft = 0;
+let autoNextTimer;
+let sessionTotal = 0;
+
+const elInterface = document.getElementById("quiz-interface");
+const elResult = document.getElementById("result-interface");
+const elQuestion = document.getElementById("question");
+const elAnswers = document.getElementById("answers");
+const elCounter = document.getElementById("question-counter");
+const elCombo = document.getElementById("combo-display");
+const elProgressBar = document.getElementById("progress-bar");
+const elBtnNext = document.getElementById("btn-next");
+const elBtnSkip = document.getElementById("btn-skip");
+const elBtnPrev = document.getElementById("btn-prev");
+const elTimer = document.getElementById("timer-display");
+const elResultTime = document.getElementById("result-time");
+const elControlPopup = document.getElementById("control-popup");
+const elReviewContainer = document.getElementById("review-container");
+const elBtnRetryWrong = document.getElementById("btn-retry-wrong");
+
+function initGame(retryWrongOnly = false) {
+    score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
+    activeQueue = []; skippedQueue = []; isPhaseSkipped = false;
+    if (!retryWrongOnly) userAnswers = {};
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const configShuffleQ = urlParams.get('sq') !== 'false'; 
+    const configTime = parseInt(urlParams.get('time')) || 0;
+
+    if (retryWrongOnly) {
+        let wrongIndices = [];
+        originalQuiz.forEach((item, idx) => {
+            if (userAnswers.hasOwnProperty(idx)) {
+                if (userAnswers[idx] !== item.c) wrongIndices.push(idx);
+            }
+        });
+        
+        if (wrongIndices.length === 0) {
+            alert("Bạn không có câu sai nào để làm lại!");
+            return;
+        }
+
+        userAnswers = {}; 
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+             let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+             return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+        
+        activeQueue = wrongIndices;
+        if(configShuffleQ) shuffleArray(activeQueue);
+    } else {
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+            let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+            return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+
+        let indices = sessionQuiz.map((_, i) => i);
+        if(configShuffleQ) shuffleArray(indices);
+        activeQueue = indices;
+    }
+    
+    sessionTotal = activeQueue.length;
+
+    elInterface.style.display = "flex";
+    elResult.style.display = "none";
+    elControlPopup.style.display = "flex";
+
+    if (configTime > 0) {
+        timeLeft = configTime * 60;
+        startCountdown();
+    } else {
+        timeLeft = 0;
+        startCountUp();
+    }
+
+    updateStats();
+    loadQuestion();
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function startCountdown() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay(timeLeft);
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("⏰ Hết giờ! Bài thi sẽ tự động nộp.");
+            finishGame();
+        }
+    }, 1000);
+}
+
+function startCountUp() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft++;
+        updateTimerDisplay(timeLeft);
+    }, 1000);
+}
+
+function updateTimerDisplay(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    elTimer.innerText = `${m}:${s}`;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const limit = parseInt(urlParams.get('time')) || 0;
+    
+    if (limit > 0 && seconds < 60) elTimer.classList.add('danger');
+    else elTimer.classList.remove('danger');
+}
+
+function loadQuestion() {
+    clearTimeout(autoNextTimer);
+
+    const qIndex = activeQueue[currentIndex];
+    const data = sessionQuiz[qIndex];
+    const hasAnswered = userAnswers.hasOwnProperty(qIndex);
+
+    elQuestion.innerText = data.q;
+    elAnswers.innerHTML = "";
+
+    if (isPhaseSkipped) {
+        document.getElementById("phase-display").style.display = "inline-block";
+        elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
+    } else {
+        document.getElementById("phase-display").style.display = "none";
+        elCounter.innerText = `Câu ${currentIndex + 1}/${activeQueue.length}`;
+    }
+
+    const labels = ["A", "B", "C", "D"];
+    data.a.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<b>${labels[idx]}.</b> ${ans}`;
+        
+        if (hasAnswered) {
+            btn.disabled = true;
+            const userPick = userAnswers[qIndex];
+            if (idx === data.c) btn.classList.add("correct");
+            if (idx === userPick && userPick !== data.c) btn.classList.add("wrong");
+            if (idx === userPick) btn.classList.add("user-selected");
+        } else {
+            btn.onclick = () => checkAnswer(qIndex, idx, btn);
+        }
+        elAnswers.appendChild(btn);
+    });
+
+    elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
+    
+    if (hasAnswered) {
+        elBtnSkip.style.display = "none";
+        elBtnNext.style.display = "block";
+    } else {
+        elBtnSkip.style.display = "block";
+        elBtnNext.style.display = "none";
+    }
+
+    updateStats();
+}
+
+function checkAnswer(qIndex, selectedIdx, btnElement) {
+    const data = sessionQuiz[qIndex];
+    const isCorrect = selectedIdx === data.c;
+    userAnswers[qIndex] = selectedIdx;
+
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        
+        if (idx === data.c) {
+            btn.classList.add("correct");
+            if (!isCorrect) {
+                btn.classList.add("flash-correct");
+            }
+        }
+        
+        if (idx === selectedIdx && !isCorrect) {
+            btn.classList.add("wrong");
+        }
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+        triggerMiniConfetti(btnElement);
+    } else {
+        combo = 0; wrongStreak++;
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+
+    autoNextTimer = setTimeout(() => {
+        nextQuestion();
+    }, 1200);
+}
+
+function nextQuestion() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    clearTimeout(autoNextTimer);
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        if(confirm(`Bạn đã bỏ qua ${skippedQueue.length} câu. Bạn có muốn làm lại ngay bây giờ không?`)) {
+             isPhaseSkipped = true;
+            activeQueue = [...skippedQueue];
+            skippedQueue = [];
+            currentIndex = 0;
+            loadQuestion();
+        } else {
+            finishGame();
+        }
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const pct = ((currentIndex + 1) / activeQueue.length) * 100;
+    elProgressBar.style.width = `${pct}%`;
+    elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
+}
+
+function finishGame() {
+    clearInterval(timerInterval);
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+    elControlPopup.style.display = "none"; 
+    
+    elResultTime.innerText = `Thời gian làm bài: ${elTimer.innerText}`;
+
+    const total = sessionTotal; 
+    const correctCount = score;
+    const wrongCount = total - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, var(--border-color) 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+
+    elReviewContainer.innerHTML = "";
+    let hasWrong = false;
+
+    sessionQuiz.forEach((item, qIndex) => {
+        const uAns = userAnswers[qIndex];
+        const correctAns = item.c;
+        if (uAns !== undefined && uAns !== correctAns) {
+            hasWrong = true;
+            const labels = ["A", "B", "C", "D"];
+            
+            const div = document.createElement("div");
+            div.className = "review-item";
+            div.innerHTML = `
+                <div class="review-question">Câu ${qIndex + 1}: ${item.q}</div>
+                <div class="review-detail">
+                    <div style="color: var(--danger)">❌ Bạn chọn: ${labels[uAns]}. ${item.a[uAns]}</div>
+                    <div style="color: var(--success)">✅ Đáp án đúng: ${labels[correctAns]}. ${item.a[correctAns]}</div>
+                </div>
+            `;
+            div.onclick = function() {
+                this.classList.toggle("active");
+            }
+            elReviewContainer.appendChild(div);
+        }
+    });
+
+    if (!hasWrong) {
+        elReviewContainer.innerHTML = `<p style="color: var(--success); font-weight: bold;">Xuất sắc! Bạn không sai câu nào! 🎉</p>`;
+        elBtnRetryWrong.style.display = "none";
+    } else {
+        elBtnRetryWrong.style.display = "block";
+    }
+}
+
+function retryWrongAnswers() {
+    initGame(true);
+}
+
+initGame(false);
+</script>
+</body>
+</html>
