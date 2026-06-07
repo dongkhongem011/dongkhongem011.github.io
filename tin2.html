@@ -8,12 +8,12 @@
 <style>
     /* --- CSS BIẾN ĐỔI GIAO DIỆN --- */
     :root {
-        --primary: #d32f2f;
+        --primary: #4f46e5; /* Màu chàm công nghệ cho môn Tin học */
         --secondary: #64748b;
         --success: #16a34a;
         --danger: #dc2626;
         
-        --bg-color: #fef2f2;
+        --bg-color: #f8fafc;
         --card-bg: #ffffff;
         --text-main: #0f172a;
         --text-sub: #475569;
@@ -23,15 +23,16 @@
     }
 
     body.dark-mode {
-        --bg-color: #121212;
-        --card-bg: #1e1e1e;
-        --text-main: #e2e8f0;
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-main: #f8fafc;
         --text-sub: #94a3b8;
-        --border-color: #333333;
-        --btn-bg: #2d2d2d;
+        --border-color: #334155;
+        --btn-bg: #334155;
         --shadow: rgba(0,0,0,0.5);
-        --danger: #ef5350; 
-        --success: #66bb6a; 
+        --primary: #6366f1;
+        --danger: #ef4444; 
+        --success: #22c55e; 
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -39,71 +40,74 @@
 
     /* HEADER */
     .header {
-        padding: 10px 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px var(--shadow); z-index: 10; flex-shrink: 0; font-size: 0.95rem;
+        padding: 12px 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px var(--shadow); z-index: 10; flex-shrink: 0; font-size: 0.95rem;
     }
-    .header-item { display: flex; align-items: center; gap: 5px; font-weight: 700; }
-    #timer-display { background: rgba(0,0,0,0.25); padding: 4px 12px; border-radius: 12px; font-family: monospace; font-size: 1.1rem; letter-spacing: 0.5px; }
+    .header-item { display: flex; align-items: center; gap: 6px; font-weight: 800; }
+    #timer-display { background: rgba(0,0,0,0.25); padding: 5px 12px; border-radius: 12px; font-family: monospace; font-size: 1.1rem; letter-spacing: 0.5px; }
     #timer-display.danger { background: #ef4444; animation: pulse 1s infinite; }
-    .combo-badge { background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; }
+    .combo-badge { background: rgba(255,255,255,0.25); padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; }
     
-    .progress-container { width: 100%; height: 4px; background: var(--border-color); flex-shrink: 0; }
+    .progress-container { width: 100%; height: 5px; background: var(--border-color); flex-shrink: 0; }
     .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
 
     /* CONTAINER */
     .container { width: 100%; max-width: 100%; background: var(--card-bg); display: flex; flex-direction: column; flex-grow: 1; position: relative; overflow: hidden; transition: background 0.3s; }
 
     /* VÙNG NỘI DUNG */
-    .quiz-body { padding: 20px 15px; overflow-y: auto; flex-grow: 1; padding-bottom: 120px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+    .quiz-body { padding: 25px 20px; overflow-y: auto; flex-grow: 1; padding-bottom: 120px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
 
-    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px; font-weight: bold; width: fit-content; }
-    .question-text { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; line-height: 1.5; color: var(--text-main); word-wrap: break-word; }
-    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px; font-weight: bold; width: fit-content; }
+    .question-text { font-size: 1.2rem; font-weight: 800; margin-bottom: 25px; line-height: 1.5; color: var(--text-main); word-wrap: break-word; }
+    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
 
     .option-btn { 
-        width: 100%; text-align: left; padding: 15px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 14px; font-size: 1rem; font-weight: 600; color: var(--text-sub); cursor: pointer; position: relative; line-height: 1.4; word-wrap: break-word; transition: all 0.2s; 
+        width: 100%; text-align: left; padding: 16px 18px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 16px; font-size: 1.05rem; font-weight: 600; color: var(--text-sub); cursor: pointer; position: relative; line-height: 1.4; word-wrap: break-word; transition: all 0.2s; 
     }
     .option-btn:active { background: var(--btn-bg); transform: scale(0.98); }
     
-    .option-btn.correct { border-color: var(--success); background: rgba(22, 163, 74, 0.1); color: var(--success); }
-    .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    .option-btn.correct { border-color: var(--success); background: rgba(34, 197, 94, 0.1); color: var(--success); }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.3rem; }
     
-    .option-btn.wrong { border-color: var(--danger); background: rgba(220, 38, 38, 0.1); color: var(--danger); }
-    .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    .option-btn.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.3rem; }
     .option-btn.user-selected { border-width: 2px; }
 
     /* HIỆU ỨNG NHÁY XANH ĐÁP ÁN ĐÚNG KHI CHỌN SAI */
     @keyframes flashGreen {
-        0%, 100% { background: rgba(22, 163, 74, 0.1); border-color: var(--success); transform: scale(1); }
-        50% { background: rgba(22, 163, 74, 0.35); border-color: #15803d; transform: scale(1.02); }
+        0%, 100% { background: rgba(34, 197, 94, 0.1); border-color: var(--success); transform: scale(1); }
+        50% { background: rgba(34, 197, 94, 0.35); border-color: #16a34a; transform: scale(1.02); }
     }
     .flash-correct { animation: flashGreen 1s ease; }
 
     /* POPUP MENU */
     .control-popup {
-        position: fixed; bottom: 50px; right: 15px; background: var(--card-bg); backdrop-filter: blur(10px); padding: 8px; border-radius: 30px; box-shadow: 0 5px 25px var(--shadow); display: flex; flex-direction: row; gap: 10px; z-index: 100; border: 1px solid var(--border-color); touch-action: none; 
+        position: fixed; bottom: 50px; right: 20px; background: var(--card-bg); backdrop-filter: blur(10px); padding: 8px; border-radius: 30px; box-shadow: 0 10px 30px var(--shadow); display: flex; flex-direction: row; gap: 10px; z-index: 100; border: 1px solid var(--border-color); touch-action: none; 
     }
     
-    .btn { width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: transform 0.1s; flex-shrink: 0; background: var(--btn-bg); color: var(--text-sub); }
+    .btn { width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: transform 0.1s; flex-shrink: 0; background: var(--btn-bg); color: var(--text-sub); }
     .btn:active { transform: scale(0.9); }
     .btn-skip { background: #fff7ed; color: #d97706; }
     body.dark-mode .btn-skip { background: #451a03; color: #fbbf24; }
-    .btn-next { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3); }
+    .btn-next { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
     
-    .btn-move { width: 32px; height: 32px; font-size: 1.1rem; position: absolute; top: -15px; right: 5px; border: 2px solid var(--card-bg); background: var(--secondary); color: white; z-index: 101; cursor: grab; }
+    .btn-move { width: 34px; height: 34px; font-size: 1.1rem; position: absolute; top: -15px; right: 5px; border: 2px solid var(--card-bg); background: var(--secondary); color: white; z-index: 101; cursor: grab; }
     .btn-move:active { cursor: grabbing; }
-    .btn-theme { width: 32px; height: 32px; font-size: 1rem; position: absolute; top: -15px; left: 5px; border: 2px solid var(--card-bg); background: #333; color: #ffd700; z-index: 101; }
+    .btn-theme { width: 34px; height: 34px; font-size: 1rem; position: absolute; top: -15px; left: 5px; border: 2px solid var(--card-bg); background: #333; color: #ffd700; z-index: 101; }
 
     /* RESULT SCREEN */
-    .result-screen { text-align: center; padding: 30px 20px; display: none; overflow-y: auto; height: 100%; background: var(--card-bg); z-index: 50; }
-    .score-circle { width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(var(--success) 0%, var(--border-color) 0%); margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--text-main); position: relative; }
-    .score-circle::before { content: ''; position: absolute; width: 120px; height: 120px; background: var(--card-bg); border-radius: 50%; transition: background 0.3s; }
+    .result-screen { text-align: center; padding: 40px 20px; display: none; overflow-y: auto; height: 100%; background: var(--card-bg); z-index: 50; }
+    .score-circle { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(var(--success) 0%, var(--border-color) 0%); margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; font-size: 2.8rem; font-weight: 800; color: var(--text-main); position: relative; box-shadow: 0 10px 20px var(--shadow); }
+    .score-circle::before { content: ''; position: absolute; width: 130px; height: 130px; background: var(--card-bg); border-radius: 50%; transition: background 0.3s; }
     .score-text { position: relative; z-index: 2; }
 
-    .review-box { text-align: left; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; }
-    .review-item { background: rgba(220, 38, 38, 0.05); border: 1px solid var(--danger); border-radius: 12px; padding: 15px; margin-bottom: 12px; cursor: pointer; }
-    .review-question { font-weight: bold; font-size: 1rem; margin-bottom: 8px; color: var(--text-main); }
-    .review-detail { display: none; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 0.95rem; }
+    .review-box { text-align: left; margin-top: 30px; border-top: 2px dashed var(--border-color); padding-top: 20px; }
+    .review-item { background: rgba(239, 68, 68, 0.05); border: 1px solid var(--danger); border-radius: 14px; padding: 18px; margin-bottom: 15px; cursor: pointer; transition: transform 0.2s; }
+    .review-item:active { transform: scale(0.98); }
+    .review-question { font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color: var(--text-main); }
+    .review-detail { display: none; margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 10px; font-size: 1rem; }
     .review-item.active .review-detail { display: block; }
+
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -136,27 +140,27 @@
     </div>
 
     <div id="result-interface" class="result-screen">
-        <h2>🎉 Hoàn thành!</h2>
-        <div style="font-size: 1rem; color: var(--text-sub); margin-bottom: 20px;" id="result-time">Thời gian: 00:00</div>
+        <h2 style="font-size: 1.8rem; margin-bottom: 10px; font-weight: 800;">🎉 Hoàn thành!</h2>
+        <div style="font-size: 1.05rem; color: var(--text-sub); margin-bottom: 30px; font-weight: 600;" id="result-time">Thời gian: 00:00</div>
         
         <div class="score-circle" id="score-circle">
             <span class="score-text" id="final-score">0%</span>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
-            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.3rem; color:var(--success)">0</span></div>
-            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.3rem; color:var(--danger)">0</span></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:25px; text-align:left">
+            <div style="background:var(--btn-bg); padding:18px; border-radius:14px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.5rem; color:var(--success); font-weight: 800;">0</span></div>
+            <div style="background:var(--btn-bg); padding:18px; border-radius:14px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.5rem; color:var(--danger); font-weight: 800;">0</span></div>
         </div>
 
-        <div style="display:flex; flex-direction: column; gap:10px; margin-bottom: 30px;">
-             <div style="display:flex; gap:10px;">
-                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
-                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="location.reload()">🔄 Làm lại tất cả</button>
+        <div style="display:flex; flex-direction: column; gap:12px; margin-bottom: 40px;">
+             <div style="display:flex; gap:12px;">
+                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:16px; font-size: 1.05rem; font-weight: 700;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
+                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:16px; font-size: 1.05rem; font-weight: 700;" onclick="location.reload()">🔄 Làm lại tất cả</button>
              </div>
-             <button id="btn-retry-wrong" class="btn" style="background:#dc2626; color:white; width:100%; border-radius:15px; display:none; font-size: 1rem;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
+             <button id="btn-retry-wrong" class="btn" style="background:var(--danger); color:white; width:100%; border-radius:16px; display:none; font-size: 1.05rem; font-weight: 700;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
         </div>
 
-        <h3 style="text-align: left; color: var(--danger); border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Xem lại câu sai 👇</h3>
+        <h3 style="text-align: left; color: var(--danger); border-bottom: 2px solid var(--border-color); padding-bottom: 8px; font-weight: 800;">Xem lại câu sai 👇</h3>
         <div id="review-container" class="review-box">
             <p style="color: var(--text-sub); font-style: italic;">Bạn làm đúng hết rồi! Giỏi quá! 👏</p>
         </div>
@@ -169,15 +173,15 @@ function triggerMiniConfetti(btn) {
     const rect = btn.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    const colors = ['#f44336', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0'];
+    const colors = ['#6366f1', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0'];
     
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 30; i++) {
         const particle = document.createElement('div');
         particle.style.position = 'fixed';
         particle.style.left = centerX + 'px';
         particle.style.top = centerY + 'px';
-        particle.style.width = '7px';
-        particle.style.height = '7px';
+        particle.style.width = '8px';
+        particle.style.height = '8px';
         particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
         particle.style.borderRadius = '50%';
         particle.style.pointerEvents = 'none';
@@ -269,7 +273,7 @@ const originalQuiz = [
   {q: "Câu 4. Học máy bán giám sát là gì?", a: ["Học từ dữ liệu hoàn toàn có nhãn.", "Học từ dữ liệu hoàn toàn không có nhãn.", "Học từ cả dữ liệu có nhãn và không nhãn.", "Học bằng cách thử và sai."], c: 2},
   {q: "Câu 5. Điều gì khiến học máy bán giám sát khác học máy có giám sát?", a: ["Không cần dữ liệu.", "Sử dụng ít dữ liệu có nhãn và nhiều dữ liệu không nhãn.", "Chỉ dùng dữ liệu không nhãn.", "Không có thuật toán cụ thể."], c: 1},
   {q: "Câu 6. Lợi ích chính của học bán giám sát là gì?", a: ["Không cần tính toán nhiều.", "Không cần dữ liệu.", "Tận dụng dữ liệu không nhãn để tăng hiệu suất mà không tốn nhiều chi phí gán nhãn.", "Dễ thực hiện hơn học không giám sát."], c: 2},
-  {q: "Câu 7. Dữ liệu không được gán nhãn trong học bán giám sát có vai trò gì?", a: ["Vô dụng, chỉ để lưu trữ.", "Làm tăng sai số.", "Để thay thế dữ liệu có nhân.", "Giúp cải thiện mô hình bằng cách học cấu trúc phân bố."], c: 3},
+  {q: "Câu 7. Dữ liệu không được gán nhãn trong học bán giám sát có vai trò gì?", a: ["Vô dụng, chỉ để lưu trữ.", "Làm tăng sai số.", "Để thay thế dữ liệu có nhãn.", "Giúp cải thiện mô hình bằng cách học cấu trúc phân bố."], c: 3},
   {q: "Câu 8. Học bán giám sát thường được sử dụng trong lĩnh vực nào?", a: ["Nhận dạng hình ảnh, nhận dạng giọng nói.", "Giải phương trình.", "Tính diện tích hình học.", "Xử lý số học trong bảng tính."], c: 0},
   {q: "Câu 9. Kỹ thuật nào sau đây phổ biến trong học bán giám sát?", a: ["Self-training.", "Gradient boosting.", "Backpropagation.", "Stochastic descent."], c: 0},
   {q: "Câu 10. Trong học bán giám sát, mô hình ban đầu được huấn luyện trên dữ liệu nào?", a: ["Dữ liệu không nhãn.", "Cả 2 loại cùng lúc.", "Dữ liệu có nhãn.", "Dữ liệu kiểm tra."], c: 2},
@@ -347,7 +351,7 @@ const originalQuiz = [
   {q: "Câu 82. Tập dữ liệu validation dùng để làm gì?", a: ["Huấn luyện mô hình.", "Kiểm tra sau khi huấn luyện.", "Điều chỉnh siêu tham số và đánh giá mô hình trong quá trình huấn luyện.", "Không có tác dụng gì."], c: 2},
   {q: "Câu 83. Nếu ANN có quá nhiều lớp và nơ-ron, có thể gặp vấn đề gì?", a: ["Underfitting.", "Mô hình sẽ bị lỗi ngay lập tức.", "Mô hình học nhanh hơn.", "Dễ bị overfitting và tốn tài nguyên."], c: 3},
   {q: "Câu 84. Self-training là kỹ thuật như thế nào?", a: ["Sử dụng mô hình học từ dữ liệu không nhãn.", "Gán nhãn giả cho dữ liệu không nhãn bằng chính mô hình hiện tại.", "Không cần mô hình ban đầu.", "Học bằng cách lặp lại dữ liệu."], c: 1},
-  {q: "Câu 85. Co-training trong học bán giám sát hoạt động thế nào?", a: ["Hai mô hình học song song, mỗi mô hình học từ một phần đặc trưng khác nhau.", "Một mô hình học cả có nhãn và không nhân cùng lúc.", "Mô hình không sử dụng bất kỳ dữ liệu có nhãn nào.", "Mô hình chính học và truyền kiến thức cho mô hình phụ."], c: 0},
+  {q: "Câu 85. Co-training trong học bán giám sát hoạt động thế nào?", a: ["Hai mô hình học song song, mỗi mô hình học từ một phần đặc trưng khác nhau.", "Một mô hình học cả có nhãn và không nhãn cùng lúc.", "Mô hình không sử dụng bất kỳ dữ liệu có nhãn nào.", "Mô hình chính học và truyền kiến thức cho mô hình phụ."], c: 0},
   {q: "Câu 86. Điều kiện giúp học bán giám sát hoạt động hiệu quả nhất là gì?", a: ["Dữ liệu không nhãn giống hoàn toàn dữ liệu có nhãn.", "Dữ liệu không nhãn có cấu trúc tương tự và hỗ trợ phân tách tốt các lớp.", "Không cần quan tâm đến phân bố dữ liệu.", "Sử dụng càng nhiều mô hình càng tốt."], c: 1},
   {q: "Câu 87. Hãy chỉ ra hạn chế của Machine Learning?", a: ["Không có khả năng sử dụng các thuật toán để phân tích những thông tin có liên quan.", "Không có khả năng xử lý dữ liệu với số chiều lớn.", "Không được huấn luyện.", "Không có khả năng đưa ra quyết định."], c: 0},
   {q: "Câu 88. Hãy nêu các bước xây dựng mô hình học máy?", a: ["Thu thập dữ liệu, chuẩn bị dữ liệu, lựa chọn mô hình, huấn luyện mô hình, đánh giá mô hình, thay đổi tham số, áp dụng mô hình.", "Thu thập dữ liệu, chuẩn bị dữ liệu, đánh giá mô hình, thay đổi tham số, áp dụng mô hình.", "Thu thập dữ liệu, chuẩn bị dữ liệu, lựa chọn mô hình, huấn luyện mô hình, đánh giá mô hình.", "Lựa chọn mô hình, huấn luyện mô hình, đánh giá mô hình, thay đổi tham số, áp dụng mô hình."], c: 0},
