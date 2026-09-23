@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tư tưởng Hồ Chí Minh - Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    /* --- CSS BIẾN ĐỔI GIAO DIỆN --- */
+    :root {
+        --primary: #d32f2f;
+        --secondary: #64748b;
+        --success: #16a34a;
+        --danger: #dc2626;
+        
+        --bg-color: #fef2f2;
+        --card-bg: #ffffff;
+        --text-main: #0f172a;
+        --text-sub: #475569;
+        --border-color: #e2e8f0;
+        --btn-bg: #f1f5f9;
+        --shadow: rgba(0,0,0,0.1);
+    }
+
+    body.dark-mode {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-main: #e2e8f0;
+        --text-sub: #94a3b8;
+        --border-color: #333333;
+        --btn-bg: #2d2d2d;
+        --shadow: rgba(0,0,0,0.5);
+        --danger: #ef5350; 
+        --success: #66bb6a; 
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+    /* HEADER */
+    .header {
+        padding: 10px 15px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px var(--shadow); z-index: 10; flex-shrink: 0; font-size: 0.95rem;
+    }
+    .header-item { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+    #timer-display { background: rgba(0,0,0,0.25); padding: 4px 12px; border-radius: 12px; font-family: monospace; font-size: 1.1rem; letter-spacing: 0.5px; }
+    #timer-display.danger { background: #ef4444; animation: pulse 1s infinite; }
+    .combo-badge { background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; }
+    
+    .progress-container { width: 100%; height: 4px; background: var(--border-color); flex-shrink: 0; }
+    .progress-bar { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+    /* CONTAINER */
+    .container { width: 100%; max-width: 100%; background: var(--card-bg); display: flex; flex-direction: column; flex-grow: 1; position: relative; overflow: hidden; transition: background 0.3s; }
+
+    /* VÙNG NỘI DUNG */
+    .quiz-body { padding: 20px 15px; overflow-y: auto; flex-grow: 1; padding-bottom: 120px; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+
+    .phase-badge { display: none; background: #0ea5e9; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px; font-weight: bold; width: fit-content; }
+    .question-text { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; line-height: 1.5; color: var(--text-main); word-wrap: break-word; }
+    .options-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+
+    .option-btn { 
+        width: 100%; text-align: left; padding: 15px; border: 2px solid var(--border-color); background: var(--card-bg); border-radius: 14px; font-size: 1rem; font-weight: 600; color: var(--text-sub); cursor: pointer; position: relative; line-height: 1.4; word-wrap: break-word; transition: all 0.2s; 
+    }
+    .option-btn:active { background: var(--btn-bg); transform: scale(0.98); }
+    
+    .option-btn.correct { border-color: var(--success); background: rgba(22, 163, 74, 0.1); color: var(--success); }
+    .option-btn.correct::after { content: "✓"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    
+    .option-btn.wrong { border-color: var(--danger); background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+    .option-btn.wrong::after { content: "✕"; position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-weight: 900; font-size: 1.2rem; }
+    .option-btn.user-selected { border-width: 2px; }
+
+    /* HIỆU ỨNG NHÁY XANH ĐÁP ÁN ĐÚNG KHI CHỌN SAI */
+    @keyframes flashGreen {
+        0%, 100% { background: rgba(22, 163, 74, 0.1); border-color: var(--success); transform: scale(1); }
+        50% { background: rgba(22, 163, 74, 0.35); border-color: #15803d; transform: scale(1.02); }
+    }
+    .flash-correct { animation: flashGreen 1s ease; }
+
+    /* POPUP MENU */
+    .control-popup {
+        position: fixed; bottom: 50px; right: 15px; background: var(--card-bg); backdrop-filter: blur(10px); padding: 8px; border-radius: 30px; box-shadow: 0 5px 25px var(--shadow); display: flex; flex-direction: row; gap: 10px; z-index: 100; border: 1px solid var(--border-color); touch-action: none; 
+    }
+    
+    .btn { width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: transform 0.1s; flex-shrink: 0; background: var(--btn-bg); color: var(--text-sub); }
+    .btn:active { transform: scale(0.9); }
+    .btn-skip { background: #fff7ed; color: #d97706; }
+    body.dark-mode .btn-skip { background: #451a03; color: #fbbf24; }
+    .btn-next { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3); }
+    
+    .btn-move { width: 32px; height: 32px; font-size: 1.1rem; position: absolute; top: -15px; right: 5px; border: 2px solid var(--card-bg); background: var(--secondary); color: white; z-index: 101; cursor: grab; }
+    .btn-move:active { cursor: grabbing; }
+    .btn-theme { width: 32px; height: 32px; font-size: 1rem; position: absolute; top: -15px; left: 5px; border: 2px solid var(--card-bg); background: #333; color: #ffd700; z-index: 101; }
+
+    /* RESULT SCREEN */
+    .result-screen { text-align: center; padding: 30px 20px; display: none; overflow-y: auto; height: 100%; background: var(--card-bg); z-index: 50; }
+    .score-circle { width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(var(--success) 0%, var(--border-color) 0%); margin: 0 auto 25px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--text-main); position: relative; }
+    .score-circle::before { content: ''; position: absolute; width: 120px; height: 120px; background: var(--card-bg); border-radius: 50%; transition: background 0.3s; }
+    .score-text { position: relative; z-index: 2; }
+
+    .review-box { text-align: left; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+    .review-item { background: rgba(220, 38, 38, 0.05); border: 1px solid var(--danger); border-radius: 12px; padding: 15px; margin-bottom: 12px; cursor: pointer; }
+    .review-question { font-weight: bold; font-size: 1rem; margin-bottom: 8px; color: var(--text-main); }
+    .review-detail { display: none; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 0.95rem; }
+    .review-item.active .review-detail { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-item" id="timer-display">00:00</div>
+    <div class="header-item" id="question-counter">1/120</div>
+    <div class="combo-badge" id="combo-display">🔥 0</div>
+</div>
+<div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+</div>
+
+<div class="container">
+    <div id="quiz-interface" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="quiz-body">
+            <div id="phase-display" class="phase-badge">LÀM LẠI CÂU BỎ QUA</div>
+            <h2 class="question-text" id="question">Đang tải...</h2>
+            <div class="options-grid" id="answers"></div>
+        </div>
+
+        <div class="control-popup" id="control-popup">
+            <button class="btn btn-theme" onclick="toggleTheme()">🌗</button>
+            <button class="btn btn-move" id="drag-handle">⇄</button>
+            
+            <button class="btn btn-prev" id="btn-prev" onclick="goBack()">⬅</button>
+            <button class="btn btn-skip" id="btn-skip" onclick="skipQuestion()">⤵</button>
+            <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">➜</button>
+        </div>
+    </div>
+
+    <div id="result-interface" class="result-screen">
+        <h2>🎉 Hoàn thành!</h2>
+        <div style="font-size: 1rem; color: var(--text-sub); margin-bottom: 20px;" id="result-time">Thời gian: 00:00</div>
+        
+        <div class="score-circle" id="score-circle">
+            <span class="score-text" id="final-score">0%</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; text-align:left">
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>✅ Đúng</b><span id="txt-correct" style="display:block; font-size:1.3rem; color:var(--success)">0</span></div>
+            <div style="background:var(--btn-bg); padding:15px; border-radius:12px"><b>❌ Sai</b><span id="txt-wrong" style="display:block; font-size:1.3rem; color:var(--danger)">0</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction: column; gap:10px; margin-bottom: 30px;">
+             <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#94a3b8; color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="window.location.href='index.html'">🏠 Trang chủ</button>
+                <button class="btn" style="background:var(--primary); color:white; width:100%; border-radius:15px; font-size: 1rem;" onclick="location.reload()">🔄 Làm lại tất cả</button>
+             </div>
+             <button id="btn-retry-wrong" class="btn" style="background:#dc2626; color:white; width:100%; border-radius:15px; display:none; font-size: 1rem;" onclick="retryWrongAnswers()">⚠️ Làm lại câu sai</button>
+        </div>
+
+        <h3 style="text-align: left; color: var(--danger); border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Xem lại câu sai 👇</h3>
+        <div id="review-container" class="review-box">
+            <p style="color: var(--text-sub); font-style: italic;">Bạn làm đúng hết rồi! Giỏi quá! 👏</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- HIỆU ỨNG NỔ NHẸ KHI CHỌN ĐÁP ÁN ĐÚNG ---
+function triggerMiniConfetti(btn) {
+    const rect = btn.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const colors = ['#f44336', '#4caf50', '#2196f3', '#ffeb3b', '#9c27b0'];
+    
+    for (let i = 0; i < 25; i++) {
+        const particle = document.createElement('div');
+        particle.style.position = 'fixed';
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+        particle.style.width = '7px';
+        particle.style.height = '7px';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.zIndex = '9999';
+        document.body.appendChild(particle);
+
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 50 + 20; 
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity - 20; 
+
+        particle.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+        ], {
+            duration: 600 + Math.random() * 300,
+            easing: 'cubic-bezier(0, .9, .57, 1)'
+        }).onfinish = () => particle.remove();
+    }
+}
+
+// --- DRAGGABLE MENU LOGIC ---
+const popup = document.getElementById('control-popup');
+const handle = document.getElementById('drag-handle');
+let isDragging = false, offsetX, offsetY;
+
+handle.addEventListener('mousedown', startDrag);
+handle.addEventListener('touchstart', startDrag, {passive: false});
+
+function startDrag(e) {
+    e.preventDefault();
+    isDragging = true;
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+    const rect = popup.getBoundingClientRect();
+    offsetX = clientX - rect.left;
+    offsetY = clientY - rect.top;
+
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, {passive: false});
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+}
+
+function onDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+
+    let newLeft = clientX - offsetX;
+    let newTop = clientY - offsetY;
+
+    const maxX = window.innerWidth - popup.offsetWidth;
+    const maxY = window.innerHeight - popup.offsetHeight;
+
+    newLeft = Math.max(0, Math.min(newLeft, maxX));
+    newTop = Math.max(0, Math.min(newTop, maxY));
+
+    popup.style.left = newLeft + 'px';
+    popup.style.top = newTop + 'px';
+    popup.style.right = 'auto'; 
+    popup.style.bottom = 'auto'; 
+}
+
+function stopDrag() {
+    isDragging = false;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+}
+
+// --- DARK MODE ---
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+
+// --- DATA CÂU HỎI TRÍCH XUẤT TỪ PDF (120 CÂU TƯ TƯỞNG HỒ CHÍ MINH) ---
+const originalQuiz = [
+  {q: "Câu 1. Đáp án nào dưới đây viết sai về con đường đến với chủ nghĩa Mác - Lênin của Nguyễn Ái Quốc:", a: ["Trên hành trình tìm đường cứu nước ở lứa tuổi 20, điều mà Nguyễn Ái Quốc muốn biết hơn cả khi tham gia các cuộc thảo luận là Quốc tế nào bênh vực nhân dân các nước thuộc địa.", "Trong quá trình bôn ba tìm đường cứu nước, Nguyễn Ái Quốc đã hoàn thiện cho mình bản lĩnh tư duy độc lập, tự chủ, sáng tạo, nhờ đó khi tiếp thu và vận dụng chủ nghĩa Mác - Lênin không rơi vào giáo điều, sao chép.", "Ngay từ đầu, chủ nghĩa cộng sản đã đưa Nguyễn Ái Quốc tin theo chủ nghĩa Lênin, tin theo Quốc tế thứ ba.", "Nguyễn Ái Quốc tiếp thu lý luận Mác - Lênin theo phương pháp nhận thức macxít, đồng thời theo lối \"đắc ý, vong ngôn\" của văn hóa phương Đông."], c: 2},
+  {q: "Câu 2. Hãy chỉ ra nhận định nào dưới đây chứng tỏ Hồ Chí Minh đã tiếp nhận giá trị tích cực của Nho giáo:", a: ["Tư tưởng của Khổng Tử chỉ thích hợp với một xã hội bình yên không bao giờ thay đổi.", "Khổng Tử là người phát ngôn bênh vực những người bóc lột chống lại những người bị áp bức.", "Tuy Khổng Tử là phong kiến song những điều hay trong học thuyết của ông thì ta nên học.", "Trong học thuyết của Khổng Tử có nhiều điều không đúng."], c: 2},
+  {q: "Câu 3. Nội dung nào dưới đây chứng tỏ Hồ Chí Minh đã nhấn mạnh giá trị nhân văn trong việc học tập chủ nghĩa Mác - Lênin:", a: ["Hiểu chủ nghĩa Mác- Lênin tức là cách mạng phân công cho việc gì đều phải làm tròn nhiệm vụ.", "Không nên đào tạo ra những con người thuộc sách làu làu, cụ Mác nói thế này, cụ Lênin nói thế kia, nhưng quét nhà lại để cho nhà đầy rác.", "Hiểu chủ nghĩa Mác Lênin là phải sống với nhau có tình có nghĩa.", "Học tập những chân lý tuyệt đối của chủ nghĩa Mác - Lênin để áp dụng một cách sáng tạo vào hoàn cảnh thực tế của nước ta."], c: 2},
+  {q: "Câu 4. Luận điểm nào dưới đây thể hiện khái quát nhất quan điểm của Hồ Chí Minh về tác phong cần có trong học tập lý luận:", a: ["Phải nêu cao tác phong độc lập suy nghĩ và tự do tư tưởng.", "Đọc tài liệu thì phải đào sâu hiểu kỹ.", "Không tin một cách mù quáng từng câu một trong sách.", "Có vấn đề chưa thật thông suốt thì mạnh dạn đề ra và thảo luận cho vỡ lẽ."], c: 0},
+  {q: "Câu 5. Đáp án nào dưới đây thể hiện đầy đủ các tiền đề tư tưởng - lý luận hình thành tư tưởng Hồ Chí Minh:", a: ["Truyền thống văn hóa dân tộc.", "Chủ nghĩa Mác - Lênin.", "Tinh hoa văn hóa nhân loại.", "Cả a, b, c."], c: 3},
+  {q: "Câu 6. Nhân tố nào dưới đây không thuộc về phẩm chất cá nhân của Nguyễn Ái Quốc:", a: ["Là người có tư duy độc lập, tự chủ, sáng tạo và đầu óc phê phán, nhạy bén với cái mới.", "Là người khổ công học tập, bản lĩnh kiên cường.", "Là người dân của một dân tộc bị áp bức.", "Là một người yêu nước, thương dân."], c: 2},
+  {q: "Câu 7. Tìm đáp án nhầm lẫn về tình hình xã hội Việt Nam cuối thế kỷ XIX đầu thế kỷ XX trong các đáp án dưới đây:", a: ["Xã hội Việt Nam có nhiều biến động: chính quyền triều Nguyễn đã từng bước khuất phục trước sự xâm lược của thực dân Pháp.", "Nhiều quốc gia độc lập đã trở thành thuộc địa của thực dân Pháp.", "Tư tưởng mang ý thức hệ phong kiến của những người lãnh đạo phong trào cách mạng đã lỗi thời.", "Cách mạng Việt Nam khủng hoảng về đường lối cứu nước."], c: 1},
+  {q: "Câu 8. Nhận định nào dưới đây thể hiện điều Nguyễn Ái Quốc muốn nghe thảo luận hơn cả trong bài “Con đường dẫn tôi đến với chủ nghĩa Lênin” :", a: ["Thảo luận về chiến tranh thế giới thứ nhất.", "Thảo luận về Cách mạng vô sản.", "Thảo luận về quốc tế nào bênh vực nhân dân các nước thuộc địa.", "Thảo luận về vận mệnh của giai cấp công nhân."], c: 2},
+  {q: "Câu 9. Theo Hồ Chí Minh học chủ nghĩa Mác theo cách nào dưới đây là đúng:", a: ["Học chủ nghĩa Mác là học tập cái tinh thần xử trí mọi việc, đối với mọi người và đối với bản thân mình.", "Học thuộc lòng một số sách vở của chủ nghĩa Mác - Lênin.", "Học lý luận của Mác về đấu tranh giai cấp thì mình cũng nêu ra khẩu hiệu giai cấp tranh đấu.", "Học chủ nghĩa Mác - Lênin để tìm ra những kết luận có sẵn cho con đường giải phóng dân tộc."], c: 0},
+  {q: "Câu 10. Tìm luận điểm dưới đây viết nhầm về nguồn gốc của tư tưởng Hồ Chí Minh khi tiếp thu văn hóa phương Tây:", a: ["Tư tưởng về xây dựng Nhà nước Pháp quyền của dân, do dân và vì dân.", "Tư tưởng tự do, bình đẳng, bác ái trong bản Tuyên ngôn Nhân quyền và Dân quyền của cách mạng Pháp 1791.", "Tiếp thu giá trị của tưởng nhân quyền được ghi trong Tuyên ngôn độc lập của nước Mỹ 1776.", "Học thuyết \"Tam dân\" của Tôn Trung Sơn."], c: 3},
+  {q: "Câu 11. Nhân tố nào sau đây thuộc về phẩm chất trí tuệ đặc sắc nhất làm tiền đề cho Nguyễn Ái Quốc trở thành nhà tư tưởng:", a: ["Sự khổ công học tập, tinh thần nhẫn nại quyết tâm theo đuổi mục tiêu.", "Tư duy độc lập, tự chủ sáng tạo, với đầu óc phê phán tinh tường, sáng suốt trong nghiên cứu lý luận và tổng kết lý luận, thực tiễn.", "Tình cảm mãnh liệt của một con người suốt đời yêu nước thương dân.", "Ý chí rất cao của một chiến sĩ cộng sản nhiệt thành cách mạng."], c: 1},
+  {q: "Câu 12. Nhân tố nào sau đây là phẩm chất căn bản xuyên suốt cuộc đời hoạt động của Hồ Chí Minh:", a: ["Sự khổ công học tập, tinh thần nhẫn nại quyết tâm theo đuổi mục tiêu.", "Tư duy độc lập, tự chủ sáng tạo, với đầu óc phê phán tinh tường, sáng suốt trong nghiên cứu lý luận và tổng kết lý luận, thực tiễn.", "Tình cảm mãnh liệt của một con người suốt đời yêu nước thương dân.", "Ý chí rất cao của một chiến sĩ cộng sản nhiệt thành cách mạng."], c: 2},
+  {q: "Câu 13. Tìm luận điểm dưới đây viết nhầm về nguồn gốc của tư tưởng Hồ Chí Minh khi tiếp thu văn hóa phương Đông:", a: ["Tiếp thu những mặt tích cực của Nho giáo.", "Kế thừa các giá trị văn hóa tiến bộ của thời kỳ Phục hưng.", "Tiếp thu chủ nghĩa Tam dân của Tôn Trung Sơn.", "Tiếp thu tư tưởng vị tha của Phật Giáo."], c: 1},
+  {q: "Câu 14. Luận điểm nào dưới đây viết sai tư tưởng Hồ Chí Minh trong tài liệu \"Báo cáo về Bắc kỳ, Trung Kỳ và Nam kỳ\":", a: ["Đấu tranh giai cấp không diễn ra gay gắt và quyết liệt giống như ở phương Tây.", "Xung đột quyền lợi của họ giảm thiểu.", "Chiến tranh đã làm thay đổi chủ nghĩa dân tộc.", "Đối với phương Đông, trong đó có Việt Nam, giải phóng giai cấp là nhiệm vụ trên hết, trước hết."], c: 3},
+  {q: "Câu 15. Luận điểm nào dưới đây thể hiện tư tưởng cốt lõi của “Chiến thuật vận động\" trong Nghị Quyết TW 8 (tháng 5.1941):", a: ["Những khẩu hiệu cao chưa thực hiện được trong tình thế hiện tại thì không để vào.", "Chiến thuật hiện tại của Đảng là phải vận dụng một phương pháp hiệu triệu hết sức thống thiết.", "Đánh thức được tinh thần dân tộc xưa nay trong nhân dân.", "Cốt yếu của cuộc vận động hiện thời là làm thế nào đánh đuổi được giặc Pháp- Nhật."], c: 2},
+  {q: "Câu 16. Tìm luận điểm của Hồ Chí Minh trong các đáp án sau:", a: ["Hãy xoá bỏ tình trạng người bóc lột người thì tình trạng dân tộc này bóc lột dân tộc khác sẽ bị xoá bỏ.", "Khi mà sự đối kháng giữa các giai cấp trong nội bộ dân tộc không còn nữa thì sự thù địch giữa các dân tộc cũng đồng thời mất theo.", "Giải phóng giai cấp là nhiệm vụ trung tâm, là điều kiện để giải phóng dân tộc.", "Trong điều kiện các nước thuộc địa thì giải phóng dân tộc là cơ sở để giải phóng giai cấp, giải phóng con người."], c: 3},
+  {q: "Câu 17. Luận điểm nào dưới đây thể hiện quan điểm của Hồ Chí Minh:", a: ["Hãy xoá bỏ tình trạng người bóc lột người thì tình trạng dân tộc này bóc lột dân tộc khác sẽ bị xoá bỏ.", "Khi mà sự đối kháng giữa các giai cấp trong nội bộ dân tộc không còn nữa thì sự thù địch giữa các dân tộc cũng đồng thời mất theo.", "Giải phóng giai cấp là nhiệm vụ trung tâm, là điều kiện để giải phóng dân tộc.", "Cần xem xét lại chủ nghĩa Mác về cơ sở lịch sử của nó, củng cố nó bằng dân tộc học phương Đông."], c: 3},
+  {q: "Câu 18. Tìm luận điểm của Hồ Chí Minh trong các đáp án sau:", a: ["Vô sản tất cả các nước đoàn kết lại.", "Vô sản tất cả các nước và các dân tộc bị áp bức đoàn kết lại.", "Vô sản tất cả các nước liên hiệp lại.", "Lao động tất cả các nước đoàn kết lại."], c: 3},
+  {q: "Câu 19. Tìm luận điểm dưới đây thể hiện đúng theo tư tưởng Hồ Chí Minh về nội dung cốt lõi để giải quyết vấn đề dân tộc thuộc địa ở Việt Nam:", a: ["Độc lập dân tộc.", "Bình đẳng - Bác ái.", "Công bằng - Văn minh.", "Văn minh - Tiến bộ."], c: 0},
+  {q: "Câu 20. Đáp án nào dưới đây thể hiện đúng tư tưởng Hồ Chí Minh về mối quan hệ giữa quyền lợi giai cấp và quyền lợi giải phóng dân tộc trong cách mạng Việt Nam giai đoạn 1941-1945:", a: ["Trong lúc này quyền lợi của bộ phận, của giai cấp phải đặt dưới quyền lợi giải phóng của toàn thể dân tộc.", "Trong lúc này quyền lợi giải phóng của toàn thể dân tộc phải đặt dưới quyền lợi của bộ phận, của giai cấp.", "Trong lúc này quyền lợi của bộ phận, của giai cấp phải đặt ngang với quyền lợi giải phóng của toàn thể dân tộc.", "Trong lúc này quyền lợi của giai cấp công nhân và giai cấp nông dân phải đặt lên trên hết."], c: 0},
+  {q: "Câu 21. Đáp án nào dưới đây trích dẫn sai nội dung Nghị Quyết TW 8 (tháng 5-1941) do Hồ Chí Minh chỉ đạo:", a: ["Chiến thuật hiện tại của Đảng là phải vận dụng một phương pháp hiệu triệu hết sức thống thiết.", "Mặt trận hiệu triệu của Đảng hiện nay không thể gọi như trước mà phải đổi ra cái tên khác cho có tính chất giai cấp hơn.", "Đánh thức được tinh thần dân tộc xưa nay trong nhân dân.", "Cốt yếu của cuộc vận động hiện thời là làm thế nào đánh đuổi được giặc Pháp- Nhật."], c: 1},
+  {q: "Câu 22. Tìm luận điểm đúng theo tư tưởng Hồ Chí Minh về mâu thuẫn cơ bản nhất của xã hội Việt Nam cuối thế kỷ XIX, đầu thế kỷ XX trong các luận điểm dưới đây:", a: ["Mâu thuẫn giữa giai cấp nông dân với giai cấp địa chủ.", "Mâu thuẫn giữa giai cấp công nhân với giai cấp tư sản.", "Mâu thuẫn giữa triều đình phong kiến lỗi thời với nhu cầu phát triển.", "Mâu thuẫn giữa toàn thể dân tộc với đế quốc thực dân Pháp."], c: 3},
+  {q: "Câu 23. Tìm luận điểm dưới đây thể hiện tư tưởng Hồ Chí Minh về “độc lập dân tộc gắn liền với chủ nghĩa xã hội”:", a: ["Nếu không có nhân dân thì Chính phủ không đủ lực lượng. Nếu không có Chính phủ thì nhân dân không có ai dẫn đường.", "Nếu nước độc lập mà dân không được hưởng hạnh phúc, tự do thì độc lập cũng chẳng có nghĩa lí gì.", "Chính phủ đã hứa với dân, sẽ gắng sức làm cho ai nấy đều có phần hạnh phúc.", "Các cơ quan của Chính phủ từ toàn quốc cho đến các làng đều là công bộc của dân."], c: 1},
+  {q: "Câu 24. Đáp án nào dưới đây thể hiện không đúng quan niệm của Hồ Chí Minh về thói quen và truyền thống lạc hậu:", a: ["Thói quen và truyền thống lạc hậu là kẻ địch to.", "Thói quen và truyền thống lạc hậu gây ra những trở ngại lớn cho chủ nghĩa xã hội.", "Thói quen và truyền thống lạc hậu cần phải bắn bỏ và tiêu diệt ngay.", "Thói quen và truyền thống lạc hậu cùng với chủ nghĩa cá nhân là kẻ địch của chủ nghĩa xã hội."], c: 2},
+  {q: "Câu 25. Tìm luận điểm của Hồ Chí Minh xác định cơ sở cơ bản để thực hiện đại đoàn kết dân tộc trong các luận điểm dưới đây:", a: ["Đại đoàn kết tức là trước hết phải đoàn kết đại đa số nhân dân, mà đại đa số nhân dân ta là công nhân, nông dân và các tầng lớp nhân dân lao động khác.", "Bất kỳ là ai mà thật thà tán thành hoà bình, thống nhất, độc lập, dân chủ thì dù những người đó trước đây chống chúng ta, bây giờ chúng ta cũng thật thà đoàn kết với họ.", "Đối với những đồng bào lạc lối lầm đường, ta phải lấy tình thân ái mà cảm hoá họ.", "Trong mấy triệu người cũng có người thế này thế khác, nhưng thế này thế khác đều dòng dõi tổ tiên ta... nên ai cũng có ít hay nhiều lòng ái quốc."], c: 3},
+  {q: "Câu 26. Nội dung nào dưới đây xác định vai trò quyết định của đại đoàn kết dân tộc đối với sự tồn vong và phát triển của đất nước Việt Nam:", a: ["Lúc nào nhân dân ta đoàn kết muôn người như một thì nước ta độc lập tự do. Trái lại lúc nào dân ta không đoàn kết thì bị nước ngoài xâm lấn.", "Bất kỳ ai mà thật thà tán thành hòa bình, thống nhất, độc lập, dân chủ thì dù người đó trước đây chống chúng ta, bây giờ chúng ta cũng thật thà đoàn kết với họ.", "Ta đoàn kết để đấu tranh cho thống nhất và độc lập của Tổ quốc, ta còn phải đòan kết xây dựng nước nhà.", "Ai có tài, có đức, có sức, có lòng phụng sự Tổ quốc và phục vụ nhân dân thì ta đoàn kết với họ."], c: 0},
+  {q: "Câu 27. Nội dung nào dưới đây trong tư tưởng Hồ Chí Minh xác định mức độ rộng rãi của khối đại đoàn kết dân tộc:", a: ["Lúc nào nhân dân ta đoàn kết muôn người như một thì nước ta độc lập tự do. Trái lại lúc nào dân ta không đoàn kết thì bị nước ngoài xâm lấn.", "Bất kỳ ai mà thật thà tán thành hòa bình thống nhất độc lập dân chủ thì dù người đó trước đây chống đối chúng ta, bây giờ chúng ta cũng thật thà đoàn kết với họ.", "Ta đoàn kết để đấu tranh cho thống nhất và độc lập của Tổ quốc, ta còn phải đoàn kết xây dựng nước nhà.", "Ai có tài, có đức, có sức, có lòng phụng sự Tổ quốc và phục vụ nhân dân thì ta đoàn kết với họ."], c: 1},
+  {q: "Câu 28. Luận điểm nào dưới đây chứng tỏ Hồ Chí Minh có tầm nhìn xa về sự cần thiết phải phát triển kinh tế nhiều thành phần:", a: ["Trong chế độ dân chủ mới, có năm loại kinh tế khác nhau (1953).", "Chúng tôi chủ trương làm cho tư bản Việt Nam phát triển. Mà chỉ có độc lập thì tư bản Việt Nam mới phát triển (1947).", "Giới Công- Thương phải hoạt động để xây dựng một nền kính tế và tài chính vững vàng và thịnh vượng.", "Nền kinh tế thịnh vượng nghĩa là các sự kinh doanh của các nhà công nghiệp, thương nghiệp thịnh vượng."], c: 1},
+  {q: "Câu 29. Luận điểm nào dưới đây thể hiện Hồ Chí Minh đã nhấn mạnh yếu tố nhân văn trong thực hiện việc xây dựng khối đại đoàn kết dân tộc:", a: ["Đại đoàn kết tức là trước hết phải đoàn kết đại đa số nhân dân, mà đại đa số nhân dân ta là công nhân, nông dân và các tầng lớp nhân dân lao động khác.", "Bất kỳ là ai mà thật thà tán thành hoà bình, thống nhất, độc lập, dân chủ thì dù những người đó trước đây chống chúng ta, bây giờ chúng ta cũng thật thà đoàn kết với họ.", "Đoàn kết của ta không những rộng rãi mà còn lâu dài.", "Đối với những đồng bào lạc lối lầm đường, ta phải lấy tình thân ái mà cảm hoá họ."], c: 3},
+  {q: "Câu 30. Luận điểm nào sau đây viết thiếu nội dung quan trọng về đại đoàn kết dân tộc trong tư tưởng Hồ Chí Minh:", a: ["Đại đoàn kết tức là trước hết phải đoàn kết đại đa số nhân dân, gồm công nhân, nông dân và các tầng lớp nhân dân lao động khác.", "Tính chất của đại đoàn kết là rộng rãi, chặt chẽ và lâu dài.", "Trong công tác đoàn kết phải chống khuynh hướng cô độc hẹp hòi và đoàn kết vô nguyên tắc.", "Trong mấy triệu người cũng có người thế này thế khác. Vậy nên ta phải khoan hồng đại độ."], c: 3},
+  {q: "Câu 31. Luận điểm nào sau đây của Hồ Chí Minh xác định đại đoàn kết là nhiệm vụ có ý nghĩa chiến lược, lâu dài:", a: ["Đại đoàn kết tức là trước hết phải đoàn kết đại đa số nhân dân, mà đại đa số nhân dân ta là công nhân, nông dân và các tầng lớp nhân dân lao động khác.", "Bất kỳ là ai thật thà tán thành hoà bình, thống nhất, độc lập, dân chủ thì dù những người đó trước đây chống chúng ta, bây giờ chúng ta cũng thật thà đoàn kết với họ.", "Đoàn kết là một chính sách dân tộc, không phải là một thủ đoạn chính trị.", "Ta đoàn kết để đấu tranh cho thống nhất và độc lập của Tổ quốc; ta còn phải đoàn kết để xây dựng nước nhà."], c: 3},
+  {q: "Câu 32. Đáp án nào dưới đây trích dẫn thiếu nội dung quan trọng trong tư tưởng Hồ Chí Minh về đại đoàn kết dân tộc:", a: ["Ta phải đoàn kết để đấu tranh cho thống nhất và độc lập của Tổ quốc.", "Đại đoàn kết trước hết là đoàn kết đại đa số nhân dân.", "Đoàn kết rộng rãi, chặt chẽ, đồng thời phải củng cố.", "Đối với những đồng bào lạc lối lầm đường, ta phải lấy tình thân ái mà cảm hóa họ."], c: 0},
+  {q: "Câu 33. Câu nào dưới đây trích thiếu nội dung quan trọng tư tưởng Hồ Chí Minh về đại đoàn kết dân tộc:", a: ["Trong mấy triệu người cũng có người thế này thế khác.", "Đại đoàn kết trước hết là đoàn kết đại đa số nhân dân.", "Trong chính sách đoàn kết phải chống hai khuynh hướng sai lầm: cô độc hẹp hòi và đoàn kết vô nguyên tắc.", "Đoàn kết là một chính sách dân tộc, không phải là thủ đoạn chính trị."], c: 0},
+  {q: "Câu 34. Đáp án nào dưới đây trích dẫn không đúng tư tưởng Hồ Chí Minh:", a: ["Chúng tôi chủ trương đấu tranh giai cấp.", "Chúng tôi chủ trương làm cho tư bản Việt Nam phát triển.", "Chúng tôi hoan nghênh tư bản Pháp và tư bản các nước khác thật thà đoàn kết với chúng tôi.", "Chính phủ, nhân dân và tôi sẽ tận tâm giúp giới Công - Thương."], c: 0},
+  {q: "Câu 35. Tìm luận điểm của Hồ Chí Minh trong các đáp án sau:", a: ["Mỗi một người phải nhớ rằng có độc lập mới tự lập, có tự cường mới tự do.", "Việt Nam sẵn sàng là bạn, là đối tác tin cậy của các nước trong cộng đồng quốc tế, phấn đấu vì hoà bình, độc lập và phát triển.", "Việt Nam chủ động hội nhập kinh tế quốc tế và khu vực.", "Phát huy tối đa nội lực, nâng cao hiệu quả hợp tác quốc tế."], c: 0},
+  {q: "Câu 36. Chỉ ra luận điểm chứng tỏ Hồ Chí Minh có tầm nhìn xa về sự cần thiết phải phát triển kinh tế tư nhân:", a: ["Chủ nghĩa dân tộc là động lực lớn của đất nước (1924).", "Chúng tôi chủ trương làm cho tư bản Việt Nam phát triển. Mà chỉ có độc lập thì tư bản Việt Nam mới phát triển (1947).", "Đoàn kết của ta không những rộng rãi mà còn lâu dài.", "Đối với những đồng bào lạc lối lầm đường, ta phải lấy tình thân ái mà cảm hoá họ."], c: 1},
+  {q: "Câu 37. Tìm luận điểm của Hồ Chí Minh về bản chất dân chủ của Chính phủ nước Việt Nam Dân chủ Cộng hoà trong các luận điểm sau:", a: ["Nếu không có nhân dân thì Chính phủ không đủ lực lượng. Nếu không có Chính phủ thì nhân dân không có ai dẫn đường.", "Chính phủ đã hứa với dân, sẽ gắng sức làm cho ai nấy đều có phần hạnh phúc.", "Các cơ quan của Chính phủ từ toàn quốc cho đến các làng đều là công bộc của dân.", "Việc gì có lợi cho dân, ta phải hết sức làm. Việc gì có hại đến dân, ta phải hết sức tránh."], c: 2},
+  {q: "Câu 38. Tìm luận điểm dưới đây của Hồ Chí Minh về “Nhà nước do dân”:", a: ["Chính phủ là công bộc của dân.", "Bao nhiêu lợi ích đều vì dân.", "Bao nhiêu quyền hạn đều của dân.", "Chính quyền từ xã đến chính phủ trung ương do dân cử ra."], c: 3},
+  {q: "Câu 39. Luận điểm nào dưới đây thể hiện tư tưởng Hồ Chí Minh về mục tiêu cao cả của Chính phủ đối với dân:", a: ["Nếu nước độc lập mà dân không được hưởng hạnh phúc, tự do thì độc lập cũng chẳng có nghĩa lí gì.", "Chính phủ đã hứa với dân, sẽ gắng sức làm cho ai nấy đều có phần hạnh phúc.", "Các cơ quan của Chính phủ từ toàn quốc cho đến các làng đều là công bộc của dân.", "Việc gì có lợi cho dân, ta phải hết sức làm. Việc gì có hại đến dân, ta phải hết sức tránh."], c: 1},
+  {q: "Câu 40. Tìm đáp án dưới đây thể hiện tư tưởng Hồ Chí Minh về “Nhà nước của dân\":", a: ["Việc gì có lợi cho dân ta phải hết sức làm.", "Bao nhiêu quyền hạn đều của dân.", "Những nhân viên ủy ban sẽ không lợi dụng danh nghĩa ủy ban để gây bè tìm cánh, đưa người \"trong nhà trong họ vào làm việc với mình.", "Việc gì có hại cho dân ta phải hết sức tránh."], c: 1},
+  {q: "Câu 41. Tìm luận điểm dưới đây thể hiện tư tưởng Hồ Chí Minh về “Nhà nước do dân\":", a: ["Bao nhiêu lợi ích đều vì dân.", "Công việc đổi mới, xây dựng là trách nhiệm của dân.", "Chính quyền từ xã đến chính phủ trung ương do dân cử ra.", "Quyền hành và lực lượng đều ở nơi dân."], c: 1},
+  {q: "Câu 42. Đáp án nào dưới đây xác định quan điểm của Hồ Chí Minh về tầm quan trọng của đoàn kết trong Đảng:", a: ["Đảng có vững cách mạng mới thành công cũng như người cầm lái có vững thuyền mới chạy.", "Đảng muốn vững thì phải có đội ngũ đảng viên có trình độ cao.", "Phải giữ gìn sự đoàn kết nhất trí của Đảng như giữ gìn con ngươi của mắt mình.", "Phải giữ gìn Đảng ta thật trong sạch, phải xứng đáng là người đày tớ trung thành của nhân dân."], c: 2},
+  {q: "Câu 43. Đáp án nào dưới đây trích dẫn sai tư tưởng Hồ Chí Minh về đạo đức:", a: ["Người cách mạng phải có đạo đức, không có đạo đức thì dù tài giỏi mấy cũng không lãnh đạo được nhân dân.", "Đạo đức cũ và đạo đức mới căn bản là không khác nhau.", "Người đảng viên, người cán bộ tốt muốn trở nên người cách mạng chân chính, không có gì là khó cả. Điều đó hoàn toàn do lòng mình mà ra.", "Cần, Kiệm, Liêm, Chính là nền tảng của đời sống mới."], c: 1},
+  {q: "Câu 44. Tìm luận điểm dưới đây thể hiện quan niệm của Hồ Chí Minh về nghĩa rộng của chữ Cần:", a: ["Người siêng học tập thì mau bidết.", "Người siêng nghĩ ngợi thì hay có sáng kiến.", "Người siêng làm thì nhất định thành công.", "Cả nước siêng năng thì nước mạnh giàu."], c: 3},
+  {q: "Câu 45. Tìm luận điểm dưới đây thể hiện quan niệm mới của Hồ Chí Minh về chữ Liêm :", a: ["Liêm là trong sạch, không tham lam.", "Ngày xưa, dưới chế độ phong kiến, những người làm quan không đục khoét dân, thì gọi là Liêm, chữ Liêm ấy chỉ có nghĩa hẹp.", "Chữ Liêm phải đi đôi với chữ Kiệm.", "Ngày nay, chữ Liêm có nghĩa rộng hơn, là mọi người đều phải Liêm."], c: 3},
+  {q: "Câu 46. Tìm luận điểm dưới đây thể hiện tư tưởng Hồ Chí Minh về biện pháp đang là đòi hỏi bức xúc nhất của nhân dân và nhà nước ta hiện nay:", a: ["Tuyên truyền và kiểm soát. Giáo dục và pháp luật từ trên xuống, từ dưới lên.", "Cán bộ phải thực hành chữ Liêm trước để làm kiểu mẫu cho dân.", "Dân phải biết quyền hạn của mình, biết kiểm soát cán bộ để giúp cán bộ thực hiện chữ Liêm.", "Pháp luật phải thẳng tay trừng trị những kẻ bất liêm, bất kỳ kẻ ấy ở địa vị nào, làm nghề nghiệp gì."], c: 3},
+  {q: "Câu 47. Phẩm chất “thật thà thương yêu, hết lòng giúp đỡ đồng chí và đồng bào\" thể hiện đức tính nào trong các đáp án dưới đây:", a: ["Nhân.", "Nghĩa.", "Trí.", "Dũng."], c: 0},
+  {q: "Câu 48. Phẩm chất \"ngay thẳng, không có tư tâm, không làm việc bậy, thấy việc phải thì làm, thấy việc phải thì nói” thể hiện đức tính nào trong các đáp án dưới đây:", a: ["Nhân.", "Nghĩa.", "Trí.", "Dũng."], c: 1},
+  {q: "Câu 49. Phẩm chất \"đầu óc trong sạch, sáng suốt, không mù quáng, biết xem người, biết xét việc” thuộc đức tính nào trong các đáp án dưới đây:", a: ["Nhân.", "Nghĩa.", "Trí.", "Dũng."], c: 2},
+  {q: "Câu 50. Phẩm chất “dũng cảm, gan góc, gặp việc phải có gan làm, thấy khuyết điểm có gan sửa chữa, cực khổ khó khăn có gan chịu đựng. Có gan chống lại vinh hoa, phú quý không chính đáng; không bao giờ rụt rè, nhút nhát” thuộc đức tính nào trong các đáp án dưới đây :", a: ["Nhân.", "Nghĩa.", "Trí.", "Dũng."], c: 3},
+  {q: "Câu 51. Phẩm chất “không tham địa vị. Không tham tiền tài. Không tham sung sướng. Không ham người tâng bốc mình” thuộc đức tính nào trong các đáp án dưới đây:", a: ["Nghĩa.", "Trí.", "Dũng.", "Liêm."], c: 3},
+  {q: "Câu 52. Phẩm chất \"siêng năng, chăm chỉ, cố gắng dẻo dai : siêng học tập, siêng nghĩ ngợi, siêng làm, siêng hoạt động...\" thuộc đức tính nào trong các đáp án dưới đây:", a: ["Cần.", "Kiệm.", "Liêm.", "Chính."], c: 0},
+  {q: "Câu 53. Phẩm chất “không xa xỉ, không hoang phí, không bừa bãi, không bủn xỉn. Khi không nên tiêu xài thì một xu cũng không nên tiêu. Khi có việc đáng làm, thì dù bao nhiêu công, tốn bao nhiêu của, cũng vui lòng” thuộc đức tính nào trong các đáp án dưới đây:", a: ["Cần.", "Kiệm.", "Liêm.", "Chính."], c: 1},
+  {q: "Câu 54. Phẩm chất \"trong sạch, không tham lam, không đục khoét dân, không trộm của công làm của tư\" thể hiện đức tính nào trong các đáp án dưới đây:", a: ["Cần.", "Kiệm.", "Liêm.", "Chính."], c: 2},
+  {q: "Câu 55. Đáp án nào dưới đây thể hiện lý tưởng nhân văn Hồ Chí Minh:", a: ["Tôi hiến cả đời tôi cho dân tộc tôi.", "Mỗi người, mỗi gia đình đều có một nỗi đau khổ riêng và gộp cả những đau khổ riêng của mỗi người, mỗi gia đình lại thì thành nỗi đau khổ của tôi.", "Riêng phần tôi thì làm một cái nhà nho nhỏ, nơi có non xanh nước biếc để câu cá, trồng hoa, sớm chiều làm bạn với các cụ già hái củi, em trẻ chăn trâu, không dính líu gì với vòng danh lợi.", "Đối với những người có thói hư tật xấu, trừ hạng người phản lại Tổ quốc và nhân dân, ta phải giúp họ tiến bộ bằng cách làm cho cái phần thiện trong con người nảy nở để đẩy lùi cái ác, chứ không phải đập cho tơi bời."], c: 0},
+  {q: "Câu 56. Tìm luận điểm dưới đây thể hiện tình cảm nhân văn Hồ Chí Minh:", a: ["Tôi chỉ có một ham muốn, ham muốn tột bậc, là làm sao cho nước ta được hoàn toàn độc lập, dân tộc ta được hoàn toàn tự do, đồng bào ta ai cũng có cơm ăn áo mặc, ai cũng được học hành.", "Đoàn kết của ta không những rộng rãi mà còn đoàn kết lâu dài.", "Người cách mạng phải có đạo đức, không có đạo đức thì dù tài giỏi mấy cũng không lãnh đạo được nhân dân.", "Mỗi người, mỗi gia đình đều có một nỗi đau khổ riêng, và gộp cả những nỗi đau khổ riêng của mỗi người, mỗi gia đình lại thì thành nỗi đau khổ của tôi."], c: 3},
+  {q: "Câu 57. Đáp án nào dưới đây thể hiện tư tưởng giáo dục nhân văn Hồ Chí Minh:", a: ["Tôi hiến cả đời tôi cho dân tộc tôi.", "Mỗi người, mỗi gia đình đều có một nỗi đau khổ riêng và gộp cả những đau khổ riêng của mỗi người, mỗi gia đình lại thì thành nỗi đau khổ của tôi.", "Riêng phần tôi thì làm một cái nhà nho nhỏ, nơi có non xanh nước biếc để câu cá, trồng hoa sớm chiều làm bạn với các cụ già hái củi, em trẻ chăn trâu, không dính líu gì với vòng danh lợi.", "Đối với những người có thói hư tật xấu, trừ hạng người phản lại Tổ quốc và nhân dân ta phải giúp họ tiến bộ bằng cách làm cho cái phần thiện trong con người nảy nở để đẩy lùi cái ác, chứ không phải đập cho tơi bời."], c: 3},
+  {q: "Câu 58. Chỉ ra luận điểm thể hiện tư tưởng Hồ Chí Minh về giáo dục con người :", a: ["Bản chất con người vốn thiện nên chủ trương đức trị, coi trọng biện pháp giáo dục.", "Bản chất con người vốn thiện vì do Chúa sinh ra nên khuyến khích cuộc sống tâm linh hướng thiện.", "Bản chất con người vốn tính ác nên chủ trương pháp trị.", "Trong mỗi con người đều có cái thiện và cái ác ở trong lòng. Ta phải biết làm cho phần tốt ở trong mỗi con người nảy nở như hoa mùa xuân để phần xấu mất dần đi."], c: 3},
+  {q: "Câu 59. Tìm một trích dẫn sai nội dung tư tưởng Hồ Chí Minh về Cần, Kiệm, Liêm, Chính trong các đáp án dưới đây:", a: ["Cần là lao động cần cù, siêng năng, lao động có kế hoạch, sáng tạo, có năng suất lao động cao.", "Kiệm là không xa xỉ, không hoang phí, không bừa bãi.", "Liêm là không tham địa vị, không tham tiền tài, không tham sung sướng, không ham người tâng bốc mình.", "Chính là trong sạch, không tham lam đồng xu, hạt thóc của Nhà nước, của dân."], c: 3},
+  {q: "Câu 60. Câu nào dưới đây thể hiện đức tính tiết kiệm vì dân của Hồ Chí Minh:", a: ["Bồi dưỡng thế hệ cách mạng cho đời sau là một việc rất quan trọng và rất cần thiết. Đảng phải chăm lo giáo dục đạo đức cách mạng cho họ, đào tạo họ thành những người thừa kế xây dựng chủ nghĩa xã hội \"vừa hồng vừa chuyên\".", "Đảng ta là một đảng cầm quyền.", "Sau khi tôi qua đời, chớ nên tổ chức điều phúng linh đình để khỏi lãng phí thì giờ, tiền bạc của nhân dân.", "Ngay sau khi cuộc kháng chiến chống Mỹ cứu nước của nhân dân ta hoàn toàn thắng lợi thì công việc \"Đầu tiên là công việc đối với con người\"."], c: 2},
+  {q: "Câu 61. Biện pháp nào sau đây là cần thiết để thực hành chữ Liêm:", a: ["\"Quan tham vì dân dại. Dân phải biết quyền hạn của mình, phải biết kiểm soát cán bộ, để giúp cán bộ thực hiện chữ Liêm\".", "\"Cán bộ phải thực hành chữ Liêm trước, để làm kiểu mẫu cho nhân dân.", "\"Pháp luật phải thẳng tay trừng trị những kẻ Bất liêm, bất kỳ kẻ ấy ở địa vị nào, làm nghề nghiệp gì\".", "Cả ba đáp án a,b,c."], c: 3},
+  {q: "Câu 62. Nội dung nào dưới đây nhấn mạnh yếu tố tình cảm nhân văn để củng cố sự đoàn kết của Đảng trong \"Di Chúc của Hồ Chí Minh:", a: ["Các đồng chí từ Trung ương đến các chi bộ cần phải giữ gìn sự đoàn kết nhất trí của Đảng như giữ gìn con ngươi của mắt mình.", "Trong Đảng thực hành dân chủ rộng rãi để củng cố và phát triển sự đoàn kết và thống nhất của Đảng. Phải có tình đồng chí thương yêu lẫn nhau.", "Đảng ta là một đảng cầm quyền. Mỗi đảng viên và cán bộ phải thật sự thấm nhuần đạo đức cách mạng, thật sự cần kiệm liêm chính, chí công vô tư.", "Phải giữ gìn Đảng ta thật trong sạch, phải xứng đáng là người lãnh đạo, là người đầy tớ trung thành của nhân dân."], c: 1},
+  {q: "Câu 63. Luận điểm nào dưới đây thể hiện tư tưởng Hồ Chí Minh về xây dựng kinh tế cũng đồng thời là xây dựng văn hoá:", a: ["Đảng ta là một đảng cầm quyền.", "Sau khi tôi qua đời, chớ nên tổ chức điều phúng linh đình để khỏi lãng phí thì giờ, tiền bạc của nhân dân.", "Ngay sau khi cuộc kháng chiến chống Mỹ, cứu nước của nhân dân ta hoàn toàn thắng lợi thì công việc \"Đầu tiên là công việc đối với con người\".", "Công việc xây dựng và khôi phục đất nước sau thẳng Mỹ rất to lớn, nặng nề, phức tạp mà cũng rất vẻ vang. Đây là cuộc chiến đấu chống lại những gì đã cũ kỹ, hư hỏng, để tạo ra những cái mới mẻ, tốt tươi."], c: 3},
+  {q: "Câu 64. Luận điểm nào dưới đây thể hiện tư tưởng Hồ Chí Minh về sự thống nhất giữa đức và tài trong sự nghiệp giáo dục con người:", a: ["Bồi dưỡng thế hệ cách mạng cho đời sau là một việc rất quan trọng và rất cần thiết. Đảng phải chăm lo giáo dục đạo đức cách mạng cho họ, đào tạo họ thành những người thừa kế xây dựng chủ nghĩa xã hội \"vừa hồng vừa chuyên\".", "Đảng ta là một đảng cầm quyền.", "Sau khi tôi qua đời, chớ nên tổ chức điều phúng linh đình để khỏi lãng phí thì giờ, tiền bạc của nhân dân.", "Ngay sau khi cuộc kháng chiến chống Mỹ cứu nước của nhân dân ta hoàn toàn thắng lợi thì công việc đầu tiên là công việc đối với con người."], c: 0},
+  {q: "Câu 65. Luận điểm nào dưới đây thể hiện lý tưởng nhân văn Hồ Chí Minh:", a: ["Tôi chỉ có một ham muốn, ham muốn tột bậc là làm sao cho nước ta được hoàn toàn độc lập, dân ta được hoàn toàn tự do, đồng bào ai cũng có cơm ăn áo mặc, ai cũng được học hành.", "Sau khi tôi qua đời, chớ nên tổ chức điếu phúng linh đình, để khỏi lãng phí thì giờ và tiền bạc của nhân dân.", "Lúc chúng ta nâng bát cơm mà ăn, nghĩ đến kẻ đói khổ, chúng ta không khỏi động lòng. Vậy tôi xin đề nghị với đồng bào cả nước, tôi xin thực hành trước: cứ 10 ngày nhịn ăn một bữa, mỗi tháng nhịn 3 bữa. Đem gạo đó (mỗi bữa một bơ) để cứu dân nghèo.", "Tôi tuyệt nhiên không ham muốn công danh phú quý chút nào. Bây giờ phải gánh chức Chủ tịch là vì đồng bào ủy thác thì tôi phải gắng sức làm, cũng như một người lính vâng mệnh lệnh của quốc dân ra trước mặt trận. Bao giờ đồng bào cho tôi lui, thì tôi rất vui lòng lui."], c: 0},
+  {q: "Câu 66. Đáp án nào dưới đây nhấn mạnh tư tưởng pháp trị nhân văn Hồ Chí Minh:", a: ["Pháp luật phải thẳng tay trừng trị những kẻ bắt liêm, bất kỳ kẻ ấy ở địa vị nào, làm nghề nghiệp gì .", "Chúng ta phải có một Hiến pháp dân chủ.", "Chính phủ tổ chức càng sớm càng hay cuộc Tổng tuyển cử với chế độ phổ thông đầu phiếu.", "Nhục hình là lối dã man, là cách của đế quốc tư bản phong kiến, nó dùng để trị quần chúng, trị cách mạng. Chúng ta có chính sách đúng, có lý lẽ đúng, có lực lượng mạnh, sao còn dùng cách dã man."], c: 3},
+  {q: "Câu 67. Đáp án nào dưới đây xác định tầm quan trọng của văn hóa kiến thức đối với sức mạnh của một dân tộc:", a: ["Đề nghị mở một chiến dịch để chống nạn mù chữ.", "Một dân tộc dốt là một dân tộc yếu.", "Mở một chiến dịch giáo dục lại tinh thần nhân dân bằng cách thực hiện : cần, kiệm, liêm, chính.", "Chúng ta phải làm cho dân tộc chúng ta trở nên một dân tộc dũng cảm, yêu nước, yêu lao động, một dân tộc xứng đáng với nước Việt Nam độc lập."], c: 1},
+  {q: "Câu 68. Đáp án nào dưới đây thể hiện tư tưởng giáo dục nhân văn của Hồ Chí Minh?", a: ["Tôi chỉ có một ham muốn, ham muốn tột bậc, là làm sao cho nước ta hoàn toàn độc lập, dân ta được hoàn toàn tự do, đồng bào ai cũng có cơm ăn áo mặc, ai cũng được học hành.", "Riêng phần tôi thì làm một cái nhà nho nhỏ, nơi có non xanh, nước biếc câu cá, trồng hoa, sớm chiều làm bạn với các cụ già hái củi, em trẻ chăn trâu, không dính líu gì với vòng danh lợi.", "Đối với cha mẹ, vợ con (của thương binh và liệt sĩ) mà thiếu sức lao động và túng thiếu, thì chính quyền địa phương (nếu ở nông thôn thì chính quyền xã cùng hợp tác xã nông nghiệp) phải giúp đỡ họ có công ăn việc làm thích hợp, quyết không để họ bị đói rét.", "Đối với những người có thói hư tật xấu, trừ hạng người phản lại Tổ quốc và nhân dân, ta cũng phải giúp họ tiến bộ bằng cách làm cho cái phần thiện nảy nở để đẩy lùi cái ác, chứ không phải đập cho tơi bời."], c: 3},
+  {q: "Câu 69. Tìm luận điểm dưới đây thể hiện rõ nhất tư tưởng nhân văn Hồ Chí Minh:", a: ["Người có 4 đức: cần, kiệm, liêm, chính. Thiếu một đức thì không thành người.", "Người siêng năng thì mau tiến bộ. Cả nước siêng năng thì nước mạnh giàu.", "Để thực hiện chữ Liêm, cần có tuyên truyền và kiểm soát, giáo dục và pháp luật, từ trên xuống, từ dưới lên.", "Đối với mọi người phải thực hành chữ Bác ái."], c: 3},
+  {q: "Câu 70. Luận điểm nào sau đây Hồ Chí Minh đã nhấn mạnh giá trị nhân văn về trọng trách lãnh đạo đất nước của Chính phủ:", a: ["Ngay sau khi cuộc kháng chiến chống Mỹ, cứu nước hoàn toàn thắng lợi thì công việc đầu tiên của Chính phủ là công việc đối với con người.", "Tôi chỉ có một ham muốn, ham muốn tột bậc, là làm sao cho nước ta được hoàn toàn độc lập, dân tộc ta được hoàn toàn tự do, đồng bào ta ai cũng có cơm ăn áo mặc, ai cũng được học hành.", "Đoàn kết là một truyền thống cực kỳ quý báu của Đảng và nhân dân ta. Cần phải giữ gìn sự đoàn kết nhất trí của Đảng như giữ gìn con ngươi của mắt mình.", "Người cách mạng phải có đạo đức, không có đạo đức thì dù tài giỏi mấy cũng không lãnh đạo được nhân dân."], c: 0},
+  {q: "Câu 71. Nội dung nào dưới đây trong \"Di chúc\" của Hồ Chí Minh thể hiện sự mẫn cảm và tầm nhìn xa của Người đối với việc ngăn ngừa nguy cơ suy thoái trong Đảng:", a: ["Các đồng chí từ Trung ương đến các chi bộ cần phải giữ gìn sự đoàn kết nhất trí của Đảng như giữ gìn con ngươi của mắt mình.", "Trong Đảng thực hành dân chủ rộng rãi để củng cố và phát triển sự đoàn kết và thống nhất của Đảng. Phải có tình đồng chí thương yêu lẫn nhau.", "Ngay sau khi cuộc kháng chiến chống Mỹ cứu nước hoàn toàn thắng lợi, việc cần làm trước tiên là chỉnh đốn lại Đảng.", "Đảng ta là một đảng cầm quyền. Mỗi đảng viên và cán bộ phải thật sự thấm nhuần đạo đức cách mạng, thật sự cần kiệm liêm chính, chí công vô tư."], c: 2},
+  {q: "Câu 72. Ý kiến nào dưới đây còn thiếu nội dung quan trọng trong quan niệm của Hồ Chí Minh về con người:", a: ["Chữ người, nghĩa hẹp là gia đình, anh em, họ hàng, bạn bè. Nghĩa rộng là đồng bào cả nước.", "Dù màu da có khác nhau, trên đời này chỉ có hai giống người: giống người bóc lột và giống người bị bóc lột.", "Trên quả đất có hàng muôn triệu người. Song số người ấy có thể chia làm hai hạng: người thiện và người ác.", "Và cũng chỉ có một mối tình hữu ái là thật mà thôi: tình hữu ái vô sản."], c: 0},
+  {q: "Câu 73. Tìm đáp nhầm lẫn với lời dặn trong Di chúc của Hồ Chí Minh về những biện pháp giữ gìn sự đoàn kết nhất trí trong Đảng trong các đáp án dưới đây :", a: ["Trong Đảng thực hành dân chủ rộng rãi, thường xuyên và nghiêm chỉnh tự phê bình và phê bình là cách tốt nhất để củng cố và phát triển sự đoàn kết và thống nhất trong Đảng.", "Ngay sau khi cuộc kháng chiến chống Mỹ cứu nước hoàn toàn thắng lợi, việc cần làm trước tiên là công việc đối với con người.", "Phải có tình đồng chí thương yêu lẫn nhau.", "Các đồng chí từ Trung ương đến các chi bộ cần phải giữ gìn sự đoàn kết nhất trí của Đảng như giữ gìn con ngươi của mắt mình."], c: 1},
+  {q: "Câu 74. Tìm đáp án dưới đây thể hiện tư tưởng Hồ Chí Minh về kẻ địch hung ác của CNXH:", a: ["Giặc ngoại xâm.", "Chủ nghĩa tư bản.", "Chủ nghĩa đế quốc.", "Chủ nghĩa cá nhân."], c: 3},
+  {q: "Câu 75. Luận điểm “Tất cả các dân tộc trên thế giới đều sinh ra bình đẳng, dân tộc nào cũng có quyền sống, quyền sung sướng và quyền tự do được nêu ra trong văn bản nào trong các văn bản dưới đây của Hồ Chí Minh:", a: ["Tuyên ngôn độc lập (1945).", "Bản án chế độ thực dân Pháp.", "Đường Cách mệnh.", "Lời kêu gọi toàn quốc kháng chiến."], c: 0},
+  {q: "Câu 76. Tìm luận điểm dưới đây thể hiện tư tưởng Hồ Chí Minh về đấu tranh chống chủ nghĩa cá nhân:", a: ["Chỉ bảo vệ lợi ích tập thể.", "Loại bỏ lợi ích cá nhân..", "Không bênh vực lợi ích cá nhân.", "Không giày xéo lên lợi ích cá nhân."], c: 3},
+  {q: "Câu 77. Luận điểm nào dưới đây thể hiện tư tưởng Hồ Chí Minh về xây dựng Nhà nước pháp quyền:", a: ["Vì vậy tôi đề nghị mở một chiến dịch để chống nạn mù chữ.", "Chúng ta phải có một Hiến pháp dân chủ.", "Chúng ta có nhiệm vụ cấp bách là phải giáo dục lại nhân dân chúng ta.", "Tín ngưỡng tự do và Lương Giáo đoàn kết."], c: 1},
+  {q: "Câu 78. Đáp án nào dưới đây thể hiện tư tưởng Hồ Chí Minh về chính sách đối ngoại mở cửa, hội nhập với thế giới:", a: ["Quốc hội Việt Nam là do toàn dân đầu phiếu cử ra.", "Chính sách đối nội của Việt Nam là dân tộc độc lập, dân quyền tự do, dân sinh hạnh phúc.", "Đồng thời chúng tôi rất hoan nghênh tư bản Pháp và tư bản các nước khác thật thà cộng tác với chúng tôi.", "Chúng tôi không chủ trương giai cấp tranh đấu vì một lẽ từng lớp tư sản Việt Nam đã bị kinh tế thực dân đè nén không cất đầu lên được."], c: 2},
+  {q: "Câu 79. Luận điểm nào sau đây của Hồ Chí Minh xác định đoàn kết là một chính sách cơ bản có tính chiến lược, nhất quán lâu dài:", a: ["Đại đoàn kết tức là trước hết phải đoàn kết đại đa số nhân dân, mà đại đa số nhân dân ta là công nhân, nông dân và các tầng lớp nhân dân lao động khác.", "Bất kỳ là ai mà thật thà tán thành hoà bình, thống nhất, độc lập, dân chủ thì dù những người đó trước đây chống chúng ta, bây giờ chúng ta cũng thật thà đoàn kết với họ.", "Đoàn kết của ta không những rộng rãi mà còn lâu dài.", "Đoàn kết là một chính sách dân tộc, không phải là một thủ đoạn chính trị."], c: 3},
+  {q: "Câu 80. Tìm đáp án thể hiện hành động nhân văn về xây dựng tập quán văn hóa mới cho người Việt Nam trong Di chúc của Hồ Chí Minh :", a: ["Sau khi tôi qua đời, chớ nên tổ chức điếu phúng linh đình, để khỏi lãng phí thì giờ và tiền bạc của nhân dân.", "Suốt đời tôi hết lòng hết sức phục vụ Tổ quốc, phục vụ cách mạng, phục vụ nhân dân. Nay dù phải từ biệt thế giới này, tôi không có điều gì phải hối hận, chỉ tiếc là tiếc rằng không được phục vụ lâu hơn nữa, nhiều hơn nữa.", "Tôi yêu cầu thi hài tôi được đốt đi, tức là \"hỏa táng . Tôi mong rằng cách \"hỏa táng sau này sẽ được phổ biến.", "Trong Đảng thực hành dân chủ rộng rãi để củng cố và phát triển sự đoàn kết và thống nhất của Đảng. Phải có tình đồng chí thương yêu lẫn nhau."], c: 2},
+  {q: "Câu 81. Đáp án nào dưới đây thể hiện rõ tính nhân văn trong quan hệ giữa người với người theo tư tưởng Hồ Chí Minh:", a: ["Phải thực hành chữ Bác - ái.", "Chớ nịnh hót người trên. Chớ xem khinh người dưới.", "Phải để việc nước lên trên việc tư, việc nhà.", "Thái độ phải chân thành, khiêm tốn, phải thật thà đoàn kết."], c: 0},
+  {q: "Câu 82. Đáp án nào dưới đây thể hiện biện pháp thực hiện chữ Liêm trong tư tưởng Hồ Chí Minh:", a: ["Liêm là phải trong sạch, không tham lam.", "Liêm là mọi người đều phải Liêm.", "Quan tham vì dân dại.", "Liêm là phải tuyên truyền và kiểm soát, giáo dục và pháp luật, từ trên xuống dưới, từ dưới lên trên."], c: 3},
+  {q: "Câu 83. Nội dung nào dưới đây chứng tỏ Hồ Chí Minh đã đánh giá đúng vai trò của chủ nghĩa dân tộc đối với cách mạng Việt Nam:", a: ["Cuộc đấu tranh giai cấp không diễn ra giống như ở phương Tây.", "Chủ nghĩa dân tộc là động lực lớn của đất nước.", "Dù sao thì cũng không thể cấm bổ sung “cơ sở lịch sử\" của chủ nghĩa Mác bằng cách đưa thêm vào đó những tư liệu mà Mác ở thời kỳ mình không thể có được.", "Nếu nông dân gần như chẳng có gì thì địa chủ cũng không có vốn liếng gì lớn."], c: 1},
+  {q: "Câu 84. Tìm đáp án dưới đây không đúng với quan niệm của Hồ Chí Minh về văn hóa trong bài “Đời sống mới\":", a: ["Cái gì cũ mà xấu, thì phải bỏ.", "Cái gì cũ mà không xấu, nhưng phiền phức thì phải sửa đổi lại cho hợp lý.", "Cái gì cũ mà tốt, thì phải phát triển thêm.", "Cái gì mới cũng nên làm, cái gì cũ cũng nên bỏ."], c: 3},
+  {q: "Câu 85. Tìm đáp án khái quát nhất thể hiện tư tưởng Hồ Chí Minh về nguyên nhân khiến một người trước đã có công với cách mạng nhưng về sau có lúc lại biến thành người có tội với cách mạng:", a: ["Bênh tham ô, tham nhũng.", "Sa vào chủ nghĩa cá nhân.", "Bệnh lãng phí, quan liêu.", "Bệnh hách dịch cửa quyền."], c: 1},
+  {q: "Câu 86. Xác định đáp án đúng dưới đây để điền vào chỗ trống trong luận điểm sau của Hồ Chí Minh: \"Học thuyết ... có ưu điểm là sự tu dưỡng đạo đức cá nhân. Tôn giáo Giêxu có ưu điểm là lòng nhân ái cao cả, .... có ưu điểm là phương pháp làm việc biện chứng, .... có ưu điểm là chính sách của nó phù hợp với điều kiện nước ta\":", a: ["Khổng Tử... Chủ nghĩa Mác... Chủ nghĩa Tôn Dật Tiên.", "Chủ nghĩa Tôn Dật tiên... Chủ nghĩa Mác... Khổng Tử.", "Khổng Tử... Chủ nghĩa Tôn Dật Tiên.... Chủ nghĩa Mác.", "Chủ nghĩa Mác - Chủ nghĩa Tôn Dật Tiên... Khổng Tử."], c: 0},
+  {q: "Câu 87. Xác định đáp án đúng dưới đây về thời kỳ Hình thành những nội dung cơ bản tư tưởng về cách mạng Việt Nam:", a: ["Thời kỳ từ giữa năm 1911 đến cuối năm 1920.", "Thời kỳ từ cuối năm 1920 đến đầu năm 1930.", "Thời kỳ trước ngày 5-6-1911.", "Thời kỳ từ đầu năm 1930 đến đầu năm 1941."], c: 1},
+  {q: "Câu 88. Nội dung nào dưới đây xác định những khuynh hướng cần chống trong chính sách đại đoàn kết dân tộc theo tư tưởng Hồ Chí Minh:", a: ["Cô độc hẹp hòi và đoàn kết vô nguyên tắc.", "Thói quen và truyền thống lạc hậu", "Chủ nghĩa tư bản và bọn đế quốc.", "Chủ nghĩa cá nhân."], c: 0},
+  {q: "Câu 89. Luận điểm nào dưới đây thể hiện tư tưởng Hồ Chí Minh về việc cần thiết phải đoàn kết quốc tế:", a: ["Tinh thần yêu nước không tách rời chủ nghĩa quốc tế vô sản.", "Trước hết nảy ra khả năng và sự cần thiết phải có liên minh chiến đấu chặt chẽ giữa các dân tộc thuộc địa với giai cấp vô sản của các nước đế quốc để thắng kẻ thù chung.", "Lao động tất cả các nước đoàn kết lại.", "Tất cả các đáp án còn lại."], c: 3},
+  {q: "Câu 90. Tìm đáp án đúng dưới đây xác định cơ sở để kết hợp sức mạnh dân tộc với sức mạnh thời đại theo tư tưởng Hồ Chí Minh:", a: ["Lòng ái quốc.", "Khoan hồng đại độ.", "Tình hữu ái vô sản.", "Phát triển tinh thần yêu nước."], c: 2},
+  {q: "Câu 91. Đáp án nào dưới đây thể hiện vai trò quan trọng về sự kết hợp sức mạnh dân tộc với sức mạnh thời đại trong tư tưởng Hồ Chí Minh:", a: ["Nguyên nhân đầu tiên đã gây ra sự suy yếu của các dân tộc phương Đông, đó là sự biệt lập.", "Trước hết nảy ra khả năng và sự cần thiết phải có liên minh chiến đấu chặt chẽ giữa các dân tộc thuộc địa với giai cấp vô sản của các nước đế quốc để thắng kẻ thù chung.", "Dù màu da có khác nhau, trên đời này chỉ có hai giống người: giống người bóc lột và giống người bị bóc lột.", "Nếu thợ thuyền An Nam biết tổ chức thì chắc Quốc tế đỏ sẽ hết lòng giúp cho mà làm cách mệnh. Nhưng muốn người ta giúp cho, thì trước mình phải giúp lấy mình."], c: 0},
+  {q: "Câu 92. Luận điểm nào dưới đây được nêu trong tài liệu “Báo cáo về Bắc kỳ, Trung kỳ và Nam kỳ” thể hiện tư duy độc lập, sáng tạo của Hồ Chí Minh khi tiếp nhận chủ nghĩa Mác- Lênin:", a: ["Nếu nông dân chỉ sống bằng cái tối thiểu cần thiết thì đời sống của địa chủ cũng chẳng có gì là xa hoa.", "Xung đột về quyền lợi của họ được giảm thiểu. Điều đó không thể chối cãi được.", "Mai đây, khi CNTB phương Tây làm thay đổi phương Đông thì đấu tranh giai cấp ở đó có trở nên quyết liệt hay không? Đại thể là có, nếu xét gương của Nhật Bản.", "Dù sao thì cũng không thể cấm bổ sung \"cơ sở lịch sử\" của chủ nghĩa Mác bằng cách đưa thêm vào đó những tư liệu mà Mác ở thời mình không thể có được."], c: 3},
+  {q: "Câu 93. Luận điểm nào sau đây trích dẫn sai tư tưởng Hồ Chí Minh trong tài liệu \"Báo cáo về Bắc kỳ, Trung kỳ và Nam kỳ\":", a: ["Mai đây, khi chủ nghĩa tư bản phương Tây làm thay đổi phương Đông thì đấu tranh giai cấp có trở nên quyết liệt hơn không? Đại thể là có, nếu xét gương của Nhật Bản.", "Sự xung đột về quyền lợi giữa các giai cấp ở phương Đông rất gay gắt.", "Người thì chẳng có công đoàn, kẻ thì chẳng có tờ-rớt.", "Nếu nông dân gần như chẳng có gì thì địa chủ cũng không có vốn liếng gì lớn."], c: 1},
+  {q: "Câu 94. Phát hiện một luận điểm tóm tắt sai về tài liệu \"Báo cáo về Bắc kỳ, Trung kỳ, Nam kỳ\" của Hồ Chí Minh trong các đáp án sau:", a: ["Mác đã xây dựng học thuyết của mình trên một triết lý nhất định của lịch sử, lịch sử châu Âu.", "Dù sao thì cũng không thể cấm bổ sung “cơ sở lịch sử” của chủ nghĩa Mác bằng cách đưa thêm vào đó những tư liệu mà Mác ở thời mình không thể có được.", "Xem xét lại chủ nghĩa Mác về cơ sở lịch sử của nó, củng cố nó bằng dân tộc học phương Đông, đó là nhiệm vụ mà những người cách mạng Việt Nam phải làm.", "Mai đây khi chủ nghĩa tư bản phương Tây làm thay đổi phương Đông thì đấu tranh giai cấp ở đây cũng không trở nên quyết liệt hơn."], c: 3},
+  {q: "Câu 95. Luận điểm nào dưới đây trích dẫn sai tư tưởng của Hồ Chí Minh trong tài liệu \"Báo cáo về Bắc kỳ, Trung Kỳ và Nam kỳ\":", a: ["Đấu tranh giai cấp không diễn ra giống như ở phương Tây.", "Chủ nghĩa dân tộc là động lực lớn của đất nước.", "Giờ đây người ta sẽ không thể làm gì cho người dân An nam nếu không dựa vào động lực duy nhất và vĩ đại này của họ.", "Mác đã xây dựng học thuyết của mình trên cơ sở châu Âu, mà châu Âu thì đại diện cho toàn nhân loại."], c: 3},
+  {q: "Câu 96. Phát hiện câu trích dẫn sai trong tài liệu: \"Báo cáo về Bắc Kỳ, Trung Kỳ, Nam Kỳ\" của Hồ Chí Minh trong các đáp án sau:", a: ["Chủ nghĩa dân tộc là một động lực lớn của đất nước.", "Quốc tế cộng sản nên nhân danh mình phát động chủ nghĩa dân tộc bản xứ.", "Chủ trương phát động chủ nghĩa dân tộc bản xứ sẽ là một chính sách mang tính hiện thực tuyệt vời.", "Khi chủ nghĩa dân tộc bản xứ thắng lợi thì nó sẽ biến thành chủ nghĩa dân tộc hẹp hòi, cực đoan."], c: 3},
+  {q: "Câu 97. Tìm đáp án đúng thể hiện Hồ Chí Minh đã chỉ ra hạn chế về cơ sở lịch sử của học thuyết Mác trong tài liệu “Báo cáo về Bắc kỳ, Trung Kỳ và Nam Kỳ trong các đáp án dưới đây:", a: ["\"Mác đã xây dựng học thuyết của mình trên một triết lý nhất định của lịch sử, nhưng lịch sử nào? Lịch sử của châu Âu. Mà châu Âu là gì? Đó chưa phải là toàn thể nhân loại\".", "\"Xem xét lại chủ nghĩa Mác về cơ sở lịch sử của nó và củng cố nó bằng cơ sở dân tộc học phương Đông\".", "“Cuộc đấu tranh giai cấp không diễn ra giống như ở phương Tây\".", "\"Mai đây, khi chủ nghĩa tư bản phương Tây làm thay đổi phương Đông thì đấu tranh giai cấp có trở nên quyết liệt không? Đại thể là có, nếu xét theo gương của Nhật Bản\"."], c: 0},
+  {q: "Câu 98. Nội dung nào dưới đây chứng tỏ Hồ Chí Minh đã xuất phát từ thực tiễn, không giáo điều khi tiếp nhận chủ nghĩa Mác ở phương Đông:", a: ["Cuộc đấu tranh giai cấp không diễn ra giống như ở phương Tây.", "Xem xét lại chủ nghĩa Mác về cơ sở lịch sử của nó, củng cố nó bằng dân tộc phương Đông.", "Dù sao thì cũng không thể cấm bổ sung \"cơ sở lịch sử\" của chủ nghĩa Mác bằng cách đưa thêm vào đó những tư liệu mà Mác ở thời kỳ mình không thể có được.", "Mác đã xây dựng học thuyết của mình trên một triết lý nhất định của lịch sử, nhưng lịch sử nào ? Lịch sử châu Âu. Mà châu Âu là gì ? Đó chưa phải là toàn thể nhân loại."], c: 1},
+  {q: "Câu 99. Tìm đáp án dưới đây thể hiện sai tư tưởng Hồ Chí Minh về vai trò của Chủ nghĩa dân tộc:", a: ["Chủ nghĩa dân tộc đã gây nên cuộc nổi dậy chống thuế năm 1908.", "Chủ nghĩa dân tộc thúc giục thanh niên bãi khóa.", "Chủ nghĩa dân tộc làm nhà vua mưu tính khởi nghĩa 1917.", "Chủ nghĩa dân tộc thức tỉnh ý thức đấu tranh giai cấp của toàn dân."], c: 3},
+  {q: "Câu 100. Đáp án nào dưới đây không đúng với quan niệm về chữ Chính trong tư tưởng Hồ Chí Minh:", a: ["Chính nghĩa là không tà, nghĩa là thẳng thắn, đúng đắn.", "Chính là gốc rễ của Cần, Kiệm, Liêm.", "Làm việc Chính, là người Thiện.", "Tự mình phải Chính trước, mới giúp được người khác Chính."], c: 1},
+  {q: "Câu 101. Đáp án nào dưới đây thể hiện biện pháp thực hiện chữ Cần theo tư tưởng Hồ Chí Minh:", a: ["Cần là siêng năng, chăm chỉ, cố gắng, dẻo dai.", "Cần là làm việc phải đặt ra mục tiêu, lập kế hoạch và phân công công việc rõ ràng, Cần phải đi với Chuyên.", "Cần là mọi người đều phải Cần, cả nước đều phải Cần.", "Cả nước siêng năng thì nước mạnh giàu."], c: 1},
+  {q: "Câu 102. Chủ trương “Làm tư sản dân quyền cách mạng và thổ địa cách mạng để đi tới xã hội cộng sản” được Hồ Chí Minh nêu rõ trong tài liệu nào dưới đây:", a: ["\"Chánh cương văn tắt của Đảng .", "\"Sách lược vắn tắt của Đảng\".", "\"Đường Kách mệnh\".", "\"Trung ương Hội nghị lần thứ Tám của Đảng Cộng sản Đông Dương\"."], c: 0},
+  {q: "Câu 103. Luận điểm “Chủ nghĩa dân tộc là động lực lớn của đất nước” được trích dẫn trong tài liệu nào dưới đây của Hồ Chí Minh:", a: ["\"Trung ương Hội nghị lần thứ Tám của Đảng Cộng sản Đông Dương\".", "“Chánh cương văn tắt, Sách lược vắn tắt\".", "\"Báo cáo về Bắc kỳ, Trung kỳ và Nam kỳ\".", "\"Di chúc\"."], c: 2},
+  {q: "Câu 104. Tìm đáp án dưới đây xác định các lĩnh vực cần thực hiện chữ Kiệm theo tư tưởng Hồ Chí Minh:", a: ["Kiệm là tiết kiệm, không xa xỉ, không hoang phí, không bừa bãi.", "Kiệm không phải là bủn xỉn.", "Kiệm là khéo tổ chức, sắp xếp.", "Kiệm là tiết kiệm thời gian, tiền của, sức lao động."], c: 3},
+  {q: "Câu 105. Đáp án nào dưới đây xác định sai nội dung của chữ Cần trong tư tưởng Hồ Chí Minh:", a: ["Cần là siêng năng, chăm chỉ, cố gắng, dẻo dai.", "Cần là phải có kế hoạch, có phân công.", "Cần phải đi với Chuyên. Cần là chống lại sự lười biếng.", "Cần là tùy điều kiện mà có Cần hay không."], c: 3},
+  {q: "Câu 106. Phát hiện một ý kiến viết sai tư tưởng Hồ Chí Minh về \"nhà nước của dân” trong các đáp án dưới đây:", a: ["Chính sách của Đảng và Chính phủ là phải hết sức chăm nom đến đời sống của nhân dân.", "Bao nhiêu quyền hạn đều do Đảng và Chính phủ quyết định.", "Đảng và Chính phủ phải lãnh đạo tổ chức, giáo dục nhân dân tăng gia sản xuất và tiết kiệm..", "Sự nghiệp kháng chiến, kiến quốc là công việc của dân."], c: 1},
+  {q: "Câu 107. Phát hiện một luận điểm viết sai tư tưởng Hồ Chí Minh về ba kẻ địch của chủ nghĩa xã hội trong các đáp án dưới đây :", a: ["Chủ nghĩa tư bản và bọn đế quốc là kẻ địch rất nguy hiểm.", "Thói quen và truyền thống lạc hậu cũng là kẻ địch to, nhưng chúng ta có thể trấn áp nó.", "Loại kẻ địch thứ ba là chủ nghĩa cá nhân.", "Chủ nghĩa cá nhân là bạn đồng minh của hai kẻ địch trên."], c: 1},
+  {q: "Câu 108. Đáp án nào dưới đây thể hiện không đúng tư tưởng Hồ Chí Minh về kẻ địch của chủ nghĩa xã hội:", a: ["Chủ nghĩa cá nhân là căn bệnh mẹ, căn bệnh gốc đẻ ra hàng trăm thứ bệnh nguy hiểm: mệnh lệnh, bè phải, quan liêu.", "Thói quen và truyền thống lạc hậu là kẻ địch to.", "Chủ nghĩa cá nhân là kẻ địch hung ác.", "Lợi ích cá nhân chính là chủ nghĩa cá nhân."], c: 3},
+  {q: "Câu 109. Đáp án nào dưới đây thể hiện không đúng tư tưởng Hồ Chí Minh về kẻ địch của chủ nghĩa xã hội:", a: ["Mỗi người đều có sở trường riêng, nhu cầu riêng và đời sống riêng của bản thân và gia đình. Đó chính là chủ nghĩa cá nhân.", "Chủ nghĩa cá nhân là kẻ địch hung ác.", "Chủ nghĩa cá nhân là tư tưởng tiểu tư sản ẩn nấp sẵn trong mỗi con người.", "Chủ nghĩa cá nhân gây ra những tác hại to lớn."], c: 0},
+  {q: "Câu 110. Đáp án nào dưới đây thể hiện không đúng quan niệm của Hồ Chí Minh về chủ nghĩa cá nhân:", a: ["Cần phải tiêu diệt lợi ích cá nhân vì nó chính là chủ nghĩa cá nhân.", "Chủ nghĩa cá nhân là làm việc gì cũng chỉ xuất phát từ lòng tham muốn địa vị, danh lợi cho bản thân mà không tính tới lợi ích của tập thể, của nhân dân, của Đảng, của Dân tộc.", "Chủ nghĩa cá nhân sinh ra trăm ngàn thứ bệnh nguy hiểm.", "Chủ nghĩa cá nhân là đồng minh của chủ nghĩa tư bản và đế quốc."], c: 0},
+  {q: "Câu 111. Nội dung nào dưới đây thể hiện tư tưởng Hồ Chí Minh về chủ trương đại đoàn kết rộng rãi trong cách mạng Việt Nam:", a: ["Chiến tranh đã làm thay đổi chủ nghĩa dân tộc.", "Chủ nghĩa dân tộc là động lực lớn của đất nước.", "Dù sao thì cũng không thể cấm bổ sung “cơ sở lịch sử” của chủ nghĩa Mác bằng cách đưa thêm vào đó những tư liệu mà Mác ở thời kỳ mình không thể có được.", "Đảng phải hết sức liên lạc với tiểu tư sản, trí thức, trung nông, thanh niên, Tân Việt để kéo họ đi vào phe vô sản giai cấp. Còn đối với bọn phú nông, trung, tiểu địa chủ và tư bản An Nam mà chưa rõ mặt phản cách mạng thì phải lợi dụng, ít lâu mới làm cho họ đứng trung lập."], c: 3},
+  {q: "Câu 112. Đáp án nào dưới đây thể hiện rõ nhất tư tưởng Hồ Chí Minh về ý nghĩa chính trị của “Tuần lễ Vàng\":", a: ["Tuần lễ Vàng sẽ tỏ cho toàn quốc đồng bào và cho toàn thế giới biết rằng, trong lúc các chiến sĩ Việt Minh trên các mặt trận quyết hy sinh giọt máu cuối cùng để giữ vững nền tự do độc lập của nước nhà, thì đồng bào ở hậu phương, nhất là những nhà giàu có, cũng có thể hy sinh được chút Vàng để phụng sự Tổ quốc.", "Tuần lễ Vàng sẽ thu góp số vàng trong nhân dân và nhất là những nhà giàu có để cúng vào việc cần cấp và quan trọng nhất của chúng ta lúc này là việc quốc phòng.", "Muốn củng cố nền độc lập, tự do, chúng ta cần sức hy sinh phấn đấu của toàn quốc đồng bào, nhưng chúng ta cũng rất cần sức quyên giúp của nhân dân, nhất là những nhà giàu có.", "Tuần lễ Vàng có ý nghĩa giúp vào nền tài chính quốc phòng."], c: 0},
+  {q: "Câu 113. Đáp án nào dưới đây trích dẫn sai tư tưởng Hồ Chí Minh về đại đoàn kết dân tộc:", a: ["Bất kỳ ai mà thật thà tán thành hòa bình, thống nhất, độc lập, dân chủ thì chúng ta cũng thật thà đoàn kết với họ, trừ những người trước đây đã từng chống lại chúng ta.", "Đại đoàn kết trước hết là đoàn kết đại đa số nhân dân.", "Đoàn kết rộng rãi, chặt chẽ, đồng thời phải củng cố.", "Đối với những đồng bào lạc lối lầm đường, ta phải lấy tình thân ái mà cảm hóa họ."], c: 0},
+  {q: "Câu 114. Phát hiện một luận điểm nhầm lẫn về phương pháp vận dụng chủ nghĩa Mác- Lênin của Nguyễn Ái Quốc (Hồ Chí Minh) trong các câu viết sau đây:", a: ["Nguyễn Ái Quốc đến với chủ nghĩa Mác - Lênin để đáp ứng nhu cầu nhận thức của mình.", "Nguyễn Ái Quốc đến với chủ nghĩa Mác - Lênin theo phương pháp nhận thức mác xít, đồng thời theo lối đắc ý, vong ngôn”.", "Trong 10 năm (1911-1920) của quá trình tìm đường cứu nước, Nguyễn Ái Quốc đã hoàn thiện cho bản thân mình bản lĩnh tư duy độc lập, tự chủ, sáng tạo, nhờ đó khi tiếp thu chủ nghĩa Mác và vận dụng chủ nghĩa Mác - Lênin không rơi vào giáo điều sao chép.", "Khi đến với Chủ nghĩa Mác- Lênin, Nguyễn Ái Quốc đã có một học vấn chắc chắn, năng lực trí tuệ sắc sảo."], c: 0},
+  {q: "Câu 115. Tìm luận điểm của Hồ Chí Minh xác định vai trò của đạo đức đối với người cách mạng trong các luận điểm sau đây:", a: ["Đạo đức cũ là đạo đức thủ cựu, nó vì danh vọng của cá nhân.", "Đạo đức mới là vĩ đại, nó vì sự nghiệp chung của dân tộc, của loài người.", "Đạo đức là cái gốc của người cách mạng.", "Người có 4 tính (cần, kiệm, liêm, chính). Thiếu một tính không thành người."], c: 2},
+  {q: "Câu 116. Hãy cho biết đáp án nào dưới đây thuộc về những nhiệm vụ cấp bách của Nhà nước Việt Nam Dân chủ Cộng hòa được thể hiện trong văn bản cùng tên:", a: ["Nhân dân đang đói.", "Phát triển văn hóa.", "Tạo việc làm cho người lao động.", "Chăm sóc sức khỏe cho nhân dân."], c: 0},
+  {q: "Câu 117. Đáp án nào dưới đây chưa được nêu ra trong các nhiệm vụ cấp cách của Nhà nước Việt Nam Dân chủ Cộng hòa được thể hiện trong văn bản cùng tên:", a: ["Nhân dân đang đói.", "Nạn dốt.", "Tín ngưỡng tự do và lương giáo đoàn kết.", "Chăm sóc sức khỏe nhân dân."], c: 3},
+  {q: "Câu 118. Tìm đáp án dưới đây thể hiện đúng thực chất chủ trương của Hồ Chí Minh qua luận điểm: “Chúng tôi chủ trương làm cho tư bản Việt Nam phát triển... đồng thời chúng tôi rất hoan nghênh tư bản Pháp và tư bản các nước khác thật thà cộng tác với chúng tôi\":", a: ["Là nêu cao độc lập tự chủ", "Là chủ trương làm bạn với quốc tế.", "Là phát triển kinh tế nhà nước.", "Là thực hiện kinh tế thị trương và hội nhập kinh tế quốc tế."], c: 3},
+  {q: "Câu 119. Luận điểm “Giờ đây người ta sẽ không thể làm gì được cho người An Nam nếu không dựa trên các động lực vĩ đại và duy nhất của đời sống xã hội của họ được Hồ Chí Minh khẳng định trong tài liệu nào dưới đây:", a: ["\"Trung ương Hội nghị lần thứ Tám của Đảng Cộng sản Đông Dương\".", "\"Chánh cương văn tắt, Sách lược vắn tắt\".", "\"Đường Kách mệnh\".", "\"Báo cáo về Bắc kỳ, Trung kỳ và Nam kỳ\"."], c: 3},
+  {q: "Câu 120. Luận điểm “Nếu không đánh đuổi được Pháp- Nhật thì vận mạng của dân tộc phải chịu kiếp trâu ngựa muôn đời mà vấn đề ruộng đất cũng không làm sao giải quyết được trích dẫn trong tài liệu nào dưới đây của Hồ Chí Minh:", a: ["\"Trung ương Hội nghị lần thứ Tám của Đảng Cộng sản Đông Dương\".", "\"Chánh cương văn tất, Sách lược vắn tắt\".", "\"Báo cáo về Bắc kỳ, Trung kỳ và Nam kỳ\".", "\"Lời kêu gọi toàn quốc kháng chiến\"."], c: 0}
+];
+
+let sessionQuiz = [], currentIndex = 0, activeQueue = [], skippedQueue = [], userAnswers = {}, score = 0, combo = 0, wrongStreak = 0, isPhaseSkipped = false;
+let timerInterval;
+let timeLeft = 0;
+let autoNextTimer;
+let sessionTotal = 0;
+
+const elInterface = document.getElementById("quiz-interface");
+const elResult = document.getElementById("result-interface");
+const elQuestion = document.getElementById("question");
+const elAnswers = document.getElementById("answers");
+const elCounter = document.getElementById("question-counter");
+const elCombo = document.getElementById("combo-display");
+const elProgressBar = document.getElementById("progress-bar");
+const elBtnNext = document.getElementById("btn-next");
+const elBtnSkip = document.getElementById("btn-skip");
+const elBtnPrev = document.getElementById("btn-prev");
+const elTimer = document.getElementById("timer-display");
+const elResultTime = document.getElementById("result-time");
+const elControlPopup = document.getElementById("control-popup");
+const elReviewContainer = document.getElementById("review-container");
+const elBtnRetryWrong = document.getElementById("btn-retry-wrong");
+
+function initGame(retryWrongOnly = false) {
+    score = 0; combo = 0; wrongStreak = 0; currentIndex = 0;
+    activeQueue = []; skippedQueue = []; isPhaseSkipped = false;
+    if (!retryWrongOnly) userAnswers = {};
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const configShuffleQ = urlParams.get('sq') !== 'false'; 
+    const configTime = parseInt(urlParams.get('time')) || 0;
+
+    if (retryWrongOnly) {
+        let wrongIndices = [];
+        originalQuiz.forEach((item, idx) => {
+            if (userAnswers.hasOwnProperty(idx)) {
+                if (userAnswers[idx] !== item.c) wrongIndices.push(idx);
+            }
+        });
+        
+        if (wrongIndices.length === 0) {
+            alert("Bạn không có câu sai nào để làm lại!");
+            return;
+        }
+
+        userAnswers = {}; 
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+             let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+             return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+        
+        activeQueue = wrongIndices;
+        if(configShuffleQ) shuffleArray(activeQueue);
+    } else {
+        sessionQuiz = originalQuiz.map((item, originalIdx) => {
+            let options = item.a.map((txt, idx) => ({ text: txt, isCorrect: idx === item.c }));
+            return { q: item.q, a: options.map(opt => opt.text), c: options.findIndex(opt => opt.isCorrect), originalId: originalIdx };
+        });
+
+        let indices = sessionQuiz.map((_, i) => i);
+        if(configShuffleQ) shuffleArray(indices);
+        activeQueue = indices;
+    }
+    
+    sessionTotal = activeQueue.length;
+
+    elInterface.style.display = "flex";
+    elResult.style.display = "none";
+    elControlPopup.style.display = "flex";
+
+    if (configTime > 0) {
+        timeLeft = configTime * 60;
+        startCountdown();
+    } else {
+        timeLeft = 0;
+        startCountUp();
+    }
+
+    updateStats();
+    loadQuestion();
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function startCountdown() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay(timeLeft);
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("⏰ Hết giờ! Bài thi sẽ tự động nộp.");
+            finishGame();
+        }
+    }, 1000);
+}
+
+function startCountUp() {
+    clearInterval(timerInterval);
+    updateTimerDisplay(timeLeft);
+    timerInterval = setInterval(() => {
+        timeLeft++;
+        updateTimerDisplay(timeLeft);
+    }, 1000);
+}
+
+function updateTimerDisplay(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    elTimer.innerText = `${m}:${s}`;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const limit = parseInt(urlParams.get('time')) || 0;
+    
+    if (limit > 0 && seconds < 60) elTimer.classList.add('danger');
+    else elTimer.classList.remove('danger');
+}
+
+function loadQuestion() {
+    clearTimeout(autoNextTimer);
+
+    const qIndex = activeQueue[currentIndex];
+    const data = sessionQuiz[qIndex];
+    const hasAnswered = userAnswers.hasOwnProperty(qIndex);
+
+    elQuestion.innerText = data.q;
+    elAnswers.innerHTML = "";
+
+    if (isPhaseSkipped) {
+        document.getElementById("phase-display").style.display = "inline-block";
+        elCounter.innerText = `Câu bỏ qua ${currentIndex + 1}/${activeQueue.length}`;
+    } else {
+        document.getElementById("phase-display").style.display = "none";
+        elCounter.innerText = `Câu ${currentIndex + 1}/${activeQueue.length}`;
+    }
+
+    const labels = ["A", "B", "C", "D"];
+    data.a.forEach((ans, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerHTML = `<b>${labels[idx]}.</b> ${ans}`;
+        
+        if (hasAnswered) {
+            btn.disabled = true;
+            const userPick = userAnswers[qIndex];
+            if (idx === data.c) btn.classList.add("correct");
+            if (idx === userPick && userPick !== data.c) btn.classList.add("wrong");
+            if (idx === userPick) btn.classList.add("user-selected");
+        } else {
+            btn.onclick = () => checkAnswer(qIndex, idx, btn);
+        }
+        elAnswers.appendChild(btn);
+    });
+
+    elBtnPrev.disabled = (currentIndex === 0 && !isPhaseSkipped);
+    
+    if (hasAnswered) {
+        elBtnSkip.style.display = "none";
+        elBtnNext.style.display = "block";
+    } else {
+        elBtnSkip.style.display = "block";
+        elBtnNext.style.display = "none";
+    }
+
+    updateStats();
+}
+
+function checkAnswer(qIndex, selectedIdx, btnElement) {
+    const data = sessionQuiz[qIndex];
+    const isCorrect = selectedIdx === data.c;
+    userAnswers[qIndex] = selectedIdx;
+
+    const allBtns = elAnswers.querySelectorAll(".option-btn");
+    allBtns.forEach((btn, idx) => {
+        btn.disabled = true;
+        
+        if (idx === data.c) {
+            btn.classList.add("correct");
+            if (!isCorrect) {
+                btn.classList.add("flash-correct");
+            }
+        }
+        
+        if (idx === selectedIdx && !isCorrect) {
+            btn.classList.add("wrong");
+        }
+    });
+
+    if (isCorrect) {
+        score++; combo++; wrongStreak = 0;
+        triggerMiniConfetti(btnElement);
+    } else {
+        combo = 0; wrongStreak++;
+    }
+
+    elBtnNext.style.display = "block";
+    elBtnSkip.style.display = "none";
+    updateStats();
+
+    autoNextTimer = setTimeout(() => {
+        nextQuestion();
+    }, 1200);
+}
+
+function nextQuestion() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function skipQuestion() {
+    clearTimeout(autoNextTimer);
+    const qIndex = activeQueue[currentIndex];
+    skippedQueue.push(qIndex);
+    if (currentIndex < activeQueue.length - 1) {
+        currentIndex++;
+        loadQuestion();
+    } else {
+        handleEndOfQueue();
+    }
+}
+
+function goBack() {
+    clearTimeout(autoNextTimer);
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadQuestion();
+    }
+}
+
+function handleEndOfQueue() {
+    if (!isPhaseSkipped && skippedQueue.length > 0) {
+        if(confirm(`Bạn đã bỏ qua ${skippedQueue.length} câu. Bạn có muốn làm lại ngay bây giờ không?`)) {
+             isPhaseSkipped = true;
+            activeQueue = [...skippedQueue];
+            skippedQueue = [];
+            currentIndex = 0;
+            loadQuestion();
+        } else {
+            finishGame();
+        }
+    } else {
+        finishGame();
+    }
+}
+
+function updateStats() {
+    const pct = ((currentIndex + 1) / activeQueue.length) * 100;
+    elProgressBar.style.width = `${pct}%`;
+    elCombo.innerText = combo > 0 ? `🔥 ${combo}` : "";
+}
+
+function finishGame() {
+    clearInterval(timerInterval);
+    elInterface.style.display = "none";
+    elResult.style.display = "block";
+    elControlPopup.style.display = "none"; 
+    
+    elResultTime.innerText = `Thời gian làm bài: ${elTimer.innerText}`;
+
+    const total = sessionTotal; 
+    const correctCount = score;
+    const wrongCount = total - score;
+    const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    const circle = document.getElementById("score-circle");
+    circle.style.background = `conic-gradient(var(--success) ${percent}%, var(--border-color) 0%)`;
+    document.getElementById("final-score").innerText = `${percent}%`;
+
+    document.getElementById("txt-correct").innerText = `${correctCount}/${total}`;
+    document.getElementById("txt-wrong").innerText = wrongCount;
+
+    elReviewContainer.innerHTML = "";
+    let hasWrong = false;
+
+    sessionQuiz.forEach((item, qIndex) => {
+        const uAns = userAnswers[qIndex];
+        const correctAns = item.c;
+        if (uAns !== undefined && uAns !== correctAns) {
+            hasWrong = true;
+            const labels = ["A", "B", "C", "D"];
+            
+            const div = document.createElement("div");
+            div.className = "review-item";
+            div.innerHTML = `
+                <div class="review-question">Câu ${qIndex + 1}: ${item.q}</div>
+                <div class="review-detail">
+                    <div style="color: var(--danger)">❌ Bạn chọn: ${labels[uAns]}. ${item.a[uAns]}</div>
+                    <div style="color: var(--success)">✅ Đáp án đúng: ${labels[correctAns]}. ${item.a[correctAns]}</div>
+                </div>
+            `;
+            div.onclick = function() {
+                this.classList.toggle("active");
+            }
+            elReviewContainer.appendChild(div);
+        }
+    });
+
+    if (!hasWrong) {
+        elReviewContainer.innerHTML = `<p style="color: var(--success); font-weight: bold;">Xuất sắc! Bạn không sai câu nào! 🎉</p>`;
+        elBtnRetryWrong.style.display = "none";
+    } else {
+        elBtnRetryWrong.style.display = "block";
+    }
+}
+
+function retryWrongAnswers() {
+    initGame(true);
+}
+
+initGame(false);
+</script>
+</body>
+</html>
